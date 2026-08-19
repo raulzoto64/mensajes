@@ -6,6 +6,7 @@ import MessageInput from '../components/MessageInput'
 import AdminPanel from '../components/AdminPanel'
 import GroupMembersPanel from '../components/GroupMembersPanel'
 import { useActivityHeartbeat } from '../lib/realtime'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 type GroupView = { id: string; name: string }
@@ -27,6 +28,28 @@ export default function ChatPage() {
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])
+
+  // Al llegar por un enlace compartido ?grupo=ID → unirse y abrir el grupo
+  useEffect(() => {
+    if (!user) return
+    const grupo = new URLSearchParams(window.location.search).get('grupo')
+    if (!grupo) return
+    supabase
+      .from('groups')
+      .select('id, name')
+      .eq('id', grupo)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return
+        supabase
+          .from('group_members')
+          .upsert({ group_id: data.id, user_id: user.id })
+          .then(() => {
+            handleSelectGroup(data.id, data.name)
+            window.history.replaceState({}, '', window.location.pathname)
+          })
+      })
+  }, [user])
 
   function handleSelectGroup(id: string, name: string) {
     setGroupView({ id, name })
@@ -101,7 +124,7 @@ export default function ChatPage() {
               onMenuToggle={() => setSidebarOpen(true)}
               isMobile={isMobile}
             />
-            <MessageInput conversationId={dmView.conversationId} onSent={handleSent} />
+            <MessageInput conversationId={dmView.conversationId} onSent={handleSent} isMobile={isMobile} />
           </>
         ) : groupView ? (
           <>
@@ -113,7 +136,7 @@ export default function ChatPage() {
               onShowMembers={() => setShowMembers(true)}
               isMobile={isMobile}
             />
-            <MessageInput groupId={groupView.id} onSent={handleSent} />
+            <MessageInput groupId={groupView.id} onSent={handleSent} isMobile={isMobile} />
           </>
         ) : (
           <EmptyState

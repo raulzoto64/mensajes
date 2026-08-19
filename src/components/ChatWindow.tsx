@@ -230,10 +230,28 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
     return new Date(iso).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
   }
 
+  const [copied, setCopied] = useState(false)
+
+  async function shareGroup() {
+    const link = `${window.location.origin}${window.location.pathname}?grupo=${groupId}`
+    try {
+      await navigator.clipboard.writeText(link)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = link
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
+
   const typerLabel = typings.length ? `@${typings[0]} escribiendo…` : null
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#070711' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#070711', position: 'relative' }}>
       {/* Header */}
       <div
         style={{
@@ -287,20 +305,28 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div
+          <button
+            onClick={shareGroup}
+            title="Compartir el grupo"
             style={{
-              padding: '3px 9px',
-              background: 'rgba(34,211,238,0.06)',
-              border: '1px solid rgba(34,211,238,0.15)',
+              padding: '3px 10px',
+              background: 'rgba(34,211,238,0.08)',
+              border: '1px solid rgba(34,211,238,0.25)',
               borderRadius: '20px',
-              fontSize: '10px',
+              fontSize: '11px',
               color: '#22d3ee',
-              fontFamily: "'DM Mono', monospace",
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontFamily: "'Outfit', sans-serif",
               whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              flexShrink: 0,
             }}
           >
-            GRUPO
-          </div>
+            ⇪ Compartir
+          </button>
           <button
             onClick={() => { setSelectMode((v) => !v); setSelectedIds(new Set()) }}
             title="Seleccionar mensajes"
@@ -440,6 +466,34 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
           >
             Cancelar
           </button>
+        </div>
+      )}
+
+      {/* Popup de enlace copiado */}
+      {copied && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '64px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(15,15,30,0.97)',
+            border: '1px solid rgba(34,211,238,0.35)',
+            borderRadius: '12px',
+            padding: '10px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            zIndex: 300,
+            boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+            fontFamily: "'Outfit', sans-serif",
+            animation: 'msg-enter 0.25s ease',
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>✅</span>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>
+            Enlace copiado — compártelo
+          </span>
         </div>
       )}
     </div>

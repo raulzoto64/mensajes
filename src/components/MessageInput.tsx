@@ -9,12 +9,13 @@ type Props = {
   groupId?: string
   conversationId?: string
   onSent: () => void
+  isMobile?: boolean
 }
 
 type PickerMode = 'none' | 'emoji' | 'gif'
 type RecordMode = 'none' | 'audio' | 'video'
 
-export default function MessageInput({ groupId, conversationId, onSent }: Props) {
+export default function MessageInput({ groupId, conversationId, onSent, isMobile }: Props) {
   const { user } = useAuth()
   const [text, setText] = useState('')
   const [picker, setPicker] = useState<PickerMode>('none')
@@ -23,6 +24,8 @@ export default function MessageInput({ groupId, conversationId, onSent }: Props)
   const [recordTime, setRecordTime] = useState(0)
   const [sending, setSending] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [mediaOpen, setMediaOpen] = useState(false)
+  const mediaRef = useRef<HTMLDivElement>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -493,20 +496,56 @@ export default function MessageInput({ groupId, conversationId, onSent }: Props)
             </button>
           </div>
 
-          {/* Right buttons */}
-          <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-            <IconBtn active={false} onClick={() => imageInputRef.current?.click()} title="Enviar imagen (cámara o galería)">
-              🖼️
-            </IconBtn>
-            <IconBtn active={false} onClick={() => videoFileInputRef.current?.click()} title="Enviar video (cámara o galería)">
-              🎞️
-            </IconBtn>
-            <IconBtn active={false} onClick={() => setRecordMode('audio')} title="Grabar audio">
-              🎤
-            </IconBtn>
-            <IconBtn active={false} onClick={() => setRecordMode('video')} title="Grabar video">
-              📹
-            </IconBtn>
+          {/* Right buttons — en móvil van todos en un desplegable */}
+          <div style={{ position: 'relative', display: 'flex', gap: '4px', flexShrink: 0 }} ref={mediaRef}>
+            {isMobile ? (
+              <>
+                <IconBtn active={mediaOpen} onClick={() => setMediaOpen((v) => !v)} title="Enviar multimedia">
+                  ➕
+                </IconBtn>
+                {mediaOpen && (
+                  <>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 119 }} onClick={() => setMediaOpen(false)} />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        bottom: 'calc(100% + 8px)',
+                        background: '#0f0f1e',
+                        border: '1px solid #1e1e3a',
+                        borderRadius: '12px',
+                        padding: '6px',
+                        zIndex: 120,
+                        boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px',
+                      }}
+                    >
+                      <MenuItem onClick={() => { imageInputRef.current?.click(); setMediaOpen(false) }} label="🖼️ Imagen" />
+                      <MenuItem onClick={() => { videoFileInputRef.current?.click(); setMediaOpen(false) }} label="🎞️ Video" />
+                      <MenuItem onClick={() => { setRecordMode('audio'); setMediaOpen(false) }} label="🎤 Grabar audio" />
+                      <MenuItem onClick={() => { setRecordMode('video'); setMediaOpen(false) }} label="📹 Grabar video" />
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <IconBtn active={false} onClick={() => imageInputRef.current?.click()} title="Enviar imagen (cámara o galería)">
+                  🖼️
+                </IconBtn>
+                <IconBtn active={false} onClick={() => videoFileInputRef.current?.click()} title="Enviar video (cámara o galería)">
+                  🎞️
+                </IconBtn>
+                <IconBtn active={false} onClick={() => setRecordMode('audio')} title="Grabar audio">
+                  🎤
+                </IconBtn>
+                <IconBtn active={false} onClick={() => setRecordMode('video')} title="Grabar video">
+                  📹
+                </IconBtn>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -550,6 +589,34 @@ function IconBtn({
       }}
     >
       {children}
+    </button>
+  )
+}
+
+function MenuItem({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        width: '100%',
+        padding: '8px 12px',
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '8px',
+        color: '#e8e8f0',
+        fontSize: '13px',
+        cursor: 'pointer',
+        fontFamily: "'Outfit', sans-serif",
+        textAlign: 'left',
+        whiteSpace: 'nowrap',
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(34,211,238,0.06)')}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+    >
+      {label}
     </button>
   )
 }
