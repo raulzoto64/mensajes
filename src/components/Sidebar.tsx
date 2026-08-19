@@ -44,11 +44,13 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
   const [dmSearch, setDmSearch] = useState('')
   const [dmResults, setDmResults] = useState<{ id: string; alias: string }[]>([])
   const [supabaseMissing] = useState(!supabaseConfigured)
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     if (!user) return
     loadMyGroups()
     loadDms()
+    loadPendingCount()
     const channel = supabase
       .channel('sidebar-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, (payload: any) => {
@@ -73,6 +75,22 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
         loadDms()
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_message_views' }, loadDms)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload: any) => {
+        // Notifica al admin cuando alguien nuevo se registra
+        if (user?.is_admin && payload.new?.alias) {
+          addNotification({
+            type: 'approval',
+            title: 'Solicitud de ingreso',
+            body: `@${payload.new.alias} quiere entrar y espera tu aprobación`,
+            userId: payload.new.id,
+            userAlias: payload.new.alias,
+          })
+          loadPendingCount()
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, () => {
+        if (user?.is_admin) loadPendingCount()
+      })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [user])
@@ -84,6 +102,15 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
     })
     return unsubscribe
   }, [user])
+
+  async function loadPendingCount() {
+    if (!user?.is_admin) return
+    const { count } = await supabase
+      .from('users')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_approved', false)
+    setPendingCount(count ?? 0)
+  }
 
   async function notifyAddedToGroup(groupId: string) {
     if (!user) return
@@ -392,25 +419,51 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
           <NotificationsPanel
             onOpenDm={(conversationId, otherUserId, otherAlias) => onSelectDm(conversationId, otherUserId, otherAlias)}
             onOpenGroup={(groupId, groupName) => onSelectGroup(groupId, groupName)}
+            onOpenAdmin={onAdminPanel}
           />
           {user?.is_admin && (
-            <button
-              onClick={onAdminPanel}
-              style={{
-                background: 'rgba(239,68,68,0.1)',
-                border: '1px solid rgba(239,68,68,0.2)',
-                borderRadius: '7px',
-                padding: '4px 8px',
-                color: '#f87171',
-                fontSize: '10px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                fontFamily: "'DM Mono', monospace",
-                letterSpacing: '0.05em',
-              }}
-            >
-              ADMIN
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={onAdminPanel}
+                style={{
+                  background: 'rgba(239,68,68,0.1)',
+                  border: '1px solid rgba(239,68,68,0.2)',
+                  borderRadius: '7px',
+                  padding: pendingCount > 0 ? '4px 6px 4px 8px' : '4px 8px',
+                  color: '#f87171',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontFamily: "'DM Mono', monospace",
+                  letterSpacing: '0.05em',
+                }}
+              >
+                ADMIN
+              </button>
+              {pendingCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    minWidth: '16px',
+                    height: '16px',
+                    background: '#22d3ee',
+                    borderRadius: '8px',
+                    color: '#070711',
+                    fontSize: '9px',
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0 3px',
+                    border: '1px solid #0a0a18',
+                  }}
+                >
+                  {pendingCount > 99 ? '99+' : pendingCount}
+                </span>
+              )}
+            </div>
           )}
         </div>
 

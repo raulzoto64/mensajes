@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 export type NotificationItem = {
   id: string
-  type: 'dm' | 'group'
+  type: 'dm' | 'group' | 'approval'
   title: string
   body: string
   conversationId?: string
@@ -10,6 +10,8 @@ export type NotificationItem = {
   otherAlias?: string
   groupId?: string
   groupName?: string
+  userId?: string
+  userAlias?: string
   at: number
   read: boolean
 }
@@ -26,7 +28,20 @@ export function addNotification(n: Omit<NotificationItem, 'id' | 'at' | 'read'>)
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`
   items = [{ ...n, id, at: Date.now(), read: false }, ...items].slice(0, 30)
+  dispatchBrowserNotification(n.title, n.body)
   emit()
+}
+
+function dispatchBrowserNotification(title: string, body: string) {
+  try {
+    if (typeof Notification === 'undefined') return
+    if (Notification.permission !== 'granted') return
+    // No repitas la notificación del navegador mientras la pestaña está enfocada
+    if (document.hasFocus?.() && document.visibilityState === 'visible') return
+    new Notification(title, { body, tag: `ephemera-${Date.now()}` })
+  } catch {
+    // el navegador puede bloquear el constructor; lo ignoramos
+  }
 }
 
 export function markNotificationRead(id: string) {

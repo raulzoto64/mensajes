@@ -5,17 +5,21 @@ type User = {
   id: string
   alias: string
   is_admin: boolean
+  is_approved: boolean
   created_at: string
 }
 
 type Props = {
   onClose: () => void
+  initialTab?: Tab
 }
 
-type Tab = 'actions' | 'users'
+type Tab = 'actions' | 'approvals' | 'users'
 
-export default function AdminPanel({ onClose }: Props) {
-  const [tab, setTab] = useState<Tab>('actions')
+const APPROVAL_PLACEHOLDER = '00000000-0000-0000-0000-000000000000'
+
+export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
+  const [tab, setTab] = useState<Tab>(initialTab)
   const [confirming, setConfirming] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [log, setLog] = useState<string[]>([])
@@ -24,8 +28,17 @@ export default function AdminPanel({ onClose }: Props) {
   const [userSearch, setUserSearch] = useState('')
 
   useEffect(() => {
-    if (tab === 'users') loadUsers()
+    if (tab === 'users' || tab === 'approvals') loadUsers()
   }, [tab])
+
+  // Refresco en vivo del panel cuando se registra un usuario nuevo
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-pending')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, loadUsers)
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [])
 
   function addLog(msg: string) {
     setLog((l) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...l].slice(0, 20))
@@ -33,9 +46,18 @@ export default function AdminPanel({ onClose }: Props) {
 
   async function loadUsers() {
     setUsersLoading(true)
-    const { data } = await supabase.from('users').select('id, alias, is_admin, created_at').order('created_at', { ascending: false })
+    const { data } = await supabase.from('users').select('id, alias, is_admin, is_approved, created_at').order('created_at', { ascending: false })
     if (data) setUsers(data as User[])
     setUsersLoading(false)
+  }
+
+  async function approveUser(userId: string, alias: string) {
+    const { error } = await supabase.from('users').update({ is_approved: true }).eq('id', userId)
+    if (error) addLog(`Error aprobando @${alias}: ${error.message}`)
+    else {
+      addLog(`Usuario @${alias} aprobado`)
+      loadUsers()
+    }
   }
 
   async function toggleAdmin(userId: string, current: boolean) {
@@ -99,6 +121,8 @@ export default function AdminPanel({ onClose }: Props) {
     u.alias.toLowerCase().includes(userSearch.toLowerCase())
   )
 
+  const pendingUsers = filteredUsers.filter((u) => !u.is_approved)
+
   return (
     <div
       style={{
@@ -150,7 +174,7 @@ export default function AdminPanel({ onClose }: Props) {
 
           {/* Tabs */}
           <div style={{ display: 'flex', background: '#14142a', borderRadius: '9px', padding: '3px', gap: '2px' }}>
-            {(['actions', 'users'] as const).map((t) => (
+            {(['actions', 'approvals', 'users'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -164,11 +188,11 @@ export default function AdminPanel({ onClose }: Props) {
                   fontWeight: '600',
                   fontFamily: "'Outfit', sans-serif",
                   transition: 'all 0.15s',
-                  background: tab === t ? (t === 'users' ? '#8b5cf6' : 'rgba(239,68,68,0.15)') : 'transparent',
-                  color: tab === t ? (t === 'users' ? '#fff' : '#f87171') : '#6b6b8a',
+                  background: tab === t ? (t === 'users' ? '#8b5cf6' : t === 'approvals' ? '#22d3ee' : 'rgba(239,68,68,0.15)') : 'transparent',
+                  color: tab === t ? (t === 'users' ? '#fff' : t === 'approvals' ? '#0a0a18' : '#f87171') : '#6b6b8a',
                 }}
               >
-                {t === 'actions' ? '⚡ Acciones' : '👤 Usuarios'}
+                {t === 'actions' ? '⚡ Acciones' : t === 'approvals' ? `🛃 Aprobaciones (${pendingUsers.length})` : '👤 Usuarios'}
               </button>
             ))}
           </div>
@@ -250,6 +274,100 @@ export default function AdminPanel({ onClose }: Props) {
             </div>
           )}
 
+          {tab === 'approvals' && (
+            <div>
+              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#6b6b8a' }}>
+                Usuarios que se registraron y esperan tu permiso para entrar.
+              </p>
+              {users.length === 0 && !usersLoading ? (
+                <button
+                  onClick={() => { setTab('approvals'); loadUsers() }}
+                  style={loadUsersBtn}
+                >
+                  Cargar solicitudes
+                </button>
+              ) : pendingUsers.length === 0 ? (
+                <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+                  No hay solicitudes pendientes
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {pendingUsers.map((u) => (
+                    <div
+                      key={u.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '10px 12px',
+                        background: '#14142a',
+                        border: '1px solid rgba(34,211,238,0.3)',
+                        borderRadius: '10px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          background: 'rgba(34,211,238,0.15)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          color: '#67e8f9',
+                          fontWeight: '700',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {u.alias[0]?.toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                        <span style={{ fontSize: '13px', color: '#e8e8f0', fontWeight: '500' }}>@{u.alias}</span>
+                        <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                          {new Date(u.created_at).toLocaleString('es')}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                        <button
+                          onClick={() => approveUser(u.id, u.alias)}
+                          style={{
+                            padding: '5px 12px',
+                            background: 'rgba(34,211,238,0.15)',
+                            border: '1px solid rgba(34,211,238,0.4)',
+                            borderRadius: '7px',
+                            color: '#22d3ee',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            fontFamily: "'Outfit', sans-serif",
+                          }}
+                        >
+                          ✅ Aprobar
+                        </button>
+                        <button
+                          onClick={() => deleteUser(u.id, u.alias)}
+                          style={{
+                            padding: '4px 8px',
+                            background: 'transparent',
+                            border: '1px solid rgba(239,68,68,0.15)',
+                            borderRadius: '7px',
+                            color: '#f87171',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            fontFamily: "'Outfit', sans-serif",
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {tab === 'users' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <input
@@ -283,7 +401,7 @@ export default function AdminPanel({ onClose }: Props) {
                         gap: '10px',
                         padding: '10px 12px',
                         background: '#14142a',
-                        border: '1px solid #1e1e3a',
+                        border: `1px solid ${u.is_approved ? '#1e1e3a' : 'rgba(34,211,238,0.35)'}`,
                         borderRadius: '10px',
                       }}
                     >
@@ -291,13 +409,13 @@ export default function AdminPanel({ onClose }: Props) {
                         style={{
                           width: '30px',
                           height: '30px',
-                          background: u.is_admin ? 'rgba(239,68,68,0.15)' : '#1e1e3a',
+                          background: u.is_admin ? 'rgba(239,68,68,0.15)' : u.is_approved ? '#1e1e3a' : 'rgba(34,211,238,0.15)',
                           borderRadius: '50%',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '12px',
-                          color: u.is_admin ? '#f87171' : '#8b5cf6',
+                          color: u.is_admin ? '#f87171' : u.is_approved ? '#8b5cf6' : '#67e8f9',
                           fontWeight: '700',
                           flexShrink: 0,
                         }}
@@ -312,12 +430,35 @@ export default function AdminPanel({ onClose }: Props) {
                               ADMIN
                             </span>
                           )}
+                          {!u.is_approved && (
+                            <span style={{ fontSize: '9px', color: '#22d3ee', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
+                              PENDIENTE
+                            </span>
+                          )}
                         </div>
                         <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
                           {new Date(u.created_at).toLocaleDateString('es')}
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                        {!u.is_approved && (
+                          <button
+                            onClick={() => approveUser(u.id, u.alias)}
+                            style={{
+                              padding: '4px 9px',
+                              background: 'rgba(34,211,238,0.15)',
+                              border: '1px solid rgba(34,211,238,0.4)',
+                              borderRadius: '7px',
+                              color: '#22d3ee',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              fontFamily: "'Outfit', sans-serif",
+                            }}
+                          >
+                            ✅ Aprobar
+                          </button>
+                        )}
                         <button
                           onClick={() => toggleAdmin(u.id, u.is_admin)}
                           title={u.is_admin ? 'Quitar admin' : 'Hacer admin'}
@@ -376,4 +517,17 @@ export default function AdminPanel({ onClose }: Props) {
       </div>
     </div>
   )
+}
+
+const loadUsersBtn: React.CSSProperties = {
+  width: '100%',
+  padding: '9px',
+  background: 'rgba(34,211,238,0.1)',
+  border: '1px solid rgba(34,211,238,0.3)',
+  borderRadius: '9px',
+  color: '#67e8f9',
+  fontSize: '13px',
+  fontWeight: '600',
+  cursor: 'pointer',
+  fontFamily: "'Outfit', sans-serif",
 }

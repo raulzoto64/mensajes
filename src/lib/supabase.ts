@@ -19,6 +19,7 @@ export type Database = {
       password_hash: string
       salt: string
       is_admin: boolean
+      is_approved: boolean
       created_at: string
       last_seen_at: string | null
     }

@@ -148,7 +148,7 @@ export default function ChatPage() {
         )}
       </div>
 
-      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      {showAdmin && <AdminPanel initialTab="approvals" onClose={() => setShowAdmin(false)} />}
       {showMembers && groupView && (
         <GroupMembersPanel groupId={groupView.id} onClose={() => setShowMembers(false)} />
       )}

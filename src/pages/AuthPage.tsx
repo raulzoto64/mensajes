@@ -9,17 +9,23 @@ export default function AuthPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!alias.trim() || !password) return
     setError(null)
+    setInfo(null)
     setLoading(true)
     try {
       const fn = mode === 'login' ? login : register
-      const { user, error: err } = await fn(alias, password)
+      const { user, error: err, pending } = await fn(alias, password)
       if (err) setError(err)
+      else if (pending) {
+        setInfo('Ya estás registrado, pídele al administrador que te apruebe el ingreso.')
+        setMode('login')
+      }
       else if (user) setUser(user)
     } finally {
       setLoading(false)
@@ -107,7 +113,7 @@ export default function AuthPage() {
             {(['login', 'register'] as const).map((m) => (
               <button
                 key={m}
-                onClick={() => { setMode(m); setError(null) }}
+                onClick={() => { setMode(m); setError(null); setInfo(null) }}
                 style={{
                   flex: 1,
                   padding: '8px',
@@ -233,6 +239,21 @@ export default function AuthPage() {
                 }}
               >
                 {error}
+              </div>
+            )}
+
+            {info && (
+              <div
+                style={{
+                  background: 'rgba(34,211,238,0.08)',
+                  border: '1px solid rgba(34,211,238,0.3)',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
+                  color: '#67e8f9',
+                  fontSize: '13px',
+                }}
+              >
+                {info}
               </div>
             )}
 

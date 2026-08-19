@@ -64,7 +64,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
     const scope = groupId ? `group-${groupId}` : conversationId ? `dm-${conversationId}` : ''
     setSending(true)
     if (conversationId) {
-      const { data: inserted, error } = await supabase
+      const { data: inserted } = await supabase
         .from('direct_messages')
         .insert({
           conversation_id: conversationId,
@@ -76,15 +76,13 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
         })
         .select('id')
         .single()
-      console.log(`[msg:dm→] insert ${JSON.stringify({ type, content, mediaUrl, inserted, error })}`)
       if (inserted?.id) {
-        const { error: viewErr } = await supabase
+        await supabase
           .from('direct_message_views')
           .upsert({ message_id: inserted.id, user_id: user.id }, { onConflict: 'message_id,user_id' })
-        console.log(`[msg:dm·] vista emisor ${JSON.stringify({ message_id: inserted.id, viewErr })}`)
       }
     } else if (groupId) {
-      const { data: inserted, error } = await supabase
+      const { data: inserted } = await supabase
         .from('messages')
         .insert({
           group_id: groupId,
@@ -96,12 +94,9 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
         })
         .select('id')
         .single()
-      console.log(`[msg:group→] insert ${JSON.stringify({ type, content, mediaUrl, inserted, error })}`)
       if (inserted?.id) {
-        const { error: viewErr } = await supabase
-          .from('message_views')
+        await supabase.from('message_views')
           .upsert({ message_id: inserted.id, user_id: user.id }, { onConflict: 'message_id,user_id' })
-        console.log(`[msg:group·] vista emisor ${JSON.stringify({ message_id: inserted.id, viewErr })}`)
       }
     }
     setSending(false)
@@ -137,16 +132,12 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
   async function uploadMedia(blob: Blob, type: 'audio' | 'video'): Promise<string | null> {
     if (!user) return null
     const path = `${type}/${user.id}/${Date.now()}.webm`
-    console.log(`[upload→] subiendo ${type} path=${path} bytes=${blob.size} mime=${blob.type || 'video/webm'}`)
-    const { data, error } = await supabase.storage.from('media').upload(path, blob, { contentType: blob.type || 'video/webm' })
-    console.log(`[upload←] ${type} ${JSON.stringify({ data, error })}`)
+    const { error } = await supabase.storage.from('media').upload(path, blob, { contentType: blob.type || 'video/webm' })
     if (error) {
-      console.error('Upload error:', error)
       setUploadError('No se pudo subir el archivo. Revisa que el bucket "media" exista en Supabase Storage.')
       return null
     }
     const { data: urlData } = supabase.storage.from('media').getPublicUrl(path)
-    console.log(`[upload·] url pública ${JSON.stringify(urlData)}`)
     return urlData.publicUrl
   }
 
@@ -162,20 +153,16 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
     }
     const ext = (file.name.split('.').pop() || '').toLowerCase() || (kind === 'video' ? 'mp4' : 'jpg')
     const path = `${kind}/${user.id}/${Date.now()}.${ext}`
-    console.log(`[upload→] subiendo ${kind}`, { name: file.name, size: file.size, mime: file.type, path })
     setSending(true)
     setUploadError('')
-    const { data, error } = await supabase.storage.from('media').upload(path, file, { contentType: file.type })
-    console.log(`[upload←] ${kind}`, { data, error })
+    const { error } = await supabase.storage.from('media').upload(path, file, { contentType: file.type })
     if (error) {
-      console.error('Upload error:', error)
       setUploadError('No se pudo subir el archivo. Revisa que el bucket "media" exista en Supabase Storage.')
       setSending(false)
       if (scope) removePendingMessage(scope, tempId)
       return
     }
     const { data: urlData } = supabase.storage.from('media').getPublicUrl(path)
-    console.log(`[upload·] url pública ${JSON.stringify(urlData)}`)
     await sendMessage(kind, null, urlData.publicUrl, tempId)
   }
 
@@ -221,8 +208,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
       setRecording(true)
       setRecordTime(0)
       timerRef.current = setInterval(() => setRecordTime((t) => t + 1), 1000)
-    } catch (err) {
-      console.error('Recording error:', err)
+    } catch {
       setRecordMode('none')
     }
   }, [groupId, conversationId, user])

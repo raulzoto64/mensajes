@@ -80,13 +80,10 @@ function getTypingChannel(scope: string): TypingEntry {
 
   ch.on('broadcast', { event: 'typing' }, ({ payload }) => {
     const alias: string | undefined = payload?.alias
-    console.log(`[typing←] scope=${scope} recibido`, payload)
     if (!alias) return
     entry!.listeners.forEach((cb) => cb(alias))
   })
-  ch.subscribe((status) => {
-    console.log(`[typing·] scope=${scope} subscribe status=${status}`)
-  })
+  ch.subscribe(() => {})
 
   return entry
 }
@@ -101,7 +98,6 @@ export function subscribeTyping(scope: string, onType: (alias: string) => void):
 
 export function notifyTyping(scope: string, userId: string, alias: string): void {
   const entry = getTypingChannel(scope)
-  console.log(`[typing→] scope=${scope} state=${entry.ch.state} enviando`, { userId, alias })
   entry.ch.send({ type: 'broadcast', event: 'typing', payload: { userId, alias, at: Date.now() } })
 }
 

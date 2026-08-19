@@ -7,6 +7,7 @@ import { supabaseConfigured } from './lib/supabase'
 function Inner() {
   const { user } = useAuth()
   if (!supabaseConfigured) return <SetupPage />
+  if (user?.is_approved === false) return <AuthPage />
   return user ? <ChatPage /> : <AuthPage />
 }
 

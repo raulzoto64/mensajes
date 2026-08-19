@@ -4,6 +4,7 @@ import { useNotifications, addNotification, markNotificationRead, markAllNotific
 type Props = {
   onOpenDm: (conversationId: string, otherUserId: string, otherAlias: string) => void
   onOpenGroup: (groupId: string, groupName: string) => void
+  onOpenAdmin: () => void
 }
 
 type PermState = 'unsupported' | 'prompt' | 'granted' | 'denied'
@@ -14,7 +15,7 @@ function currentPerm(): PermState {
   return s === 'granted' ? 'granted' : s === 'denied' ? 'denied' : 'prompt'
 }
 
-export default function NotificationsPanel({ onOpenDm, onOpenGroup }: Props) {
+export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin }: Props) {
   const notifications = useNotifications()
   const [open, setOpen] = useState(false)
   const [perm, setPerm] = useState<PermState>(currentPerm())
@@ -55,6 +56,8 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup }: Props) {
       onOpenDm(n.conversationId, n.otherUserId, n.otherAlias ?? 'usuario')
     } else if (n.type === 'group' && n.groupId) {
       onOpenGroup(n.groupId, n.groupName ?? 'grupo')
+    } else if (n.type === 'approval') {
+      onOpenAdmin()
     }
     setOpen(false)
   }
@@ -211,7 +214,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup }: Props) {
                         width: '30px',
                         height: '30px',
                         minWidth: '30px',
-                        background: n.type === 'dm' ? 'rgba(34,211,238,0.12)' : 'rgba(139,92,246,0.12)',
+                        background: n.type === 'dm' ? 'rgba(34,211,238,0.12)' : n.type === 'approval' ? 'rgba(245,158,11,0.12)' : 'rgba(139,92,246,0.12)',
                         borderRadius: '8px',
                         display: 'flex',
                         alignItems: 'center',
@@ -219,7 +222,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup }: Props) {
                         fontSize: '14px',
                       }}
                     >
-                      {n.type === 'dm' ? '💬' : '👥'}
+                      {n.type === 'dm' ? '💬' : n.type === 'approval' ? '🛃' : '👥'}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -273,7 +276,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup }: Props) {
                 width: '32px',
                 height: '32px',
                 minWidth: '32px',
-                background: t.type === 'dm' ? 'rgba(34,211,238,0.15)' : 'rgba(139,92,246,0.15)',
+                background: t.type === 'dm' ? 'rgba(34,211,238,0.15)' : t.type === 'approval' ? 'rgba(245,158,11,0.15)' : 'rgba(139,92,246,0.15)',
                 borderRadius: '9px',
                 display: 'flex',
                 alignItems: 'center',
@@ -281,7 +284,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup }: Props) {
                 fontSize: '15px',
               }}
             >
-              {t.type === 'dm' ? '💬' : '👥'}
+              {t.type === 'dm' ? '💬' : t.type === 'approval' ? '🛃' : '👥'}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#e8e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

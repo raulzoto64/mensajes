@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash text NOT NULL,          -- SHA-256 hash del password + salt
   salt          text NOT NULL,          -- salt aleatorio de 16 bytes hex
   is_admin      boolean NOT NULL DEFAULT false,
+  is_approved   boolean NOT NULL DEFAULT false,  -- aprobado por el admin para entrar
   created_at    timestamptz NOT NULL DEFAULT now()
 );
 
