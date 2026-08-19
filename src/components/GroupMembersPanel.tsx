@@ -23,6 +23,7 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
   const [inviteSearch, setInviteSearch] = useState('')
   const [searchResults, setSearchResults] = useState<{ id: string; alias: string }[]>([])
   const [adding, setAdding] = useState(false)
+  const [createdBy, setCreatedBy] = useState<string | null>(null)
 
   useEffect(() => {
     load()
@@ -31,7 +32,7 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
   async function load() {
     setLoading(true)
     const [{ data: grp }, { data: mems }] = await Promise.all([
-      supabase.from('groups').select('name').eq('id', groupId).maybeSingle(),
+      supabase.from('groups').select('name, created_by').eq('id', groupId).maybeSingle(),
       supabase
         .from('group_members')
         .select('user_id, joined_at, users(alias, is_admin)')
@@ -39,7 +40,10 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
         .order('joined_at', { ascending: true }),
     ])
 
-    if (grp) setGroupName(grp.name)
+    if (grp) {
+      setGroupName(grp.name)
+      setCreatedBy((grp as any).created_by ?? null)
+    }
     if (mems) {
       setMembers(
         mems.map((m: any) => ({
@@ -146,7 +150,8 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
         </div>
 
         {/* Invite search */}
-        <div style={{ position: 'relative' }}>
+        {user?.id === createdBy && (
+          <div style={{ position: 'relative' }}>
           <input
             value={inviteSearch}
             onChange={(e) => setInviteSearch(e.target.value)}
@@ -224,7 +229,8 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
               ))}
             </div>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Member list */}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -277,7 +283,7 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
                     DESDE {formatDate(m.joined_at).toUpperCase()}
                   </div>
                 </div>
-                {user?.is_admin && m.user_id !== user.id && (
+                {user?.id === createdBy && m.user_id !== user.id && (
                   <button
                     onClick={() => removeMember(m.user_id)}
                     style={{

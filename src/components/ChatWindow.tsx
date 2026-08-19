@@ -18,6 +18,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [memberCount, setMemberCount] = useState(0)
+  const [isCreator, setIsCreator] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [typings, setTypings] = useState<string[]>([])
@@ -36,6 +37,13 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
 
     const count = members?.length ?? 0
     setMemberCount(count)
+
+    const { data: grpInfo } = await supabase
+      .from('groups')
+      .select('created_by')
+      .eq('id', groupId)
+      .maybeSingle()
+    setIsCreator((grpInfo as any)?.created_by === user.id)
 
     const cutoff = Date.now() - 24 * 60 * 60 * 1000
 
@@ -305,28 +313,30 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <button
-            onClick={shareGroup}
-            title="Compartir el grupo"
-            style={{
-              padding: '3px 10px',
-              background: 'rgba(34,211,238,0.08)',
-              border: '1px solid rgba(34,211,238,0.25)',
-              borderRadius: '20px',
-              fontSize: '11px',
-              color: '#22d3ee',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontFamily: "'Outfit', sans-serif",
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0,
-            }}
-          >
-            ⇪ Compartir
-          </button>
+          {isCreator && (
+            <button
+              onClick={shareGroup}
+              title="Compartir el grupo (solo el creador)"
+              style={{
+                padding: '3px 10px',
+                background: 'rgba(34,211,238,0.08)',
+                border: '1px solid rgba(34,211,238,0.25)',
+                borderRadius: '20px',
+                fontSize: '11px',
+                color: '#22d3ee',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontFamily: "'Outfit', sans-serif",
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                flexShrink: 0,
+              }}
+            >
+              ⇪ Compartir
+            </button>
+          )}
           <button
             onClick={() => { setSelectMode((v) => !v); setSelectedIds(new Set()) }}
             title="Seleccionar mensajes"
