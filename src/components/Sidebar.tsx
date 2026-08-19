@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useOnlineUsers, onChatChanged } from '../lib/realtime'
 import { lastSeenLabel } from '../lib/time'
@@ -43,9 +43,7 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
   const [dms, setDms] = useState<DM[]>([])
   const [dmSearch, setDmSearch] = useState('')
   const [dmResults, setDmResults] = useState<{ id: string; alias: string }[]>([])
-  const [supabaseMissing] = useState(
-    !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY
-  )
+  const [supabaseMissing] = useState(!supabaseConfigured)
 
   useEffect(() => {
     if (!user) return
