@@ -66,12 +66,14 @@ export default function ChatPage() {
   function handleSelectGroup(id: string, name: string) {
     setGroupView({ id, name })
     setDmView(null)
+    setShowMembers(false)
     if (isMobile) setSidebarOpen(false)
   }
 
   function handleSelectDm(conversationId: string, otherUserId: string, otherAlias: string) {
     setDmView({ conversationId, otherUserId, otherAlias })
     setGroupView(null)
+    setShowMembers(false)
     if (isMobile) setSidebarOpen(false)
   }
 
