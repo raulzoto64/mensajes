@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export type LightboxMedia = {
   type: 'image' | 'gif' | 'video'
@@ -24,7 +25,11 @@ export default function MediaLightbox({ media, onClose }: { media: LightboxMedia
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
   }, [media, onClose])
 
   if (!media) return null
@@ -33,13 +38,13 @@ export default function MediaLightbox({ media, onClose }: { media: LightboxMedia
     ? { width: '100vw', height: '100dvh', maxWidth: '100vw', maxHeight: '100dvh' }
     : { width: 'auto', height: 'auto', maxWidth: 'min(90vw, 900px)', maxHeight: 'min(88vh, 700px)' }
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 400,
+        zIndex: 9999,
         background: 'rgba(0,0,0,0.94)',
         display: 'flex',
         alignItems: 'center',
@@ -89,7 +94,7 @@ export default function MediaLightbox({ media, onClose }: { media: LightboxMedia
           color: '#fff',
           fontSize: '16px',
           cursor: 'pointer',
-          zIndex: 401,
+          zIndex: 10000,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -97,6 +102,7 @@ export default function MediaLightbox({ media, onClose }: { media: LightboxMedia
       >
         ✕
       </button>
-    </div>
+    </div>,
+    document.body,
   )
 }
