@@ -1,4 +1,5 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
+import MediaLightbox, { type LightboxMedia } from './MediaLightbox'
 
 export type Message = {
   id: string
@@ -35,6 +36,21 @@ export default function MessageBubble({
 }) {
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressed = useRef(false)
+  const [lightbox, setLightbox] = useState<LightboxMedia | null>(null)
+
+  function openMedia() {
+    if (longPressed.current) {
+      longPressed.current = false
+      return
+    }
+    if (selectMode && selectable) {
+      onToggleSelect()
+      return
+    }
+    if (msg.media_url && (msg.type === 'image' || msg.type === 'gif' || msg.type === 'video')) {
+      setLightbox({ type: msg.type as 'image' | 'gif' | 'video', url: msg.media_url, sender_alias: msg.sender_alias })
+    }
+  }
 
   function handlePointerDown() {
     if (!isMine) return
@@ -194,13 +210,20 @@ export default function MessageBubble({
               <p style={{ margin: 0, fontSize: '32px', lineHeight: '1.2' }}>{msg.content}</p>
             )}
             {msg.type === 'gif' && msg.media_url && (
-              <img src={msg.media_url} alt="GIF" style={{ maxWidth: '220px', maxHeight: '160px', borderRadius: '6px', display: 'block' }} loading="lazy" />
+              <img
+                src={msg.media_url}
+                alt="GIF"
+                onClick={(e) => { e.stopPropagation(); openMedia() }}
+                style={{ maxWidth: '220px', maxHeight: '160px', borderRadius: '6px', display: 'block', cursor: 'pointer' }}
+                loading="lazy"
+              />
             )}
             {msg.type === 'image' && msg.media_url && (
               <img
                 src={msg.media_url}
                 alt={msg.content ?? 'Imagen'}
-                style={{ width: '100%', maxWidth: '280px', maxHeight: '240px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain' }}
+                onClick={(e) => { e.stopPropagation(); openMedia() }}
+                style={{ width: '100%', maxWidth: '280px', maxHeight: '240px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain', cursor: 'pointer' }}
                 loading="lazy"
               />
             )}
@@ -208,7 +231,13 @@ export default function MessageBubble({
               <audio controls src={msg.media_url} style={{ maxWidth: '220px', height: '38px' }} />
             )}
             {msg.type === 'video' && msg.media_url && (
-              <video controls src={msg.media_url} style={{ width: '100%', maxWidth: '320px', maxHeight: '280px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain' }} />
+              <video
+                controls
+                playsInline
+                src={msg.media_url}
+                onClick={(e) => { e.stopPropagation(); openMedia() }}
+                style={{ width: '100%', maxWidth: '320px', maxHeight: '280px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain', cursor: 'pointer' }}
+              />
             )}
           </div>
         </div>
@@ -228,6 +257,8 @@ export default function MessageBubble({
           </span>
         </div>
       </div>
+
+      <MediaLightbox media={lightbox} onClose={() => setLightbox(null)} />
     </div>
   )
 }
