@@ -17,6 +17,7 @@ type Props = {
 export default function DmChatWindow({ conversationId, otherUserId, otherAlias, onMenuToggle, isMobile }: Props) {
   const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
+  const [receipts, setReceipts] = useState<Record<string, 'delivered' | 'seen'>>({})
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [typing, setTyping] = useState(false)
@@ -83,6 +84,20 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
       created_at: m.created_at,
     })))
 
+    // Estado de entrega: ✓ entregado / ✓✓ visto por el otro usuario
+    const myIds = liveMsgs.filter((m: any) => m.sender_id === user.id).map((m: any) => m.id)
+    const newReceipts: Record<string, 'delivered' | 'seen'> = {}
+    if (myIds.length) {
+      const { data: views } = await supabase
+        .from('direct_message_views')
+        .select('message_id')
+        .eq('user_id', otherUserId)
+        .in('message_id', myIds)
+      const seen = new Set((views ?? []).map((v: any) => v.message_id))
+      for (const id of myIds) newReceipts[id] = seen.has(id) ? 'seen' : 'delivered'
+    }
+    setReceipts(newReceipts)
+
     // Timer: recargar cuando venza la gracia más cercana para ocultar el mensaje
     if (graceTimer.current) clearTimeout(graceTimer.current)
     const nextGrace = liveMsgs
@@ -145,6 +160,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   useEffect(() => {
     setSelectMode(false)
     setSelectedIds(new Set())
+    setReceipts({})
     if (graceTimer.current) clearTimeout(graceTimer.current)
   }, [conversationId])
 
@@ -164,6 +180,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
     const channel = supabase
       .channel(`dm-${conversationId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `conversation_id=eq.${conversationId}` }, loadMessages)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_message_views' }, loadMessages)
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [conversationId, loadMessages])
@@ -341,6 +358,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
             onToggleSelect={() => toggleSelect(msg.id)}
             onLongPress={() => handleLongPress(msg.id)}
             formatTime={formatTime}
+            receipt={msg.sender_id === user?.id ? (receipts[msg.id] ?? 'delivered') : undefined}
           />
         ))}
         {pending.map((p) => (
@@ -364,6 +382,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
             onLongPress={() => {}}
             formatTime={formatTime}
             sending
+            receipt="sending"
           />
         ))}
         <div ref={bottomRef} />

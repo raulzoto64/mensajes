@@ -23,6 +23,7 @@ export default function MessageBubble({
   onLongPress,
   formatTime,
   sending,
+  receipt,
 }: {
   msg: Message
   isMine: boolean
@@ -33,6 +34,7 @@ export default function MessageBubble({
   onLongPress: () => void
   formatTime: (s: string) => string
   sending?: boolean
+  receipt?: 'sending' | 'delivered' | 'seen'
 }) {
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressed = useRef(false)
@@ -255,6 +257,21 @@ export default function MessageBubble({
           <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
             {formatTime(msg.created_at)}
           </span>
+          {isMine && receipt && (
+            <span
+              title={
+                receipt === 'sending' ? 'Enviando…' : receipt === 'seen' ? 'Visto' : 'Entregado'
+              }
+              style={{
+                fontSize: '10px',
+                color: receipt === 'seen' ? '#22d3ee' : '#3d3d5c',
+                lineHeight: 1,
+                letterSpacing: '-1px',
+              }}
+            >
+              {receipt === 'sending' ? '⏱' : receipt === 'seen' ? '✓✓' : '✓'}
+            </span>
+          )}
         </div>
       </div>
 

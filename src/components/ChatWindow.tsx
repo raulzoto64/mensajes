@@ -17,6 +17,7 @@ type Props = {
 export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, onShowMembers, isMobile }: Props) {
   const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
+  const [receipts, setReceipts] = useState<Record<string, 'delivered' | 'seen'>>({})
   const [memberCount, setMemberCount] = useState(0)
   const [isCreator, setIsCreator] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
@@ -102,6 +103,20 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
       created_at: m.created_at,
     })))
 
+    // Estado de entrega en grupo: ✓ entregado / ✓✓ visto por todos los miembros
+    const myIds = msgs.filter((m: any) => m.sender_id === user.id).map((m: any) => m.id)
+    const newReceipts: Record<string, 'delivered' | 'seen'> = {}
+    if (myIds.length) {
+      const { data: viewRows } = await supabase
+        .from('message_views')
+        .select('message_id')
+        .in('message_id', myIds)
+      const perMsg = new Map<string, number>()
+      for (const v of viewRows ?? []) perMsg.set(v.message_id, (perMsg.get(v.message_id) ?? 0) + 1)
+      for (const id of myIds) newReceipts[id] = (perMsg.get(id) ?? 0) >= count ? 'seen' : 'delivered'
+    }
+    setReceipts(newReceipts)
+
     // Timer: recargar cuando venza la gracia más cercana para ocultar el mensaje
     if (graceTimer.current) clearTimeout(graceTimer.current)
     const nextGrace = msgs
@@ -166,6 +181,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   useEffect(() => {
     setSelectMode(false)
     setSelectedIds(new Set())
+    setReceipts({})
     if (graceTimer.current) clearTimeout(graceTimer.current)
   }, [groupId])
 
@@ -190,6 +206,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
     const channel = supabase
       .channel(`chat-${groupId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `group_id=eq.${groupId}` }, loadMessages)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'message_views' }, loadMessages)
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [groupId, loadMessages])
@@ -400,6 +417,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             onToggleSelect={() => toggleSelect(msg.id)}
             onLongPress={() => handleLongPress(msg.id)}
             formatTime={formatTime}
+            receipt={msg.sender_id === user?.id ? (receipts[msg.id] ?? 'delivered') : undefined}
           />
         ))}
         {pending.map((p) => (
@@ -423,6 +441,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             onLongPress={() => {}}
             formatTime={formatTime}
             sending
+            receipt="sending"
           />
         ))}
         <div ref={bottomRef} />
