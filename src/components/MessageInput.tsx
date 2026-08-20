@@ -63,8 +63,10 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
     if (!user) return
     const scope = groupId ? `group-${groupId}` : conversationId ? `dm-${conversationId}` : ''
     setSending(true)
+    setUploadError('')
+    let insertError: string | null = null
     if (conversationId) {
-      const { data: inserted } = await supabase
+      const { data: inserted, error } = await supabase
         .from('direct_messages')
         .insert({
           conversation_id: conversationId,
@@ -76,13 +78,14 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
         })
         .select('id')
         .single()
+      if (error) insertError = error.message
       if (inserted?.id) {
         await supabase
           .from('direct_message_views')
           .upsert({ message_id: inserted.id, user_id: user.id }, { onConflict: 'message_id,user_id' })
       }
     } else if (groupId) {
-      const { data: inserted } = await supabase
+      const { data: inserted, error } = await supabase
         .from('messages')
         .insert({
           group_id: groupId,
@@ -94,6 +97,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
         })
         .select('id')
         .single()
+      if (error) insertError = error.message
       if (inserted?.id) {
         await supabase.from('message_views')
           .upsert({ message_id: inserted.id, user_id: user.id }, { onConflict: 'message_id,user_id' })
@@ -101,6 +105,10 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
     }
     setSending(false)
     if (tempId && scope) removePendingMessage(scope, tempId)
+    if (insertError) {
+      setUploadError(`No se pudo enviar: ${insertError}`)
+      return
+    }
     notifyChatChanged()
     onSent()
   }
