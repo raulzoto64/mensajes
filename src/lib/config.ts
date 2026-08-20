@@ -17,3 +17,8 @@ function decode(enc: string): string {
 
 export const SUPABASE_URL = decode(urlEnc)
 export const SUPABASE_ANON_KEY = decode(anonEnc)
+
+// Llave pública VAPID para Web Push (es pública por diseño, no es un secreto)
+export const VAPID_PUBLIC_KEY =
+  'BGAffOyjwIKSN8us5OZ7Fiajci89t7Y0nwDFEX4bT54X38LiL_RZ_uOekC0mEoU1xRSC1JE8tjr58EaFjjvrW_4'
+export const VAPID_SUBJECT = 'mailto:raulzoto64@gmail.com'

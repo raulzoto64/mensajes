@@ -3,6 +3,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useOnlineUsers, onChatChanged } from '../lib/realtime'
 import { lastSeenLabel } from '../lib/time'
+import { unsubscribePush } from '../lib/push'
 import NotificationsPanel from './NotificationsPanel'
 import { addNotification } from '../lib/notifications'
 
@@ -887,7 +888,10 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
       {/* Logout */}
       <div style={{ padding: '8px', borderTop: '1px solid #1e1e3a' }}>
         <button
-          onClick={logout}
+          onClick={() => {
+            if (user) unsubscribePush(user.id)
+            logout()
+          }}
           style={{
             width: '100%',
             display: 'flex',

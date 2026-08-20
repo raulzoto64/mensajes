@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNotifications, addNotification, markNotificationRead, markAllNotificationsRead, type NotificationItem } from '../lib/notifications'
+import { useNotifications, markNotificationRead, markAllNotificationsRead, type NotificationItem } from '../lib/notifications'
+import { useAuth } from '../contexts/AuthContext'
+import { subscribePush, unsubscribePush, standaloneMode } from '../lib/push'
 
 type Props = {
   onOpenDm: (conversationId: string, otherUserId: string, otherAlias: string) => void
@@ -17,11 +19,23 @@ function currentPerm(): PermState {
 
 export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin }: Props) {
   const notifications = useNotifications()
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [perm, setPerm] = useState<PermState>(currentPerm())
+  const [installAlert, setInstallAlert] = useState(false)
   const [toasts, setToasts] = useState<NotificationItem[]>([])
   const toastTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const seenRef = useRef(new Set<string>())
+
+  // Cuando el permiso está concedido, registramos la suscripción de Web Push
+  useEffect(() => {
+    if (perm === 'granted' && user) {
+      subscribePush(user.id).then((ok) => {
+        if (!ok && !standaloneMode()) setInstallAlert(true)
+      })
+    }
+    if (perm !== 'granted' || !standaloneMode()) setInstallAlert(false)
+  }, [perm, user])
 
   // Nuevas notificaciones → toast propio (in-app), no el del navegador
   useEffect(() => {
@@ -181,6 +195,13 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                   >
                     {perm === 'granted' ? '✓ Notificaciones activadas' : 'Activar notificaciones'}
                   </button>
+                )}
+                {installAlert && perm === 'granted' && (
+                  <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#fbbf24', lineHeight: 1.4 }}>
+                    {navigator.userAgent.match(/iPhone|iPad|iPod/i)
+                      ? 'En iOS: tocá “Compartir → Agregar a pantalla de inicio” y abre la app desde ahí para recibir notificaciones.'
+                      : 'Para recibirlas con la app cerrada, instalala desde el menú del navegador (“Instalar app” o “Agregar a pantalla de inicio”).'}
+                  </p>
                 )}
               </div>
 

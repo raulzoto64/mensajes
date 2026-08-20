@@ -51,6 +51,18 @@ export default function ChatPage() {
       })
   }, [user])
 
+  // Al llegar por una notificación push de mensaje directo ?dm=CONVID&u=OTHER&alias=...
+  useEffect(() => {
+    if (!user) return
+    const params = new URLSearchParams(window.location.search)
+    const conv = params.get('dm')
+    const other = params.get('u')
+    const alias = params.get('alias')
+    if (!conv || !other) return
+    handleSelectDm(conv, other, alias ?? 'usuario')
+    window.history.replaceState({}, '', window.location.pathname)
+  }, [user])
+
   function handleSelectGroup(id: string, name: string) {
     setGroupView({ id, name })
     setDmView(null)
@@ -199,6 +211,7 @@ function EmptyState({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            zIndex: 10,
           }}
         >
           ☰

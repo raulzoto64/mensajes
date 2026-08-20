@@ -100,4 +100,16 @@ export type Database = {
       viewed_at: string
     }
   }
+  push_subscriptions: {
+    Row: {
+      id: string
+      user_id: string
+      endpoint: string
+      p256dh: string
+      auth: string
+      browser: string | null
+      created_at: string
+      updated_at: string
+    }
+  }
 }
