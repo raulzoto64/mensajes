@@ -141,7 +141,10 @@ class CallManager {
 
   async acceptCall() {
     const inc = this.state.incoming
-    if (!inc || !this.me) return
+    if (!inc || !this.me) {
+      console.log('[call] acceptCall ignorado: no hay incoming o no hay me', { inc, me: this.me })
+      return
+    }
     this.state = {
       ...this.state,
       status: 'connecting',
@@ -156,8 +159,12 @@ class CallManager {
     }
     this.emit()
     await this.ensureLocalStream()
-    if (this.state.error) return
-    console.log('[call] acceptCall ->', inc.callId)
+    if (this.state.error) {
+      console.log('[call] acceptCall: error al obtener micrófono:', this.state.error)
+      return
+    }
+    console.log('[call] acceptCall ->', inc.callId, 'participantes:', inc.participants.map((p) => p.alias))
+    console.log('[call] acceptCall: local stream tracks:', this.localStream?.getAudioTracks().length)
     await this.joinCallChannel(inc.callId)
     console.log('[call] call channel subscribed, enviando join')
     this.broadcastOnCall({
@@ -203,8 +210,11 @@ class CallManager {
 
   private async ensureLocalStream() {
     try {
+      console.log('[call] ensureLocalStream: solicitando micrófono...')
       this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      console.log('[call] ensureLocalStream: micrófono OK, tracks:', this.localStream.getAudioTracks().length)
     } catch (e: any) {
+      console.error('[call] ensureLocalStream: ERROR micrófono:', e?.message ?? e)
       this.state = {
         ...this.state,
         error: 'No se pudo acceder al micrófono: ' + (e?.message ?? e),
@@ -333,14 +343,18 @@ class CallManager {
 
   private ensurePeer(userId: string, alias: string) {
     if (this.pcs.has(userId)) return
-    console.log('[call] ensurePeer ->', alias ?? userId)
+    console.log('[call] ensurePeer ->', alias ?? userId, 'localStream tracks:', this.localStream?.getAudioTracks().length ?? 0)
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
     this.state = {
       ...this.state,
       peers: { ...this.state.peers, [userId]: { userId, alias, state: 'connecting', stream: null } },
     }
     if (this.localStream) {
-      this.localStream.getAudioTracks().forEach((t) => pc.addTrack(t, this.localStream!))
+      const tracks = this.localStream.getAudioTracks()
+      tracks.forEach((t) => pc.addTrack(t, this.localStream!))
+      console.log('[call] ensurePeer: agregadas', tracks.length, 'pistas de audio al PC de', alias ?? userId)
+    } else {
+      console.log('[call] ensurePeer: SIN localStream, no se agregan pistas')
     }
     pc.onicecandidate = (e) => {
       if (e.candidate && this.me) {

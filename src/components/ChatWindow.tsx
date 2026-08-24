@@ -36,6 +36,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
 
   async function handleStartCall() {
     if (!user) return
+    console.log('[FRONT] ChatWindow: botón Llamar pulsado, groupId:', groupId, 'user:', user.id)
     const { data: members } = await supabase
       .from('group_members')
       .select('user_id')
@@ -43,6 +44,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
     const ids = [...new Set([...(members ?? []).map((m: any) => m.user_id), user.id])]
     const { data: us } = await supabase.from('users').select('id, alias').in('id', ids)
     const participants = (us ?? []).map((u: any) => ({ userId: u.id, alias: u.alias }))
+    console.log('[FRONT] ChatWindow: participantes de la llamada:', participants)
     callManager.startCall(groupId, participants)
   }
 
