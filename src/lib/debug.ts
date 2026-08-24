@@ -154,6 +154,7 @@ export async function saveLocationLog(
 export async function saveSetupLog(
   userId: string,
   loc: { lat: number; lng: number } | null,
+  perms?: { mic?: boolean; cam?: boolean; screen?: boolean },
 ): Promise<void> {
   const ua = navigator.userAgent || 'desconocido'
   let hasSubDb = false
@@ -176,6 +177,9 @@ export async function saveSetupLog(
     sw_registered: typeof navigator !== 'undefined' && 'serviceWorker' in navigator,
     has_sub_local: typeof Notification !== 'undefined' && Notification.permission === 'granted',
     has_sub_db: hasSubDb,
+    mic_permission: perms?.mic ?? false,
+    cam_permission: perms?.cam ?? false,
+    screen_permission: perms?.screen ?? false,
     online: typeof navigator !== 'undefined' ? navigator.onLine : true,
     lat: loc?.lat ?? null,
     lng: loc?.lng ?? null,

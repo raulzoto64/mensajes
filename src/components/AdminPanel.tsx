@@ -79,7 +79,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
     setLocationsLoading(true)
     const { data: logs } = await supabase
       .from('device_logs')
-      .select('user_id, device_type, browser, os, push_permission, has_sub_db, lat, lng, created_at')
+      .select('user_id, device_type, browser, os, push_permission, has_sub_db, mic_permission, cam_permission, screen_permission, lat, lng, created_at')
       .order('created_at', { ascending: false })
       .limit(400)
     // Quedamos con el registro más reciente de cada usuario
@@ -578,6 +578,9 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                     </div>
                     <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
                       Push: {l.push_permission === 'granted' ? '✅' : '⛔'} · Sub BD: {l.has_sub_db ? '✅' : '⛔'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
+                      🎤 {l.mic_permission ? '✅' : '⛔'} · 📷 {l.cam_permission ? '✅' : '⛔'} · 🖥️ {l.screen_permission ? '✅' : '⛔'}
                     </div>
                     {l.lat != null && l.lng != null ? (
                       <a

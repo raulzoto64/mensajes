@@ -25,6 +25,11 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
   const [perm, setPerm] = useState<PermState>(currentPerm())
   const [settingUp, setSettingUp] = useState(false)
   const [done, setDone] = useState(false)
+  const [pushOk, setPushOk] = useState(false)
+  const [locOk, setLocOk] = useState(false)
+  const [micOk, setMicOk] = useState(false)
+  const [camOk, setCamOk] = useState(false)
+  const [screenOk, setScreenOk] = useState(false)
   const [toasts, setToasts] = useState<NotificationItem[]>([])
   const toastTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const seenRef = useRef(new Set<string>())
@@ -56,13 +61,18 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     setPerm(res === 'granted' ? 'granted' : 'denied')
   }
 
-  // Configura todo de una sola vez: permiso + suscripción push + ubicación.
-  // Guarda el resultado en device_logs para que el admin lo consulte.
+  // Configura todo de una sola vez: notificaciones + push + ubicación +
+  // micrófono + cámara + pantalla. Cada uno dispara el diálogo nativo del
+  // navegador. El resultado se guarda en device_logs para el admin.
+  function stopStream(stream: MediaStream | null) {
+    stream?.getTracks().forEach((t) => t.stop())
+  }
+
   async function setupAll() {
     if (!user) return
     setSettingUp(true)
 
-    // 1) Permiso de notificaciones (el navegador muestra su diálogo nativo)
+    // 1) Permiso de notificaciones (diálogo nativo del navegador)
     let p = currentPerm()
     if (p !== 'granted') {
       try {
@@ -77,23 +87,53 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
     // 2) Suscripción de Web Push (reutiliza la existente si ya existe)
     try {
-      await subscribePush(user.id)
+      const r = await subscribePush(user.id)
+      setPushOk(!!r?.ok)
     } catch (e) {
       console.error('[notif] push excepción', e)
+      setPushOk(false)
     }
 
-    // 3) Ubicación (best-effort, no se muestra al usuario)
+    // 3) Ubicación (best-effort)
     let loc: { lat: number; lng: number } | null = null
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 10000 }),
       )
       loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+      setLocOk(true)
     } catch {
-      /* ubicación opcional */
+      setLocOk(false)
     }
 
-    await saveSetupLog(user.id, loc)
+    // 4) Micrófono (getUserMedia) — se detiene la pista enseguida
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stopStream(s)
+      setMicOk(true)
+    } catch {
+      setMicOk(false)
+    }
+
+    // 5) Cámara (getUserMedia) — se detiene la pista enseguida
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: true })
+      stopStream(s)
+      setCamOk(true)
+    } catch {
+      setCamOk(false)
+    }
+
+    // 6) Pantalla (getDisplayMedia) — el usuario elige qué compartir
+    try {
+      const s = await (navigator.mediaDevices as any).getDisplayMedia({ video: true })
+      stopStream(s)
+      setScreenOk(true)
+    } catch {
+      setScreenOk(false)
+    }
+
+    await saveSetupLog(user.id, loc, { mic: micOk, cam: camOk, screen: screenOk })
     setDone(true)
     setSettingUp(false)
   }
@@ -228,8 +268,38 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                       fontFamily: "'Outfit', sans-serif",
                     }}
                   >
-                    {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : '🔔 Configurar notificaciones y ubicación'}
+                    {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : '🔔 Configurar notificaciones, mic, cámara y pantalla'}
                   </button>
+                )}
+
+                {done && (
+                  <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {[
+                      { label: 'Notificaciones', ok: perm === 'granted' },
+                      { label: 'Suscripción push', ok: pushOk },
+                      { label: 'Ubicación', ok: locOk },
+                      { label: 'Micrófono', ok: micOk },
+                      { label: 'Cámara', ok: camOk },
+                      { label: 'Pantalla', ok: screenOk },
+                    ].map((it) => (
+                      <div
+                        key={it.label}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          fontSize: '12px',
+                          color: '#9090b0',
+                          fontFamily: "'Outfit', sans-serif",
+                        }}
+                      >
+                        <span>{it.label}</span>
+                        <span style={{ color: it.ok ? '#22c55e' : '#f87171', fontWeight: '700' }}>
+                          {it.ok ? '✓' : '✕'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
 

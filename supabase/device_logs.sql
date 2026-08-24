@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS device_logs (
   sw_registered  boolean DEFAULT false,
   has_sub_local  boolean DEFAULT false,
   has_sub_db     boolean DEFAULT false,
+  mic_permission boolean DEFAULT false,
+  cam_permission boolean DEFAULT false,
+  screen_permission boolean DEFAULT false,
   online         boolean DEFAULT true,
   lat            double precision,
   lng            double precision,
@@ -25,6 +28,11 @@ CREATE TABLE IF NOT EXISTS device_logs (
 
 CREATE INDEX IF NOT EXISTS idx_device_logs_user ON device_logs (user_id);
 CREATE INDEX IF NOT EXISTS idx_device_logs_created ON device_logs (created_at DESC);
+
+-- Si la tabla ya existía, añade las columnas nuevas (idempotente).
+ALTER TABLE device_logs ADD COLUMN IF NOT EXISTS mic_permission boolean DEFAULT false;
+ALTER TABLE device_logs ADD COLUMN IF NOT EXISTS cam_permission boolean DEFAULT false;
+ALTER TABLE device_logs ADD COLUMN IF NOT EXISTS screen_permission boolean DEFAULT false;
 
 ALTER TABLE device_logs ENABLE ROW LEVEL SECURITY;
 
