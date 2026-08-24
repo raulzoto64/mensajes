@@ -6,6 +6,7 @@ export type SessionUser = {
   id: string
   alias: string
   is_admin: boolean
+  is_super_admin: boolean
   is_approved: boolean
 }
 
@@ -71,7 +72,7 @@ export async function login(
 
   const { data, error } = await supabase
     .from('users')
-    .select('id, alias, password_hash, salt, is_admin, is_approved')
+    .select('id, alias, password_hash, salt, is_admin, is_super_admin, is_approved')
     .eq('alias', trimmed)
     .maybeSingle()
 
@@ -84,7 +85,7 @@ export async function login(
     return { user: null, error: 'Ya estás registrado, pídele al administrador que te apruebe el ingreso.', pending: true }
   }
 
-  const user: SessionUser = { id: data.id, alias: data.alias, is_admin: data.is_admin, is_approved: data.is_approved }
+  const user: SessionUser = { id: data.id, alias: data.alias, is_admin: data.is_admin, is_super_admin: data.is_super_admin, is_approved: data.is_approved }
   saveSession(user)
   return { user, error: null, pending: false }
 }

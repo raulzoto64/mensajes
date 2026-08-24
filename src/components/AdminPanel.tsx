@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 
 type User = {
   id: string
   alias: string
   is_admin: boolean
+  is_super_admin: boolean
   is_approved: boolean
   created_at: string
 }
@@ -19,6 +21,7 @@ type Tab = 'actions' | 'approvals' | 'users' | 'locations'
 const APPROVAL_PLACEHOLDER = '00000000-0000-0000-0000-000000000000'
 
 export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
+  const { user } = useAuth()
   const [tab, setTab] = useState<Tab>(initialTab)
   const [confirming, setConfirming] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -31,8 +34,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
   useEffect(() => {
     if (tab === 'users' || tab === 'approvals') loadUsers()
-    if (tab === 'locations') loadLocations()
-  }, [tab])
+    if (tab === 'locations' && user?.is_super_admin) loadLocations()
+  }, [tab, user?.is_super_admin])
 
   // Refresco en vivo del panel cuando se registra un usuario nuevo
   useEffect(() => {
@@ -49,7 +52,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
   async function loadUsers() {
     setUsersLoading(true)
-    const { data } = await supabase.from('users').select('id, alias, is_admin, is_approved, created_at').order('created_at', { ascending: false })
+    const { data } = await supabase.from('users').select('id, alias, is_admin, is_super_admin, is_approved, created_at').order('created_at', { ascending: false })
     if (data) setUsers(data as User[])
     setUsersLoading(false)
   }
@@ -66,6 +69,13 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
   async function toggleAdmin(userId: string, current: boolean) {
     await supabase.from('users').update({ is_admin: !current }).eq('id', userId)
     addLog(`${current ? 'Admin removido' : 'Admin asignado'} a usuario ${userId.slice(0, 8)}`)
+    loadUsers()
+  }
+
+  async function toggleSuperAdmin(userId: string, current: boolean) {
+    // El super admin también es admin normal, así puede abrir el panel.
+    await supabase.from('users').update({ is_super_admin: !current, is_admin: true }).eq('id', userId)
+    addLog(`${current ? 'Super admin removido' : 'Super admin asignado'} a usuario ${userId.slice(0, 8)}`)
     loadUsers()
   }
 
@@ -213,6 +223,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
           {/* Tabs */}
           <div style={{ display: 'flex', background: '#14142a', borderRadius: '9px', padding: '3px', gap: '2px' }}>
             {(['actions', 'approvals', 'users', 'locations'] as const).map((t) => {
+              if (t === 'locations' && !user?.is_super_admin) return null
               const active = tab === t
               const color = t === 'locations' ? '#22c55e' : t === 'users' ? '#8b5cf6' : t === 'approvals' ? '#22d3ee' : '#f87171'
               const label =
@@ -477,6 +488,11 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                               ADMIN
                             </span>
                           )}
+                          {u.is_super_admin && (
+                            <span style={{ fontSize: '9px', color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
+                              SUPER
+                            </span>
+                          )}
                           {!u.is_approved && (
                             <span style={{ fontSize: '9px', color: '#22d3ee', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
                               PENDIENTE
@@ -522,6 +538,24 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         >
                           {u.is_admin ? 'Revocar' : 'Admin'}
                         </button>
+                        {user?.is_super_admin && (
+                          <button
+                            onClick={() => toggleSuperAdmin(u.id, u.is_super_admin)}
+                            title={u.is_super_admin ? 'Quitar super admin' : 'Hacer super admin'}
+                            style={{
+                              padding: '4px 9px',
+                              background: u.is_super_admin ? 'rgba(251,191,36,0.08)' : 'rgba(251,191,36,0.08)',
+                              border: `1px solid ${u.is_super_admin ? 'rgba(251,191,36,0.4)' : 'rgba(251,191,36,0.2)'}`,
+                              borderRadius: '7px',
+                              color: '#fbbf24',
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              fontFamily: "'Outfit', sans-serif",
+                            }}
+                          >
+                            {u.is_super_admin ? 'Quitar super' : 'Super'}
+                          </button>
+                        )}
                         <button
                           onClick={() => deleteUser(u.id, u.alias)}
                           style={{
