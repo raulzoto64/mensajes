@@ -27,6 +27,8 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
   const [uploadError, setUploadError] = useState('')
   const [mediaOpen, setMediaOpen] = useState(false)
   const [oneTimeView, setOneTimeView] = useState(false)
+  const [pendingMedia, setPendingMedia] = useState<{ kind: 'image' | 'video' | 'audio'; previewUrl: string; file?: File; blob?: Blob } | null>(null)
+  const [caption, setCaption] = useState('')
   const mediaRef = useRef<HTMLDivElement>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -175,29 +177,50 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
     return urlData.publicUrl
   }
 
-  async function handleMediaFile(e: React.ChangeEvent<HTMLInputElement>, kind: 'image' | 'video') {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file || !user || sending) return
-    const scope = groupId ? `group-${groupId}` : conversationId ? `dm-${conversationId}` : ''
-    const preview = URL.createObjectURL(file)
-    const tempId = genTempId()
-    if (scope) {
-      addPendingMessage(scope, { tempId, type: kind, content: null, mediaUrl: preview, createdAt: new Date().toISOString() })
-    }
-    const ext = (file.name.split('.').pop() || '').toLowerCase() || (kind === 'video' ? 'mp4' : 'jpg')
-    const path = `${kind}/${user.id}/${Date.now()}.${ext}`
+  async function uploadFile(file: File, folder: 'image' | 'video' | 'audio'): Promise<string | null> {
+    if (!user) return null
+    const ext = (file.name.split('.').pop() || '').toLowerCase() || (folder === 'video' ? 'mp4' : folder === 'audio' ? 'webm' : 'jpg')
+    const path = `${folder}/${user.id}/${Date.now()}.${ext}`
     setSending(true)
     setUploadError('')
     const { error } = await supabase.storage.from('media').upload(path, file, { contentType: file.type })
     if (error) {
       setUploadError('No se pudo subir el archivo. Revisa que el bucket "media" exista en Supabase Storage.')
       setSending(false)
-      if (scope) removePendingMessage(scope, tempId)
-      return
+      return null
     }
     const { data: urlData } = supabase.storage.from('media').getPublicUrl(path)
-    await sendMessage(kind, null, urlData.publicUrl, tempId, oneTimeView)
+    setSending(false)
+    return urlData.publicUrl
+  }
+
+  // Confirma el envío desde el modal de vista previa (sube y envía el mensaje).
+  async function confirmMedia() {
+    if (!pendingMedia || !user) return
+    let url: string | null = null
+    if (pendingMedia.blob) url = await uploadMedia(pendingMedia.blob, pendingMedia.kind as 'audio' | 'video')
+    else if (pendingMedia.file) url = await uploadFile(pendingMedia.file, pendingMedia.kind)
+    if (!url) return
+    await sendMessage(pendingMedia.kind, caption.trim() || null, url, genTempId(), oneTimeView)
+    if (pendingMedia.previewUrl) URL.revokeObjectURL(pendingMedia.previewUrl)
+    setPendingMedia(null)
+    setCaption('')
+    setOneTimeView(false)
+  }
+
+  function cancelMedia() {
+    if (pendingMedia?.previewUrl) URL.revokeObjectURL(pendingMedia.previewUrl)
+    setPendingMedia(null)
+    setCaption('')
+    setOneTimeView(false)
+  }
+
+  async function handleMediaFile(e: React.ChangeEvent<HTMLInputElement>, kind: 'image' | 'video') {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !user || sending) return
+    const preview = URL.createObjectURL(file)
+    setPendingMedia({ kind, file, previewUrl: preview })
   }
 
   const startRecording = useCallback(async (type: 'audio' | 'video') => {
@@ -221,14 +244,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
       mr.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: mimeType })
         const preview = URL.createObjectURL(blob)
-        const tempId = genTempId()
-        const scope = groupId ? `group-${groupId}` : conversationId ? `dm-${conversationId}` : ''
-        if (scope) {
-          addPendingMessage(scope, { tempId, type, content: null, mediaUrl: preview, createdAt: new Date().toISOString() })
-        }
-         const url = await uploadMedia(blob, type)
-         if (url) await sendMessage(type, null, url, tempId, oneTimeView)
-         else if (scope) removePendingMessage(scope, tempId)
+        setPendingMedia({ kind: type, blob, previewUrl: preview })
         stream.getTracks().forEach((t) => t.stop())
         streamRef.current = null
         if (videoPreviewRef.current) videoPreviewRef.current.srcObject = null
@@ -449,13 +465,10 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
              <IconBtn active={picker === 'emoji'} onClick={() => setPicker(picker === 'emoji' ? 'none' : 'emoji')} title="Emojis">
                😊
              </IconBtn>
-             <IconBtn active={picker === 'gif'} onClick={() => setPicker(picker === 'gif' ? 'none' : 'gif')} title="GIFs" mono>
-               GIF
-             </IconBtn>
-             <IconBtn active={oneTimeView} onClick={() => setOneTimeView((v) => !v)} title="Vista única: el multimedia se borra al ser visto">
-               👁️
-             </IconBtn>
-           </div>
+              <IconBtn active={picker === 'gif'} onClick={() => setPicker(picker === 'gif' ? 'none' : 'gif')} title="GIFs" mono>
+                GIF
+              </IconBtn>
+            </div>
 
           {/* Textarea */}
           <div
@@ -569,6 +582,63 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
                 </IconBtn>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {pendingMedia && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 500,
+            background: isMobile ? '#0a0a18' : 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            justifyContent: isMobile ? 'stretch' : 'flex-start',
+            fontFamily: "'Outfit', sans-serif",
+          }}
+        >
+          <div
+            style={{
+              background: '#0a0a18',
+              display: 'flex',
+              flexDirection: 'column',
+              width: isMobile ? '100%' : '420px',
+              height: '100%',
+              borderRight: isMobile ? 'none' : '1px solid #1e1e3a',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px', borderBottom: '1px solid #1e1e3a' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px', color: '#e8e8f0' }}>Vista previa</span>
+              <button onClick={cancelMedia} style={{ background: 'transparent', border: 'none', color: '#6b6b8a', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px', overflow: 'hidden' }}>
+              {pendingMedia.kind === 'image' && <img src={pendingMedia.previewUrl} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '10px' }} />}
+              {pendingMedia.kind === 'video' && <video src={pendingMedia.previewUrl} controls autoPlay style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '10px' }} />}
+              {pendingMedia.kind === 'audio' && <audio src={pendingMedia.previewUrl} controls style={{ width: '100%' }} />}
+            </div>
+            <div style={{ padding: '12px 14px', borderTop: '1px solid #1e1e3a', display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+              <input
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Escribe un mensaje…"
+                style={{ flex: 1, background: '#14142a', border: '1px solid #1e1e3a', borderRadius: '10px', padding: '10px 12px', color: '#e8e8f0', fontSize: '14px', fontFamily: "'Outfit', sans-serif", outline: 'none' }}
+              />
+              <button
+                onClick={() => setOneTimeView((v) => !v)}
+                title="Vista única: el multimedia se borra al ser visto"
+                style={{ width: '40px', height: '40px', background: oneTimeView ? 'rgba(251,191,36,0.15)' : '#14142a', border: `1px solid ${oneTimeView ? 'rgba(251,191,36,0.4)' : '#1e1e3a'}`, borderRadius: '10px', color: oneTimeView ? '#fbbf24' : '#6b6b8a', fontSize: '16px', cursor: 'pointer', flexShrink: 0 }}
+              >
+                👁️
+              </button>
+              <button
+                onClick={confirmMedia}
+                disabled={sending}
+                style={{ width: '40px', height: '40px', background: '#8b5cf6', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '16px', cursor: sending ? 'default' : 'pointer', flexShrink: 0 }}
+              >
+                ➤
+              </button>
+            </div>
           </div>
         </div>
       )}
