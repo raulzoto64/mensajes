@@ -6,6 +6,7 @@ import { subscribeTyping, notifyChatChanged, onChatChanged, usePendingMessages }
 import { deleteMediaFiles } from '../lib/media'
 import { expiryCutoff } from '../lib/expire'
 import DurationSettingsModal from './DurationSettingsModal'
+import { callManager } from '../lib/call'
 
 type Props = {
   groupId: string
@@ -31,6 +32,18 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pending = usePendingMessages(`group-${groupId}`)
+
+  async function handleStartCall() {
+    if (!user) return
+    const { data: members } = await supabase
+      .from('group_members')
+      .select('user_id')
+      .eq('group_id', groupId)
+    const ids = [...new Set([...(members ?? []).map((m: any) => m.user_id), user.id])]
+    const { data: us } = await supabase.from('users').select('id, alias').in('id', ids)
+    const participants = (us ?? []).map((u: any) => ({ userId: u.id, alias: u.alias }))
+    callManager.startCall(groupId, participants)
+  }
 
   const loadMessages = useCallback(async () => {
     if (!user) return
@@ -401,6 +414,26 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             }}
           >
             ☑
+          </button>
+          <button
+            onClick={handleStartCall}
+            title="Llamar (audio)"
+            style={{
+              background: '#14142a',
+              border: '1px solid #1e1e3a',
+              borderRadius: '8px',
+              width: '32px',
+              height: '32px',
+              color: '#22c55e',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            📞
           </button>
           <button
             onClick={onShowMembers}

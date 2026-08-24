@@ -7,6 +7,7 @@ import { lastSeenLabel } from '../lib/time'
 import { deleteMediaFiles } from '../lib/media'
 import { expiryCutoff } from '../lib/expire'
 import DurationSettingsModal from './DurationSettingsModal'
+import { callManager } from '../lib/call'
 
 type Props = {
   conversationId: string
@@ -243,6 +244,14 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
 
   const isOnline = onlineUsers.has(otherUserId)
 
+  function handleStartCall() {
+    if (!user) return
+    callManager.startCall(conversationId, [
+      { userId: user.id, alias: user.alias },
+      { userId: otherUserId, alias: otherAlias },
+    ])
+  }
+
   useEffect(() => {
     if (!otherUserId || isOnline) return
     let cancelled = false
@@ -328,6 +337,26 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
         >
           ◉ PRIVADO
         </div>
+        <button
+          onClick={handleStartCall}
+          title="Llamar (audio)"
+          style={{
+            background: '#14142a',
+            border: '1px solid #1e1e3a',
+            borderRadius: '8px',
+            width: '32px',
+            height: '32px',
+            color: '#22c55e',
+            cursor: 'pointer',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          📞
+        </button>
         <button
           onClick={() => setShowSettings(true)}
           title="Configurar duración de borrado del chat"

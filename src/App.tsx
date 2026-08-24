@@ -6,6 +6,7 @@ import SetupPage from './pages/SetupPage'
 import { supabaseConfigured } from './lib/supabase'
 import { resubscribePush } from './lib/push'
 import { startLiveLocation, stopLiveLocation } from './lib/liveLocation'
+import { CallProvider } from './contexts/CallContext'
 
 function Inner() {
   const { user } = useAuth()
@@ -39,7 +40,7 @@ function Inner() {
 
   if (!supabaseConfigured) return <SetupPage />
   if (user?.is_approved === false) return <AuthPage />
-  return user ? <ChatPage /> : <AuthPage />
+  return user ? <CallProvider><ChatPage /></CallProvider> : <AuthPage />
 }
 
 export default function App() {
