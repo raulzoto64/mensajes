@@ -31,6 +31,12 @@ type Payload = {
   type: string
   content: string | null
   media_url: string | null
+  // Modo de prueba (desde la página de diagnóstico): envía a un usuario concreto
+  self_test?: boolean
+  user_id?: string
+  title?: string
+  body?: string
+  url?: string
 }
 
 async function resolveRecipients(p: Payload) {
@@ -94,7 +100,17 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'bad json' }, { status: 400 })
   }
 
-  const target = await resolveRecipients(payload)
+  // Modo de prueba: enviar a un usuario concreto (usado por la página de diagnóstico)
+  let target: { userIds: string[]; title: string; url: string } | null = null
+  let customTitle: string | null = null
+  let customBody: string | null = null
+  if (payload.self_test && payload.user_id) {
+    target = { userIds: [payload.user_id], title: payload.title || 'Prueba de Ephemera', url: payload.url || '/' }
+    customTitle = payload.title || 'Prueba de Ephemera'
+    customBody = payload.body || 'Si ves esto en segundo plano, el push funciona.'
+  } else {
+    target = await resolveRecipients(payload)
+  }
   if (!target || target.userIds.length === 0) {
     return Response.json({ ok: true, skipped: true })
   }
@@ -104,12 +120,12 @@ Deno.serve(async (req) => {
     .select('endpoint, p256dh, auth')
     .in('user_id', target.userIds)
 
-  const body = previewBody(payload)
+  const body = customBody ?? previewBody(payload)
   const notificationPayload = JSON.stringify({
-    title: target.title,
+    title: customTitle ?? target.title,
     body,
     url: target.url,
-    tag: payload.table === 'messages' ? `g-${payload.group_id}` : `dm-${payload.conversation_id}`,
+    tag: payload.self_test ? `selftest-${payload.user_id}` : payload.table === 'messages' ? `g-${payload.group_id}` : `dm-${payload.conversation_id}`,
     vibrate: [120, 60, 120],
   })
 
