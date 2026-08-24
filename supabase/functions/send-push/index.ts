@@ -43,6 +43,9 @@ type Payload = {
   title?: string
   body?: string
   url?: string
+  // Avisa a los administradores de un nuevo usuario pendiente de aprobación
+  mode?: string
+  user_alias?: string
 }
 
 async function resolveRecipients(p: Payload) {
@@ -116,6 +119,13 @@ Deno.serve(async (req) => {
     target = { userIds: [payload.user_id], title: payload.title || 'Prueba de Ephemera', url: payload.url || '/' }
     customTitle = payload.title || 'Prueba de Ephemera'
     customBody = payload.body || 'Si ves esto en segundo plano, el push funciona.'
+  } else if (payload.mode === 'new_user' && payload.user_alias) {
+    // Notifica a todos los administradores del nuevo usuario pendiente
+    const { data: admins } = await admin.from('users').select('id').eq('is_admin', true)
+    const userIds = (admins ?? []).map((a: { id: string }) => a.id)
+    target = { userIds, title: 'Nuevo usuario pendiente', url: '/?admin=1' }
+    customTitle = 'Nuevo usuario pendiente'
+    customBody = `@${payload.user_alias} solicita ingreso y espera tu aprobación`
   } else {
     target = await resolveRecipients(payload)
   }

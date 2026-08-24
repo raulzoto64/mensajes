@@ -30,6 +30,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
   const [micOk, setMicOk] = useState(false)
   const [camOk, setCamOk] = useState(false)
   const [screenOk, setScreenOk] = useState(false)
+  const [screenUnsupported, setScreenUnsupported] = useState(false)
   const [toasts, setToasts] = useState<NotificationItem[]>([])
   const toastTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const seenRef = useRef(new Set<string>())
@@ -124,11 +125,19 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
       setCamOk(false)
     }
 
-    // 6) Pantalla (getDisplayMedia) — el usuario elige qué compartir
+    // 6) Pantalla (getDisplayMedia) — el usuario elige qué compartir.
+    // En iOS Safari no existe getDisplayMedia: lo marcamos como no disponible
+    // en vez de un ✕ engañoso.
     try {
-      const s = await (navigator.mediaDevices as any).getDisplayMedia({ video: true })
-      stopStream(s)
-      setScreenOk(true)
+      const md = navigator.mediaDevices as any
+      if (typeof md?.getDisplayMedia !== 'function') {
+        setScreenUnsupported(true)
+        setScreenOk(false)
+      } else {
+        const s = await md.getDisplayMedia({ video: true })
+        stopStream(s)
+        setScreenOk(true)
+      }
     } catch {
       setScreenOk(false)
     }
@@ -274,14 +283,14 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
                 {done && (
                   <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {[
+                    {([
                       { label: 'Notificaciones', ok: perm === 'granted' },
                       { label: 'Suscripción push', ok: pushOk },
                       { label: 'Ubicación', ok: locOk },
                       { label: 'Micrófono', ok: micOk },
                       { label: 'Cámara', ok: camOk },
-                      { label: 'Pantalla', ok: screenOk },
-                    ].map((it) => (
+                      { label: 'Pantalla', ok: screenOk, unsupported: screenUnsupported },
+                    ] as { label: string; ok: boolean; unsupported?: boolean }[]).map((it) => (
                       <div
                         key={it.label}
                         style={{
@@ -294,8 +303,13 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                         }}
                       >
                         <span>{it.label}</span>
-                        <span style={{ color: it.ok ? '#22c55e' : '#f87171', fontWeight: '700' }}>
-                          {it.ok ? '✓' : '✕'}
+                        <span
+                          style={{
+                            color: it.unsupported ? '#6b6b8a' : it.ok ? '#22c55e' : '#f87171',
+                            fontWeight: '700',
+                          }}
+                        >
+                          {it.unsupported ? 'no disponible' : it.ok ? '✓' : '✕'}
                         </span>
                       </div>
                     ))}

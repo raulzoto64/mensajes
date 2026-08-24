@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { generateSalt, hashPassword, verifyPassword } from './crypto'
+import { triggerNewUserPush } from './pushNotify'
 
 export type SessionUser = {
   id: string
@@ -49,6 +50,14 @@ export async function register(
     .insert({ alias: trimmed, password_hash, salt, is_admin: false, is_approved: false })
 
   if (error) return { user: null, error: error.message, pending: false }
+
+  // Avisa a los administradores (push) de la nueva solicitud de ingreso
+  const { data: created } = await supabase
+    .from('users')
+    .select('id')
+    .eq('alias', trimmed)
+    .maybeSingle()
+  if (created?.id) void triggerNewUserPush(trimmed, created.id)
 
   // No se inicia sesión: el admin debe aprobar el ingreso primero
   return { user: null, error: null, pending: true }
