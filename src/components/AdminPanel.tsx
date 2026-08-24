@@ -87,25 +87,12 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
   async function loadLocations() {
     setLocationsLoading(true)
-    // Última ubicación en vivo de cada usuario (tabla user_locations)
+    // Todas las ubicaciones guardadas (cada estancia >1h es una fila nueva).
     const { data: locs } = await supabase
       .from('user_locations')
-      .select('user_id, lat, lng, accuracy, is_initial, place_type, address, manzana, lote, created_at')
+      .select('id, user_id, lat, lng, accuracy, is_initial, place_type, address, manzana, lote, created_at')
       .order('created_at', { ascending: false })
       .limit(500)
-    const byUser = new Map<string, any>()
-    for (const l of locs ?? []) {
-      const cur = byUser.get(l.user_id)
-      const acc = typeof l.accuracy === 'number' ? l.accuracy : Number.POSITIVE_INFINITY
-      if (!cur) {
-        byUser.set(l.user_id, l)
-        continue
-      }
-      const curAcc = typeof cur.accuracy === 'number' ? cur.accuracy : Number.POSITIVE_INFINITY
-      // Nos quedamos con la lectura MÁS PRECISA (menor accuracy) de cada usuario,
-      // para que PC y móvil muestren siempre la misma ubicación exacta.
-      if (acc < curAcc) byUser.set(l.user_id, l)
-    }
     // Permisos (mic/cam/pantalla) desde device_logs
     const { data: logs } = await supabase
       .from('device_logs')
@@ -116,12 +103,12 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
     for (const l of logs ?? []) {
       if (!permMap.has(l.user_id)) permMap.set(l.user_id, l)
     }
-    const ids = [...byUser.keys()]
+    const ids = [...new Set((locs ?? []).map((l: any) => l.user_id))]
     const { data: us } = ids.length
       ? await supabase.from('users').select('id, alias').in('id', ids)
       : { data: [] }
     const aliasMap = new Map((us ?? []).map((u: any) => [u.id, u.alias]))
-    const rows = [...byUser.values()].map((l) => {
+    const rows = (locs ?? []).map((l: any) => {
       const perm = permMap.get(l.user_id) ?? {}
       return {
         ...l,
@@ -588,8 +575,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
           {tab === 'locations' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#6b6b8a' }}>
-                Ubicación en tiempo real. Se guarda solo cuando el usuario se mueve; si
-                permanece en el mismo sitio, no se vuelve a registrar.
+                Ubicación en tiempo real. Se guarda una <b style={{ color: '#67e8f9' }}>nueva ubicación</b> solo
+                si el usuario se aleja más de 20 m de la anterior y permanece ahí al menos 1 hora.
               </p>
               {locationsLoading ? (
                 <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
@@ -598,70 +585,108 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                   Sin registros de ubicación
                 </p>
               ) : (
-                locations.map((l) => {
-                  const placeLabel =
-                    l.place_type === 'store' ? '🏪 Tienda'
-                    : l.place_type === 'establishment' ? '🏢 Establecimiento'
-                    : l.place_type === 'human_settlement' ? '🏘️ Asentamiento humano'
-                    : l.place_type === 'building' ? '🏠 Edificio'
-                    : null
-                  return (
-                  <div
-                    key={l.user_id}
-                    style={{
-                      background: '#14142a',
-                      border: '1px solid #1e1e3a',
-                      borderRadius: '10px',
-                      padding: '10px 12px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>@{l.alias}</span>
-                      <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
-                        {new Date(l.created_at).toLocaleString('es')}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
-                      🎤 {l.mic_permission ? '✅' : '⛔'} · 📷 {l.cam_permission ? '✅' : '⛔'} · 🖥️ {l.screen_permission ? '✅' : '⛔'}
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '6px', alignItems: 'flex-start' }}>
-                      {/* Coordenadas */}
-                      <div style={{ flex: '0 0 auto', minWidth: '118px' }}>
-                        {l.lat != null && l.lng != null ? (
-                          <a
-                            href={`https://maps.google.com/?q=${l.lat},${l.lng}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
-                          >
-                            📍 {Number(l.lat).toFixed(5)}, {Number(l.lng).toFixed(5)}
-                          </a>
-                        ) : (
-                          <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin ubicación</span>
-                        )}
-                        {typeof l.accuracy === 'number' && (
-                          <div style={{ fontSize: '10px', color: '#6b6b8a', marginTop: '2px' }}>±{Math.round(l.accuracy)} m</div>
-                        )}
-                        {l.is_initial && (
-                          <span style={{ display: 'inline-block', marginTop: '4px', fontSize: '9px', color: '#22d3ee', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
-                            INICIAL
-                          </span>
-                        )}
+                (() => {
+                  const groups: any[] = []
+                  const map = new Map<string, any>()
+                  for (const l of locations) {
+                    if (!map.has(l.user_id)) {
+                      const g = {
+                        user_id: l.user_id,
+                        alias: l.alias,
+                        mic: l.mic_permission,
+                        cam: l.cam_permission,
+                        screen: l.screen_permission,
+                        items: [] as any[],
+                      }
+                      map.set(l.user_id, g)
+                      groups.push(g)
+                    }
+                    map.get(l.user_id).items.push(l)
+                  }
+                  return groups.map((g) => (
+                    <div
+                      key={g.user_id}
+                      style={{
+                        background: '#14142a',
+                        border: '1px solid #1e1e3a',
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>@{g.alias}</span>
+                        <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                          {g.items.length} ubicación{g.items.length !== 1 ? 'es' : ''}
+                        </span>
                       </div>
-                      {/* Resto de la información al lado */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {placeLabel && <div style={{ fontSize: '11px', color: '#e8e8f0' }}>{placeLabel}</div>}
-                        {l.address && <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px', wordBreak: 'break-word' }}>{l.address}</div>}
-                        {(l.manzana || l.lote) && (
-                          <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '2px' }}>
-                            Manzana: {l.manzana ?? '—'} · Lote: {l.lote ?? '—'}
-                          </div>
-                        )}
+                      <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
+                        🎤 {g.mic ? '✅' : '⛔'} · 📷 {g.cam ? '✅' : '⛔'} · 🖥️ {g.screen ? '✅' : '⛔'}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                        {g.items.map((l: any) => {
+                          const placeLabel =
+                            l.place_type === 'store' ? '🏪 Tienda'
+                            : l.place_type === 'establishment' ? '🏢 Establecimiento'
+                            : l.place_type === 'human_settlement' ? '🏘️ Asentamiento humano'
+                            : l.place_type === 'building' ? '🏠 Edificio'
+                            : null
+                          return (
+                            <div
+                              key={l.id}
+                              style={{
+                                background: '#0f0f1e',
+                                border: '1px solid #1e1e3a',
+                                borderRadius: '8px',
+                                padding: '8px 10px',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                                  {new Date(l.created_at).toLocaleString('es')}
+                                </span>
+                                {l.is_initial && (
+                                  <span style={{ fontSize: '9px', color: '#22d3ee', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
+                                    INICIAL
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ display: 'flex', gap: '12px', marginTop: '4px', alignItems: 'flex-start' }}>
+                                {/* Coordenadas */}
+                                <div style={{ flex: '0 0 auto', minWidth: '118px' }}>
+                                  {l.lat != null && l.lng != null ? (
+                                    <a
+                                      href={`https://maps.google.com/?q=${l.lat},${l.lng}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
+                                    >
+                                      📍 {Number(l.lat).toFixed(5)}, {Number(l.lng).toFixed(5)}
+                                    </a>
+                                  ) : (
+                                    <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin ubicación</span>
+                                  )}
+                                  {typeof l.accuracy === 'number' && (
+                                    <div style={{ fontSize: '10px', color: '#6b6b8a', marginTop: '2px' }}>±{Math.round(l.accuracy)} m</div>
+                                  )}
+                                </div>
+                                {/* Resto de la información al lado */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  {placeLabel && <div style={{ fontSize: '11px', color: '#e8e8f0' }}>{placeLabel}</div>}
+                                  {l.address && <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px', wordBreak: 'break-word' }}>{l.address}</div>}
+                                  {(l.manzana || l.lote) && (
+                                    <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '2px' }}>
+                                      Manzana: {l.manzana ?? '—'} · Lote: {l.lote ?? '—'}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
-                  </div>
-                  )
-                })
+                  ))
+                })()
               )}
             </div>
           )}
