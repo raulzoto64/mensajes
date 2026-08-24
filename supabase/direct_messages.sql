@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS direct_conversations (
   user_a     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   user_b     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at timestamptz NOT NULL DEFAULT now(),
+  auto_delete_hours integer NOT NULL DEFAULT 24,
   UNIQUE (user_a, user_b),
   CHECK (user_a <> user_b)
 );
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS direct_messages (
   deleted_at      timestamptz,
   delete_reason   text,
   delete_after    timestamptz,
+  one_time_view   boolean NOT NULL DEFAULT false,
   created_at      timestamptz NOT NULL DEFAULT now()
 );
 

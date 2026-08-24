@@ -4,8 +4,8 @@
 //
 // Secrets requeridos (Settings → Edge Functions → Secrets):
 //   PUSH_SECRET         = 5035b8b60e38488e30e635a4754a4eb06c1f6d8a350964723d8432ed4c6e3cd8
-//   VAPID_PRIVATE_KEY   = iRLSVnZ3fphB8txNVovLG997mxn4AMrpol9j36yhKXk
-//   VAPID_PUBLIC_KEY    = BGAffOyjwIKSN8us5OZ7Fiajci89t7Y0nwDFEX4bT54X38LiL_RZ_uOekC0mEoU1xRSC1JE8tjr58EaFjjvrW_4
+//   VAPID_PRIVATE_KEY   = EeVYLtLwUDnFmQ5fRzRNcfm72g3sCKWMaNNLG6TUVvE
+//   VAPID_PUBLIC_KEY    = BEf5JRyAOcpsGaGGY8k9y_i7RcjzgJZ_Q7-MKKmaF_PL-Itg7JueNjFKQyRbtVv3isnrKB1jPc6wWOhMGVTxtMM
 //   VAPID_SUBJECT       = mailto:raulzoto64@gmail.com
 
 import { createClient } from 'npm:@supabase/supabase-js@2'

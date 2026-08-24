@@ -5,6 +5,8 @@ import MessageBubble, { type Message } from './MessageBubble'
 import { useOnlineUsers, subscribeTyping, notifyChatChanged, onChatChanged, usePendingMessages } from '../lib/realtime'
 import { lastSeenLabel } from '../lib/time'
 import { deleteMediaFiles } from '../lib/media'
+import { expiryCutoff } from '../lib/expire'
+import DurationSettingsModal from './DurationSettingsModal'
 
 type Props = {
   conversationId: string
@@ -22,6 +24,8 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [typing, setTyping] = useState(false)
   const [lastSeen, setLastSeen] = useState<string | null>(null)
+  const [autoDeleteHours, setAutoDeleteHours] = useState<number>(24)
+  const [showSettings, setShowSettings] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -31,16 +35,24 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   const loadMessages = useCallback(async () => {
     if (!user) return
 
+    const { data: convInfo } = await supabase
+      .from('direct_conversations')
+      .select('auto_delete_hours')
+      .eq('id', conversationId)
+      .maybeSingle()
+    const convHours = (convInfo as any)?.auto_delete_hours ?? 24
+    setAutoDeleteHours(convHours)
+
     const { data: msgs } = await supabase
       .from('direct_messages')
-      .select('id, conversation_id, sender_id, type, content, media_url, is_deleted, delete_after, created_at')
+      .select('id, conversation_id, sender_id, type, content, media_url, is_deleted, delete_after, created_at, one_time_view')
       .eq('conversation_id', conversationId)
       .eq('is_deleted', false)
       .is('deleted_at', null)
       .order('created_at', { ascending: true })
 
-    // Borrado con motivo: más de 24h (el registro queda, se elimina el archivo)
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000
+    // Borrado con motivo: pasada la duración configurada de la conversación
+    const cutoff = expiryCutoff(convHours)
     const staleIds = (msgs ?? []).filter((m: any) => new Date(m.created_at).getTime() < cutoff).map((m: any) => m.id)
     if (staleIds.length) {
       await supabase
@@ -129,11 +141,11 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
       const perMsg = new Map<string, number>()
       for (const v of counts ?? []) perMsg.set(v.message_id, (perMsg.get(v.message_id) ?? 0) + 1)
       const fullyViewed = liveMsgs.filter((m: any) =>
-        m.sender_id !== user.id && (perMsg.get(m.id) ?? 0) >= 2 && !m.delete_after
+        m.sender_id !== user.id && m.one_time_view && (perMsg.get(m.id) ?? 0) >= 2 && !m.delete_after
       )
       if (fullyViewed.length) {
-        // Gracia de 5 minutos desde que se completó la vista
-        const grace = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+        // Vista única: breve gracia para que el otro alcance a verlo
+        const grace = new Date(Date.now() + 3 * 1000).toISOString()
         await supabase
           .from('direct_messages')
           .update({ delete_after: grace })
@@ -317,6 +329,26 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
           ◉ PRIVADO
         </div>
         <button
+          onClick={() => setShowSettings(true)}
+          title="Configurar duración de borrado del chat"
+          style={{
+            background: '#14142a',
+            border: '1px solid #1e1e3a',
+            borderRadius: '8px',
+            width: '32px',
+            height: '32px',
+            color: '#6b6b8a',
+            cursor: 'pointer',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          ⚙️
+        </button>
+        <button
           onClick={() => { setSelectMode((v) => !v); setSelectedIds(new Set()) }}
           title="Seleccionar mensajes"
           style={{
@@ -387,6 +419,19 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
         ))}
         <div ref={bottomRef} />
       </div>
+
+      {showSettings && (
+        <DurationSettingsModal
+          title={`Duración de borrado · @${otherAlias}`}
+          current={autoDeleteHours}
+          onClose={() => setShowSettings(false)}
+          onSave={async (hours) => {
+            await supabase.from('direct_conversations').update({ auto_delete_hours: hours }).eq('id', conversationId)
+            setShowSettings(false)
+            loadMessages()
+          }}
+        />
+      )}
 
       {/* Selection action bar */}
       {selectMode && (

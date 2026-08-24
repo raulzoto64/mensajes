@@ -1,12 +1,13 @@
 -- =============================================================
--- EPHEMERA — LIMPIEZA AUTOMÁTICA DE MENSAJES DIRECTOS (24H)
+-- EPHEMERA — LIMPIEZA AUTOMÁTICA DE MENSAJES DIRECTOS
 -- Archivo independiente: pégalo en el SQL Editor de Supabase.
 -- SOLO afecta a mensajes directos (DMs). Los grupos NO se tocan.
 --
--- Comportamiento:
---   1) Los mensajes directos con más de 24 horas se borran.
---   2) Las conversaciones directas sin actividad (mensajes nuevos)
---      en las últimas 24 horas se borran por completo.
+-- Comportamiento (versión con duración configurable):
+--   1) Los mensajes directos más antiguos que la duración configurada
+--      de su conversación (auto_delete_hours) se borran.
+--   2) NO se borran las conversaciones: permanecen en la barra lateral
+--      aunque no tengan mensajes (las vacía el cliente).
 -- =============================================================
 
 -- Habilita pg_cron (scheduler) si aún no está activo
@@ -18,22 +19,11 @@ RETURNS void
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  -- 1) Borra mensajes directos con más de 24 horas de antigüedad
-  DELETE FROM direct_messages
-  WHERE created_at < now() - interval '24 hours';
-
-  -- 2) Borra conversaciones que no tuvieron actividad en las últimas 24h
-  --    (sin mensajes recientes y con más de 24h desde su creación o su último mensaje)
-  DELETE FROM direct_conversations dc
-  WHERE NOT EXISTS (
-    SELECT 1 FROM direct_messages dm
-    WHERE dm.conversation_id = dc.id
-      AND dm.created_at >= now() - interval '24 hours'
-  )
-  AND (
-    dc.created_at < now() - interval '24 hours'
-    OR EXISTS (SELECT 1 FROM direct_messages dm WHERE dm.conversation_id = dc.id)
-  );
+  -- 1) Borra mensajes directos más antiguos que la duración configurada
+  DELETE FROM direct_messages dm
+  WHERE dm.created_at < now() - (COALESCE(
+          (SELECT c.auto_delete_hours FROM direct_conversations c WHERE c.id = dm.conversation_id), 24
+        ) || ' hours')::interval;
 END;
 $$;
 

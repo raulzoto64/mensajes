@@ -25,6 +25,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
   const [sending, setSending] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [mediaOpen, setMediaOpen] = useState(false)
+  const [oneTimeView, setOneTimeView] = useState(false)
   const mediaRef = useRef<HTMLDivElement>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -59,9 +60,11 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
     return () => clearInterval(id)
   }, [typingScope, user, text])
 
-  async function sendMessage(type: string, content: string | null, mediaUrl: string | null, tempId?: string) {
+  async function sendMessage(type: string, content: string | null, mediaUrl: string | null, tempId?: string, oneTimeView?: boolean) {
     if (!user) return
     const scope = groupId ? `group-${groupId}` : conversationId ? `dm-${conversationId}` : ''
+    // Vista única solo aplica a multimedia (no a texto ni emoji)
+    const isOneTime = Boolean(oneTimeView) && type !== 'text' && type !== 'emoji'
     setSending(true)
     setUploadError('')
     let insertError: string | null = null
@@ -75,6 +78,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
           content,
           media_url: mediaUrl,
           is_deleted: false,
+          one_time_view: isOneTime,
         })
         .select('id')
         .single()
@@ -94,9 +98,11 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
           content,
           media_url: mediaUrl,
           is_deleted: false,
+          one_time_view: isOneTime,
         })
         .select('id')
         .single()
+        .then((r) => r)
       if (error) insertError = error.message
       if (inserted?.id) {
         await supabase.from('message_views')
@@ -109,6 +115,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
       setUploadError(`No se pudo enviar: ${insertError}`)
       return
     }
+    if (isOneTime) setOneTimeView(false)
     notifyChatChanged()
     onSent()
   }
@@ -171,7 +178,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
       return
     }
     const { data: urlData } = supabase.storage.from('media').getPublicUrl(path)
-    await sendMessage(kind, null, urlData.publicUrl, tempId)
+    await sendMessage(kind, null, urlData.publicUrl, tempId, oneTimeView)
   }
 
   const startRecording = useCallback(async (type: 'audio' | 'video') => {
@@ -200,9 +207,9 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
         if (scope) {
           addPendingMessage(scope, { tempId, type, content: null, mediaUrl: preview, createdAt: new Date().toISOString() })
         }
-        const url = await uploadMedia(blob, type)
-        if (url) await sendMessage(type, null, url, tempId)
-        else if (scope) removePendingMessage(scope, tempId)
+         const url = await uploadMedia(blob, type)
+         if (url) await sendMessage(type, null, url, tempId, oneTimeView)
+         else if (scope) removePendingMessage(scope, tempId)
         stream.getTracks().forEach((t) => t.stop())
         streamRef.current = null
         if (videoPreviewRef.current) videoPreviewRef.current.srcObject = null
@@ -313,7 +320,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
             if (scope) {
               addPendingMessage(scope, { tempId, type: 'gif', content: null, mediaUrl: url, createdAt: new Date().toISOString() })
             }
-            sendMessage('gif', null, url, tempId)
+            sendMessage('gif', null, url, tempId, oneTimeView)
             setPicker('none')
           }}
           onClose={() => setPicker('none')}
@@ -419,14 +426,17 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
       {!isRecording && (
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
           {/* Left buttons */}
-          <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-            <IconBtn active={picker === 'emoji'} onClick={() => setPicker(picker === 'emoji' ? 'none' : 'emoji')} title="Emojis">
-              😊
-            </IconBtn>
-            <IconBtn active={picker === 'gif'} onClick={() => setPicker(picker === 'gif' ? 'none' : 'gif')} title="GIFs" mono>
-              GIF
-            </IconBtn>
-          </div>
+           <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+             <IconBtn active={picker === 'emoji'} onClick={() => setPicker(picker === 'emoji' ? 'none' : 'emoji')} title="Emojis">
+               😊
+             </IconBtn>
+             <IconBtn active={picker === 'gif'} onClick={() => setPicker(picker === 'gif' ? 'none' : 'gif')} title="GIFs" mono>
+               GIF
+             </IconBtn>
+             <IconBtn active={oneTimeView} onClick={() => setOneTimeView((v) => !v)} title="Vista única: el multimedia se borra al ser visto">
+               👁️
+             </IconBtn>
+           </div>
 
           {/* Textarea */}
           <div

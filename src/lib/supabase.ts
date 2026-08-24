@@ -31,6 +31,7 @@ export type Database = {
       description: string | null
       created_by: string
       created_at: string
+      auto_delete_hours: number
     }
   }
   group_members: {
@@ -53,6 +54,7 @@ export type Database = {
       deleted_at: string | null
       delete_reason: string | null
       sender_alias?: string
+      one_time_view?: boolean
     }
   }
   message_views: {
@@ -77,6 +79,7 @@ export type Database = {
       user_a: string
       user_b: string
       created_at: string
+      auto_delete_hours: number
     }
   }
   direct_messages: {
@@ -91,6 +94,7 @@ export type Database = {
       created_at: string
       deleted_at: string | null
       delete_reason: string | null
+      one_time_view?: boolean
     }
   }
   direct_message_views: {

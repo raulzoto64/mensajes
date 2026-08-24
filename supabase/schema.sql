@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS groups (
   name        text NOT NULL,
   description text,
   created_by  uuid REFERENCES users(id) ON DELETE SET NULL,
-  created_at  timestamptz NOT NULL DEFAULT now()
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  auto_delete_hours integer NOT NULL DEFAULT 24  -- duración de borrado automático de mensajes
 );
 
 CREATE INDEX IF NOT EXISTS idx_groups_created_by ON groups (created_by);
@@ -55,8 +56,9 @@ CREATE TABLE IF NOT EXISTS messages (
   media_url  text,          -- para audio, video, gif, imagen
   is_deleted boolean NOT NULL DEFAULT false,
   deleted_at timestamptz,   -- cuándo se marcó como borrado
-  delete_reason text,       -- 'manual' | 'viewed' | '24h'
-  delete_after timestamptz, -- gracia de 5 min: borrado programado al verlo todos
+  delete_reason text,       -- 'manual' | 'viewed' | 'expired'
+  delete_after timestamptz, -- gracia: borrado programado al verlo todos (vista única)
+  one_time_view boolean NOT NULL DEFAULT false, -- multimedia de "vista única"
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

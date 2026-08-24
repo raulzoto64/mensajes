@@ -115,6 +115,19 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
       fn: () =>
         supabase.from('custom_gifs').delete({ count: 'exact' }).neq('id', '00000000-0000-0000-0000-000000000000'),
     },
+    {
+      id: 'conversations',
+      label: 'Eliminar TODAS las conversaciones',
+      desc: 'Borra mensajes, chats privados y grupos de TODO el sistema (acción irreversible)',
+      color: '#f87171',
+      fn: async () => {
+        const a = await supabase.from('messages').delete({ count: 'exact' }).neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('direct_messages').delete({ count: 'exact' }).neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('direct_conversations').delete({ count: 'exact' }).neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('groups').delete({ count: 'exact' }).neq('id', '00000000-0000-0000-0000-000000000000')
+        return { count: a.count, error: a.error }
+      },
+    },
   ]
 
   const filteredUsers = users.filter((u) =>

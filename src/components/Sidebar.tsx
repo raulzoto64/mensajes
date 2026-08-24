@@ -237,34 +237,13 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
       .in('conversation_id', convIds)
       .eq('is_deleted', false)
 
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000
-
-    // Last activity per conversation (creation or last message), then delete inactive 24h ones
-    const lastByConv = new Map<string, number>()
-    for (const c of convs) lastByConv.set(c.id, new Date(c.created_at).getTime())
-    for (const m of msgs ?? []) {
-      const t = new Date(m.created_at).getTime()
-      if (t > (lastByConv.get(m.conversation_id) ?? 0)) lastByConv.set(m.conversation_id, t)
-    }
-    const staleConvIds = convs.filter((c: any) => (lastByConv.get(c.id) ?? 0) < cutoff).map((c: any) => c.id)
-    if (staleConvIds.length) {
-      await supabase.from('direct_conversations').delete().in('id', staleConvIds)
-    }
-
-    const remainingConvs = convs.filter((c: any) => (lastByConv.get(c.id) ?? 0) >= cutoff)
-    if (remainingConvs.length === 0) { setDms([]); return }
-
-    const otherIds = remainingConvs.map((c: any) => (c.user_a === user.id ? c.user_b : c.user_a))
+    // Las conversaciones son persistentes: no se borran ni se ocultan por falta de mensajes.
+    const otherIds = convs.map((c: any) => (c.user_a === user.id ? c.user_b : c.user_a))
     const { data: others } = await supabase.from('users').select('id, alias, last_seen_at').in('id', otherIds)
     const aliasMap = new Map((others ?? []).map((o: any) => [o.id, o.alias]))
     const lastSeenMap = new Map((others ?? []).map((o: any) => [o.id, o.last_seen_at ?? null]))
 
-    const remainingIds = remainingConvs.map((c: any) => c.id)
-    const liveMsgs = (msgs ?? []).filter((m: any) => remainingIds.includes(m.conversation_id))
-
-    // Hide conversations without any live (non-deleted) message
-    const withMsgs = remainingConvs.filter((c: any) => liveMsgs.some((m: any) => m.conversation_id === c.id))
-    if (withMsgs.length === 0) { setDms([]); return }
+    const liveMsgs = (msgs ?? []).filter((m: any) => convIds.includes(m.conversation_id))
 
     const msgIds = liveMsgs.map((m: any) => m.id)
     const { data: viewed } = msgIds.length
@@ -279,7 +258,7 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
       }
     }
 
-    const list: DM[] = withMsgs.map((c: any) => {
+    const list: DM[] = convs.map((c: any) => {
       const otherId = c.user_a === user.id ? c.user_b : c.user_a
       return {
         conversationId: c.id,
@@ -289,7 +268,19 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
         unreadCount: unreadByConv.get(c.id) ?? 0,
       }
     })
-    setDms(list.sort((a, b) => b.unreadCount - a.unreadCount))
+    // Ordena: con no leídos primero, luego por actividad reciente
+    const lastActivity = new Map<string, number>()
+    for (const c of convs) lastActivity.set(c.id, new Date(c.created_at).getTime())
+    for (const m of liveMsgs) {
+      const t = new Date(m.created_at).getTime()
+      if (t > (lastActivity.get(m.conversation_id) ?? 0)) lastActivity.set(m.conversation_id, t)
+    }
+    setDms(
+      list.sort((a, b) => {
+        if (b.unreadCount !== a.unreadCount) return b.unreadCount - a.unreadCount
+        return (lastActivity.get(b.conversationId) ?? 0) - (lastActivity.get(a.conversationId) ?? 0)
+      }),
+    )
   }
 
   async function searchUsers(q: string) {

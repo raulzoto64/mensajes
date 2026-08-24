@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import MessageBubble, { type Message } from './MessageBubble'
 import { subscribeTyping, notifyChatChanged, onChatChanged, usePendingMessages } from '../lib/realtime'
 import { deleteMediaFiles } from '../lib/media'
+import { expiryCutoff } from '../lib/expire'
+import DurationSettingsModal from './DurationSettingsModal'
 
 type Props = {
   groupId: string
@@ -20,6 +22,8 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const [receipts, setReceipts] = useState<Record<string, 'delivered' | 'seen'>>({})
   const [memberCount, setMemberCount] = useState(0)
   const [isCreator, setIsCreator] = useState(false)
+  const [autoDeleteHours, setAutoDeleteHours] = useState<number>(24)
+  const [showSettings, setShowSettings] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [typings, setTypings] = useState<string[]>([])
@@ -41,16 +45,18 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
 
     const { data: grpInfo } = await supabase
       .from('groups')
-      .select('created_by')
+      .select('created_by, auto_delete_hours')
       .eq('id', groupId)
       .maybeSingle()
     setIsCreator((grpInfo as any)?.created_by === user.id)
+    const groupHours = (grpInfo as any)?.auto_delete_hours ?? 24
+    setAutoDeleteHours(groupHours)
 
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000
+    const cutoff = expiryCutoff(groupHours)
 
     const { data: rows } = await supabase
       .from('messages')
-      .select('id, group_id, sender_id, type, content, media_url, is_deleted, delete_after, created_at')
+      .select('id, group_id, sender_id, type, content, media_url, is_deleted, delete_after, created_at, one_time_view')
       .eq('group_id', groupId)
       .eq('is_deleted', false)
       .is('deleted_at', null)
@@ -149,11 +155,11 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
         const perMsg = new Map<string, number>()
         for (const v of counts ?? []) perMsg.set(v.message_id, (perMsg.get(v.message_id) ?? 0) + 1)
         const fullyViewed = msgs.filter((m: any) =>
-          m.sender_id !== user.id && (perMsg.get(m.id) ?? 0) >= count && !m.delete_after
+          m.sender_id !== user.id && m.one_time_view && (perMsg.get(m.id) ?? 0) >= count && !m.delete_after
         )
         if (fullyViewed.length) {
-          // Gracia de 5 minutos desde que se completó la vista
-          const grace = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+          // Vista única: breve gracia para que el último en verlo alcance a verlo
+          const grace = new Date(Date.now() + 3 * 1000).toISOString()
           await supabase
             .from('messages')
             .update({ delete_after: grace })
@@ -330,6 +336,28 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {(isCreator || user?.is_admin) && (
+            <button
+              onClick={() => setShowSettings(true)}
+              title="Configurar duración de borrado del grupo"
+              style={{
+                background: '#14142a',
+                border: '1px solid #1e1e3a',
+                borderRadius: '8px',
+                width: '32px',
+                height: '32px',
+                color: '#6b6b8a',
+                cursor: 'pointer',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              ⚙️
+            </button>
+          )}
           {isCreator && (
             <button
               onClick={shareGroup}
@@ -524,6 +552,19 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             Enlace copiado — compártelo
           </span>
         </div>
+      )}
+
+      {showSettings && (
+        <DurationSettingsModal
+          title={`Duración de borrado · ${groupName}`}
+          current={autoDeleteHours}
+          onClose={() => setShowSettings(false)}
+          onSave={async (hours) => {
+            await supabase.from('groups').update({ auto_delete_hours: hours }).eq('id', groupId)
+            setShowSettings(false)
+            loadMessages()
+          }}
+        />
       )}
     </div>
   )

@@ -11,6 +11,7 @@ export type Message = {
   media_url: string | null
   is_deleted: boolean
   created_at: string
+  one_time_view?: boolean
 }
 
 export default function MessageBubble({
@@ -36,6 +37,7 @@ export default function MessageBubble({
   sending?: boolean
   receipt?: 'sending' | 'delivered' | 'seen'
 }) {
+  const isOneTime = Boolean(msg.one_time_view) && (msg.type === 'image' || msg.type === 'video' || msg.type === 'audio' || msg.type === 'gif')
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressed = useRef(false)
   const [lightbox, setLightbox] = useState<LightboxMedia | null>(null)
@@ -178,6 +180,34 @@ export default function MessageBubble({
                 ENVIANDO…
               </span>
             )}
+            {/* One-time view badge */}
+            {isOneTime && (
+              <div
+                title="Vista única: se borra después de verse"
+                style={{
+                  position: 'absolute',
+                  top: '6px',
+                  right: isMine ? 'auto' : '6px',
+                  left: isMine ? '6px' : 'auto',
+                  zIndex: 6,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  padding: '2px 6px',
+                  background: 'rgba(0,0,0,0.55)',
+                  borderRadius: '10px',
+                  color: '#fbbf24',
+                  fontSize: '9px',
+                  fontWeight: '700',
+                  fontFamily: "'DM Mono', monospace",
+                  letterSpacing: '0.04em',
+                  pointerEvents: 'none',
+                }}
+              >
+                👁️ 1 VEZ
+              </div>
+            )}
+
             {/* Selection indicator */}
             {selectMode && selectable && (
               <div
