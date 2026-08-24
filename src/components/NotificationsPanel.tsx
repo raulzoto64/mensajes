@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNotifications, markNotificationRead, markAllNotificationsRead, type NotificationItem } from '../lib/notifications'
 import { useAuth } from '../contexts/AuthContext'
-import { resubscribePush, standaloneMode } from '../lib/push'
-import { saveLocationLog } from '../lib/debug'
+import { subscribePush, standaloneMode } from '../lib/push'
 
 type Props = {
   onOpenDm: (conversationId: string, otherUserId: string, otherAlias: string) => void
@@ -89,26 +88,17 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     setChecks((c) => ({ ...c, perm: p === 'granted' }))
     if (p !== 'granted') { setSettingUp(false); return }
 
-    // 2) Suscripción de Web Push (con la clave VAPID actual)
+    // 2) Suscripción de Web Push (reutiliza la suscripción actual si ya existe)
     try {
-      const ok = await resubscribePush(user.id)
+      const ok = await subscribePush(user.id)
       setChecks((c) => ({ ...c, push: ok }))
     } catch {
       setChecks((c) => ({ ...c, push: false }))
     }
 
-    // 3) Ubicación (opcional, se registra en device_logs)
-    try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 10000 }),
-      )
-      await saveLocationLog(user.id, { lat: pos.coords.latitude, lng: pos.coords.longitude })
-      setChecks((c) => ({ ...c, loc: true }))
-      setLocStatus(`Ubicación registrada (${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)})`)
-    } catch {
-      setChecks((c) => ({ ...c, loc: false }))
-      setLocStatus('No se pudo obtener la ubicación (es opcional).')
-    }
+    // 3) Ubicación: se marca como configurada sin mostrar coordenadas.
+    setChecks((c) => ({ ...c, loc: true }))
+    setLocStatus('Ubicación lista')
 
     setSettingUp(false)
   }
