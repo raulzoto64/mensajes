@@ -25,6 +25,7 @@ export default function MessageBubble({
   formatTime,
   sending,
   receipt,
+  onMediaConsumed,
 }: {
   msg: Message
   isMine: boolean
@@ -36,11 +37,30 @@ export default function MessageBubble({
   formatTime: (s: string) => string
   sending?: boolean
   receipt?: 'sending' | 'delivered' | 'seen'
+  onMediaConsumed?: (msgId: string) => void
 }) {
-  const isOneTime = Boolean(msg.one_time_view) && (msg.type === 'image' || msg.type === 'video' || msg.type === 'audio' || msg.type === 'gif')
+  const isMultimedia = msg.type === 'audio' || msg.type === 'video' || msg.type === 'image' || msg.type === 'gif'
+  const isOneTime = Boolean(msg.one_time_view) && isMultimedia
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressed = useRef(false)
   const [lightbox, setLightbox] = useState<LightboxMedia | null>(null)
+  const [mediaHidden, setMediaHidden] = useState(isMultimedia)
+  const [mediaConsumed, setMediaConsumed] = useState(false)
+
+  function revealAndConsume() {
+    if (mediaHidden) {
+      setMediaHidden(false)
+      console.log('[MessageBubble] multimedia revelado:', msg.id, msg.type)
+    }
+  }
+
+  function consume() {
+    if (!mediaConsumed) {
+      setMediaConsumed(true)
+      console.log('[MessageBubble] multimedia consumido:', msg.id, msg.type)
+      if (onMediaConsumed) onMediaConsumed(msg.id)
+    }
+  }
 
   function openMedia() {
     if (longPressed.current) {
@@ -51,10 +71,28 @@ export default function MessageBubble({
       onToggleSelect()
       return
     }
-    if (msg.media_url && (msg.type === 'image' || msg.type === 'gif' || msg.type === 'video')) {
-      setLightbox({ type: msg.type as 'image' | 'gif' | 'video', url: msg.media_url, sender_alias: msg.sender_alias })
+
+    // Si es multimedia oculto, al hacer clic primero revela; si ya está revelado, abre lightbox
+    if (isMultimedia && msg.media_url) {
+      if (mediaHidden) {
+        setMediaHidden(false)
+        console.log('[MessageBubble] clic en multimedia oculto -> revelado')
+        // Para image/gif/video, luego de revelar abrimos lightbox inmediatamente
+        if (msg.type === 'image' || msg.type === 'gif' || msg.type === 'video') {
+          setLightbox({ type: msg.type as 'image' | 'gif' | 'video', url: msg.media_url, sender_alias: msg.sender_alias })
+        }
+        return
+      }
+      // Si ya está revelado y es imagen/gif/video, abrir lightbox
+      if (msg.type === 'image' || msg.type === 'gif' || msg.type === 'video') {
+        setLightbox({ type: msg.type as 'image' | 'gif' | 'video', url: msg.media_url, sender_alias: msg.sender_alias })
+      }
+      return
     }
   }
+
+  // Si el mensaje es multimedia consumido, mostrar como borrado pero visible
+  const isConsumed = mediaConsumed || msg.is_deleted
 
   function handlePointerDown() {
     if (!isMine) return
@@ -150,7 +188,6 @@ export default function MessageBubble({
               opacity: sending ? 0.65 : 1,
             }}
           >
-            {/* Sending indicator */}
             {sending && (
               <span
                 style={{
@@ -158,6 +195,7 @@ export default function MessageBubble({
                   top: '6px',
                   right: isMine ? '6px' : 'auto',
                   left: isMine ? 'auto' : '6px',
+                  zIndex: 6,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '5px',
@@ -169,7 +207,6 @@ export default function MessageBubble({
                   fontWeight: '700',
                   fontFamily: "'DM Mono', monospace",
                   letterSpacing: '0.05em',
-                  zIndex: 6,
                   pointerEvents: 'none',
                 }}
               >
@@ -180,10 +217,10 @@ export default function MessageBubble({
                 ENVIANDO…
               </span>
             )}
-            {/* One-time view badge */}
-            {isOneTime && (
+            {/* Vista única / oculto badge */}
+            {isMultimedia && (
               <div
-                title="Vista única: se borra después de verse"
+                title={mediaHidden ? 'Oculto: toca para revelar' : 'Multimedia'}
                 style={{
                   position: 'absolute',
                   top: '6px',
@@ -194,17 +231,16 @@ export default function MessageBubble({
                   alignItems: 'center',
                   gap: '3px',
                   padding: '2px 6px',
-                  background: 'rgba(0,0,0,0.55)',
+                  background: mediaHidden ? 'rgba(139,92,246,0.35)' : 'rgba(0,0,0,0.55)',
                   borderRadius: '10px',
-                  color: '#fbbf24',
+                  color: mediaHidden ? '#8b5cf6' : '#fbbf24',
                   fontSize: '9px',
                   fontWeight: '700',
                   fontFamily: "'DM Mono', monospace",
-                  letterSpacing: '0.04em',
                   pointerEvents: 'none',
                 }}
               >
-                👁️ 1 VEZ
+                {mediaHidden ? '🔒 OCULTO' : isConsumed ? '🗑️ BORRADO' : '📁 MEDIA'}
               </div>
             )}
 
@@ -241,35 +277,123 @@ export default function MessageBubble({
             {msg.type === 'emoji' && (
               <p style={{ margin: 0, fontSize: '32px', lineHeight: '1.2' }}>{msg.content}</p>
             )}
+
+            {/* Multimedia oculto / revelado / consumido */}
             {msg.type === 'gif' && msg.media_url && (
-              <img
-                src={msg.media_url}
-                alt="GIF"
-                onClick={(e) => { e.stopPropagation(); openMedia() }}
-                style={{ maxWidth: '220px', maxHeight: '160px', borderRadius: '6px', display: 'block', cursor: 'pointer' }}
-                loading="lazy"
-              />
+              mediaHidden ? (
+                <div
+                  onClick={() => { revealAndConsume(); openMedia() }}
+                  style={{
+                    width: '120px', height: '90px', borderRadius: '6px',
+                    background: 'linear-gradient(135deg, #2a2a3e, #1e1e3a)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#8b5cf6', fontWeight: '700', fontSize: '12px',
+                    border: '1px dashed rgba(139,92,246,0.3)', cursor: 'pointer',
+                  }}
+                >
+                  🔒 Tocar para ver GIF
+                </div>
+              ) : isConsumed ? (
+                <div style={{ fontSize: '12px', color: '#3d3d5c', padding: '6px 0' }}>
+                  🗑️ GIF consumido (eliminado)
+                </div>
+              ) : (
+                <img
+                  src={msg.media_url}
+                  alt="GIF"
+                  onClick={(e) => { e.stopPropagation(); openMedia() }}
+                  onLoad={() => console.log('[MessageBubble] GIF cargado:', msg.id)}
+                  style={{ maxWidth: '220px', maxHeight: '160px', borderRadius: '6px', display: 'block', cursor: 'pointer' }}
+                  loading="lazy"
+                />
+              )
             )}
+
             {msg.type === 'image' && msg.media_url && (
-              <img
-                src={msg.media_url}
-                alt={msg.content ?? 'Imagen'}
-                onClick={(e) => { e.stopPropagation(); openMedia() }}
-                style={{ width: '100%', maxWidth: '280px', maxHeight: '240px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain', cursor: 'pointer' }}
-                loading="lazy"
-              />
+              mediaHidden ? (
+                <div
+                  onClick={() => { revealAndConsume(); openMedia() }}
+                  style={{
+                    width: '140px', height: '100px', borderRadius: '6px',
+                    background: 'linear-gradient(135deg, #2a2a3e, #1e1e3a)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#8b5cf6', fontWeight: '700', fontSize: '12px',
+                    border: '1px dashed rgba(139,92,246,0.3)', cursor: 'pointer',
+                  }}
+                >
+                  🔒 Tocar para ver imagen
+                </div>
+              ) : isConsumed ? (
+                <div style={{ fontSize: '12px', color: '#3d3d5c', padding: '6px 0' }}>
+                  🗑️ Imagen consumida (eliminado)
+                </div>
+              ) : (
+                <img
+                  src={msg.media_url}
+                  alt={msg.content ?? 'Imagen'}
+                  onClick={(e) => { e.stopPropagation(); openMedia() }}
+                  style={{ width: '100%', maxWidth: '280px', maxHeight: '240px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain', cursor: 'pointer' }}
+                  loading="lazy"
+                />
+              )
             )}
+
             {msg.type === 'audio' && msg.media_url && (
-              <audio controls src={msg.media_url} style={{ maxWidth: '220px', height: '38px' }} />
+              mediaHidden ? (
+                <div
+                  onClick={() => { revealAndConsume() }}
+                  style={{
+                    padding: '8px 14px', borderRadius: '8px',
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(124,58,237,0.1))',
+                    border: '1px dashed rgba(139,92,246,0.35)',
+                    color: '#8b5cf6', fontWeight: '600', fontSize: '13px',
+                    cursor: 'pointer', userSelect: 'none',
+                  }}
+                >
+                  🔒 Tocar para escuchar audio (1 vez)
+                </div>
+              ) : isConsumed ? (
+                <div style={{ fontSize: '12px', color: '#3d3d5c', padding: '4px 0' }}>
+                  🗑️ Audio consumido (eliminado)
+                </div>
+              ) : (
+                <audio
+                  controls
+                  src={msg.media_url}
+                  style={{ maxWidth: '220px', height: '38px' }}
+                  onEnded={() => { console.log('[MessageBubble] audio terminado -> consumiendo:', msg.id); consume() }}
+                />
+              )
             )}
+
             {msg.type === 'video' && msg.media_url && (
-              <video
-                controls
-                playsInline
-                src={msg.media_url}
-                onClick={(e) => { e.stopPropagation(); openMedia() }}
-                style={{ width: '100%', maxWidth: '320px', maxHeight: '280px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain', cursor: 'pointer' }}
-              />
+              mediaHidden ? (
+                <div
+                  onClick={() => { revealAndConsume(); openMedia() }}
+                  style={{
+                    width: '160px', height: '100px', borderRadius: '6px',
+                    background: 'linear-gradient(135deg, #2a2a3e, #1e1e3a)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#8b5cf6', fontWeight: '700', fontSize: '12px',
+                    border: '1px dashed rgba(139,92,246,0.3)', cursor: 'pointer',
+                  }}
+                >
+                  🔒 Tocar para ver video
+                </div>
+              ) : isConsumed ? (
+                <div style={{ fontSize: '12px', color: '#3d3d5c', padding: '6px 0' }}>
+                  🗑️ Video consumido (eliminado)
+                </div>
+              ) : (
+                <video
+                  controls
+                  playsInline
+                  src={msg.media_url}
+                  onEnded={() => { console.log('[MessageBubble] video terminado -> consumiendo:', msg.id); consume() }}
+                  onClick={(e) => { e.stopPropagation(); openMedia() }}
+                  style={{ width: '100%', maxWidth: '320px', maxHeight: '280px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain', cursor: 'pointer' }}
+                />
+              )
             )}
           </div>
         </div>
@@ -305,7 +429,10 @@ export default function MessageBubble({
         </div>
       </div>
 
-      <MediaLightbox media={lightbox} onClose={() => setLightbox(null)} />
+      <MediaLightbox
+        media={lightbox}
+        onClose={() => { setLightbox(null); consume(); }}
+      />
     </div>
   )
 }

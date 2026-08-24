@@ -239,6 +239,15 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
     loadMessages()
   }
 
+  async function handleMediaConsumed(msgId: string) {
+    console.log('[FRONT] DmChatWindow: multimedia consumido, actualizando DB ->', msgId)
+    await supabase
+      .from('direct_messages')
+      .update({ is_deleted: true, deleted_at: new Date().toISOString(), delete_reason: 'multimedia_consumed' })
+      .eq('id', msgId)
+    loadMessages()
+  }
+
   function formatTime(iso: string) {
     return new Date(iso).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
   }
@@ -413,6 +422,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
             onLongPress={() => handleLongPress(msg.id)}
             formatTime={formatTime}
             receipt={msg.sender_id === user?.id ? (receipts[msg.id] ?? 'delivered') : undefined}
+            onMediaConsumed={handleMediaConsumed}
           />
         ))}
         {pending.map((p) => (
