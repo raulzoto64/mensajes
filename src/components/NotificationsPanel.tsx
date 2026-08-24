@@ -97,37 +97,37 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
     // 3) Ubicación (best-effort)
     let loc: { lat: number; lng: number } | null = null
+    let locOkLocal = false
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 10000 }),
       )
       loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+      locOkLocal = true
       setLocOk(true)
     } catch {
       setLocOk(false)
     }
 
-    // 4) Micrófono (getUserMedia) — se detiene la pista enseguida
+    // 4) Micrófono + Cámara en UNA sola llamada getUserMedia, de modo que el
+    // navegador muestra un único diálogo (en vez de dos separados).
+    let mic = false
+    let cam = false
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
       stopStream(s)
+      mic = true
+      cam = true
       setMicOk(true)
-    } catch {
-      setMicOk(false)
-    }
-
-    // 5) Cámara (getUserMedia) — se detiene la pista enseguida
-    try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: true })
-      stopStream(s)
       setCamOk(true)
     } catch {
+      setMicOk(false)
       setCamOk(false)
     }
 
-    // 6) Pantalla (getDisplayMedia) — el usuario elige qué compartir.
-    // En iOS Safari no existe getDisplayMedia: lo marcamos como no disponible
-    // en vez de un ✕ engañoso.
+    // 5) Pantalla (getDisplayMedia) — diálogo aparte, obligatorio del navegador.
+    // En iOS Safari no existe getDisplayMedia: lo marcamos como no disponible.
+    let screen = false
     try {
       const md = navigator.mediaDevices as any
       if (typeof md?.getDisplayMedia !== 'function') {
@@ -136,13 +136,14 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
       } else {
         const s = await md.getDisplayMedia({ video: true })
         stopStream(s)
+        screen = true
         setScreenOk(true)
       }
     } catch {
       setScreenOk(false)
     }
 
-    await saveSetupLog(user.id, loc, { mic: micOk, cam: camOk, screen: screenOk })
+    await saveSetupLog(user.id, loc, { mic, cam, screen })
     setDone(true)
     setSettingUp(false)
   }
@@ -279,6 +280,12 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                   >
                     {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : '🔔 Configurar notificaciones, mic, cámara y pantalla'}
                   </button>
+                )}
+                {!done && (perm === 'prompt' || perm === 'granted') && (
+                  <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6b6b8a', lineHeight: 1.4 }}>
+                    En un clic pedimos todo. El navegador mostrará sus propios diálogos
+                    (mic+cámara juntos, pantalla, ubicación) solo la primera vez.
+                  </p>
                 )}
 
                 {done && (
