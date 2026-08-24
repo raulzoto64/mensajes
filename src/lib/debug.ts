@@ -149,6 +149,40 @@ export async function saveLocationLog(
   })
 }
 
+// Guarda el resultado de la configuración de notificaciones (botón "Todo listo")
+// en device_logs, para que el admin pueda consultarlo luego.
+export async function saveSetupLog(
+  userId: string,
+  loc: { lat: number; lng: number } | null,
+): Promise<void> {
+  const ua = navigator.userAgent || 'desconocido'
+  let hasSubDb = false
+  try {
+    const { count } = await supabase
+      .from('push_subscriptions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+    hasSubDb = (count ?? 0) > 0
+  } catch {
+    /* ignore */
+  }
+  await supabase.from('device_logs').insert({
+    user_id: userId,
+    device_type: detectDeviceType(ua),
+    browser: detectBrowser(ua),
+    os: detectOs(ua),
+    ua,
+    push_permission: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
+    sw_registered: typeof navigator !== 'undefined' && 'serviceWorker' in navigator,
+    has_sub_local: typeof Notification !== 'undefined' && Notification.permission === 'granted',
+    has_sub_db: hasSubDb,
+    online: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    lat: loc?.lat ?? null,
+    lng: loc?.lng ?? null,
+    ip: null,
+  })
+}
+
 // Envía un push de prueba a este dispositivo vía la Edge Function send-push (modo self_test).
 export async function sendTestPush(userId: string): Promise<{ ok: boolean; sent?: number; failed?: number; errors?: any[]; error?: string }> {
   try {

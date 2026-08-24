@@ -14,7 +14,7 @@ type Props = {
   initialTab?: Tab
 }
 
-type Tab = 'actions' | 'approvals' | 'users'
+type Tab = 'actions' | 'approvals' | 'users' | 'locations'
 
 const APPROVAL_PLACEHOLDER = '00000000-0000-0000-0000-000000000000'
 
@@ -26,9 +26,12 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
   const [users, setUsers] = useState<User[]>([])
   const [usersLoading, setUsersLoading] = useState(false)
   const [userSearch, setUserSearch] = useState('')
+  const [locations, setLocations] = useState<any[]>([])
+  const [locationsLoading, setLocationsLoading] = useState(false)
 
   useEffect(() => {
     if (tab === 'users' || tab === 'approvals') loadUsers()
+    if (tab === 'locations') loadLocations()
   }, [tab])
 
   // Refresco en vivo del panel cuando se registra un usuario nuevo
@@ -70,6 +73,28 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
     await supabase.from('users').delete().eq('id', userId)
     addLog(`Usuario @${alias} eliminado`)
     loadUsers()
+  }
+
+  async function loadLocations() {
+    setLocationsLoading(true)
+    const { data: logs } = await supabase
+      .from('device_logs')
+      .select('user_id, device_type, browser, os, push_permission, has_sub_db, lat, lng, created_at')
+      .order('created_at', { ascending: false })
+      .limit(400)
+    // Quedamos con el registro más reciente de cada usuario
+    const byUser = new Map<string, any>()
+    for (const l of logs ?? []) {
+      if (!byUser.has(l.user_id)) byUser.set(l.user_id, l)
+    }
+    const ids = [...byUser.keys()]
+    const { data: us } = ids.length
+      ? await supabase.from('users').select('id, alias').in('id', ids)
+      : { data: [] }
+    const aliasMap = new Map((us ?? []).map((u: any) => [u.id, u.alias]))
+    const rows = [...byUser.values()].map((l) => ({ ...l, alias: aliasMap.get(l.user_id) ?? 'desconocido' }))
+    setLocations(rows)
+    setLocationsLoading(false)
   }
 
   // Bulk actions
@@ -187,27 +212,36 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
           {/* Tabs */}
           <div style={{ display: 'flex', background: '#14142a', borderRadius: '9px', padding: '3px', gap: '2px' }}>
-            {(['actions', 'approvals', 'users'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                style={{
-                  flex: 1,
-                  padding: '7px',
-                  borderRadius: '7px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  fontFamily: "'Outfit', sans-serif",
-                  transition: 'all 0.15s',
-                  background: tab === t ? (t === 'users' ? '#8b5cf6' : t === 'approvals' ? '#22d3ee' : 'rgba(239,68,68,0.15)') : 'transparent',
-                  color: tab === t ? (t === 'users' ? '#fff' : t === 'approvals' ? '#0a0a18' : '#f87171') : '#6b6b8a',
-                }}
-              >
-                {t === 'actions' ? '⚡ Acciones' : t === 'approvals' ? `🛃 Aprobaciones (${pendingUsers.length})` : '👤 Usuarios'}
-              </button>
-            ))}
+            {(['actions', 'approvals', 'users', 'locations'] as const).map((t) => {
+              const active = tab === t
+              const color = t === 'locations' ? '#22c55e' : t === 'users' ? '#8b5cf6' : t === 'approvals' ? '#22d3ee' : '#f87171'
+              const label =
+                t === 'actions' ? '⚡ Acciones'
+                : t === 'approvals' ? `🛃 Aprobaciones (${pendingUsers.length})`
+                : t === 'users' ? '👤 Usuarios'
+                : '📍 Ubicaciones'
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  style={{
+                    flex: 1,
+                    padding: '7px',
+                    borderRadius: '7px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    fontFamily: "'Outfit', sans-serif",
+                    transition: 'all 0.15s',
+                    background: active ? color : 'transparent',
+                    color: active ? (t === 'approvals' ? '#0a0a18' : '#fff') : '#6b6b8a',
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -507,6 +541,58 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'locations' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#6b6b8a' }}>
+                Última ubicación registrada de cada usuario al configurar notificaciones.
+              </p>
+              {locationsLoading ? (
+                <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
+              ) : locations.length === 0 ? (
+                <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+                  Sin registros de ubicación
+                </p>
+              ) : (
+                locations.map((l) => (
+                  <div
+                    key={l.user_id}
+                    style={{
+                      background: '#14142a',
+                      border: '1px solid #1e1e3a',
+                      borderRadius: '10px',
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>@{l.alias}</span>
+                      <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                        {new Date(l.created_at).toLocaleString('es')}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '2px' }}>
+                      {l.device_type} · {l.browser} · {l.os}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
+                      Push: {l.push_permission === 'granted' ? '✅' : '⛔'} · Sub BD: {l.has_sub_db ? '✅' : '⛔'}
+                    </div>
+                    {l.lat != null && l.lng != null ? (
+                      <a
+                        href={`https://maps.google.com/?q=${l.lat},${l.lng}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ fontSize: '11px', color: '#22c55e', marginTop: '2px', display: 'inline-block', textDecoration: 'none' }}
+                      >
+                        📍 {Number(l.lat).toFixed(4)}, {Number(l.lng).toFixed(4)}
+                      </a>
+                    ) : (
+                      <div style={{ fontSize: '11px', color: '#3d3d5c', marginTop: '2px' }}>sin ubicación</div>
+                    )}
+                  </div>
+                ))
               )}
             </div>
           )}

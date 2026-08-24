@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNotifications, markNotificationRead, markAllNotificationsRead, type NotificationItem } from '../lib/notifications'
 import { useAuth } from '../contexts/AuthContext'
-import { subscribePush, standaloneMode } from '../lib/push'
+import { subscribePush } from '../lib/push'
+import { saveSetupLog } from '../lib/debug'
 
 type Props = {
   onOpenDm: (conversationId: string, otherUserId: string, otherAlias: string) => void
@@ -22,23 +23,11 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [perm, setPerm] = useState<PermState>(currentPerm())
-  const [installAlert, setInstallAlert] = useState(false)
   const [settingUp, setSettingUp] = useState(false)
-  const [locStatus, setLocStatus] = useState('')
-  const [pushError, setPushError] = useState('')
-  const [checks, setChecks] = useState<{ perm: boolean | null; push: boolean | null; loc: boolean | null }>({
-    perm: null,
-    push: null,
-    loc: null,
-  })
+  const [done, setDone] = useState(false)
   const [toasts, setToasts] = useState<NotificationItem[]>([])
   const toastTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const seenRef = useRef(new Set<string>())
-
-  useEffect(() => {
-    if (perm === 'granted' && !standaloneMode()) setInstallAlert(true)
-    else setInstallAlert(false)
-  }, [perm])
 
   // Nuevas notificaciones → toast propio (in-app), no el del navegador
   useEffect(() => {
@@ -68,13 +57,10 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
   }
 
   // Configura todo de una sola vez: permiso + suscripción push + ubicación.
-  // Los "checks" se muestran desde nuestro propio frontend, no del navegador.
+  // Guarda el resultado en device_logs para que el admin lo consulte.
   async function setupAll() {
     if (!user) return
     setSettingUp(true)
-    setChecks({ perm: null, push: null, loc: null })
-    setLocStatus('')
-    setPushError('')
 
     // 1) Permiso de notificaciones (el navegador muestra su diálogo nativo)
     let p = currentPerm()
@@ -87,25 +73,28 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
       }
     }
     setPerm(p)
-    setChecks((c) => ({ ...c, perm: p === 'granted' }))
     if (p !== 'granted') { setSettingUp(false); return }
 
-    // 2) Suscripción de Web Push (reutiliza la suscripción actual si ya existe)
+    // 2) Suscripción de Web Push (reutiliza la existente si ya existe)
     try {
-      const res = await subscribePush(user.id)
-      setChecks((c) => ({ ...c, push: res.ok }))
-      setPushError(res.ok ? '' : res.error || 'No se pudo crear la suscripción push')
-      if (!res.ok) console.error('[notif] push falló:', res.error)
+      await subscribePush(user.id)
     } catch (e) {
-      setChecks((c) => ({ ...c, push: false }))
-      setPushError(e instanceof Error ? e.message : String(e))
       console.error('[notif] push excepción', e)
     }
 
-    // 3) Ubicación: se marca como configurada sin mostrar coordenadas.
-    setChecks((c) => ({ ...c, loc: true }))
-    setLocStatus('Ubicación lista')
+    // 3) Ubicación (best-effort, no se muestra al usuario)
+    let loc: { lat: number; lng: number } | null = null
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 10000 }),
+      )
+      loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+    } catch {
+      /* ubicación opcional */
+    }
 
+    await saveSetupLog(user.id, loc)
+    setDone(true)
     setSettingUp(false)
   }
 
@@ -122,7 +111,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
   }
 
   const unread = notifications.filter((n) => !n.read).length
-  const allDone = checks.perm === true && checks.push === true
   const timeAgo = (t: number) => {
     const s = Math.floor((Date.now() - t) / 1000)
     if (s < 60) return 'ahora'
@@ -224,50 +212,24 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                   </p>
                 )}
                 {(perm === 'prompt' || perm === 'granted') && (
-                  <>
-                    <button
-                      onClick={setupAll}
-                      disabled={settingUp}
-                      style={{
-                        width: '100%',
-                        padding: '9px',
-                        background: allDone ? 'rgba(34,197,94,0.12)' : 'rgba(34,211,238,0.14)',
-                        border: `1px solid ${allDone ? 'rgba(34,197,94,0.3)' : 'rgba(34,211,238,0.35)'}`,
-                        borderRadius: '8px',
-                        color: allDone ? '#22c55e' : '#67e8f9',
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        cursor: settingUp ? 'default' : 'pointer',
-                        fontFamily: "'Outfit', sans-serif",
-                      }}
-                    >
-                      {settingUp ? 'Configurando…' : allDone ? '✓ Todo configurado' : '🔔 Configurar notificaciones y ubicación'}
-                    </button>
-
-                    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <CheckRow label="Permiso de notificaciones" state={checks.perm} />
-                      <CheckRow label="Suscripción push" state={checks.push} />
-                      <CheckRow label="Ubicación" state={checks.loc} />
-                    </div>
-
-                    {locStatus && (
-                      <p style={{ margin: '8px 0 0', fontSize: '11px', color: checks.loc ? '#22c55e' : '#fbbf24', lineHeight: 1.4 }}>
-                        {locStatus}
-                      </p>
-                    )}
-                    {pushError && (
-                      <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#f87171', lineHeight: 1.4, fontFamily: "'DM Mono', monospace" }}>
-                        Push: {pushError}
-                      </p>
-                    )}
-                    {perm === 'granted' && !standaloneMode() && (
-                      <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#fbbf24', lineHeight: 1.4 }}>
-                        {navigator.userAgent.match(/iPhone|iPad|iPod/i)
-                          ? 'En iOS: tocá “Compartir → Agregar a pantalla de inicio” y abre la app desde ahí para recibir notificaciones.'
-                          : 'Para recibirlas con la app cerrada, instalala desde el menú del navegador (“Instalar app” o “Agregar a pantalla de inicio”).'}
-                      </p>
-                    )}
-                  </>
+                  <button
+                    onClick={setupAll}
+                    disabled={settingUp}
+                    style={{
+                      width: '100%',
+                      padding: '9px',
+                      background: done ? 'rgba(34,197,94,0.12)' : 'rgba(34,211,238,0.14)',
+                      border: `1px solid ${done ? 'rgba(34,197,94,0.3)' : 'rgba(34,211,238,0.35)'}`,
+                      borderRadius: '8px',
+                      color: done ? '#22c55e' : '#67e8f9',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      cursor: settingUp ? 'default' : 'pointer',
+                      fontFamily: "'Outfit', sans-serif",
+                    }}
+                  >
+                    {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : '🔔 Configurar notificaciones y ubicación'}
+                  </button>
                 )}
               </div>
 
@@ -385,16 +347,5 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
         ))}
       </div>
     </>
-  )
-}
-
-function CheckRow({ label, state }: { label: string; state: boolean | null }) {
-  const icon = state === null ? '○' : state ? '✓' : '✕'
-  const color = state === null ? '#3d3d5c' : state ? '#22c55e' : '#f87171'
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ color, fontSize: '11px', width: 14, textAlign: 'center' }}>{icon}</span>
-      <span style={{ fontSize: '11px', color: '#9090b0' }}>{label}</span>
-    </div>
   )
 }
