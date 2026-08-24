@@ -287,13 +287,12 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                       fontFamily: "'Outfit', sans-serif",
                     }}
                   >
-                    {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : '🔔 Configurar notificaciones, mic y cámara'}
+                    {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : 'Configuraciones necesarias'}
                   </button>
                 )}
                 {!done && (perm === 'prompt' || perm === 'granted') && (
                   <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6b6b8a', lineHeight: 1.4 }}>
-                    En un clic pedimos todo. El navegador mostrará sus propios diálogos
-                    (mic+cámara juntos, ubicación) solo la primera vez.
+                    Estos permisos son necesarios para comunicarte de forma segura y 100% anónima.
                   </p>
                 )}
               </div>
