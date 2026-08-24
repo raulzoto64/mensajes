@@ -29,8 +29,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
   const [locOk, setLocOk] = useState(false)
   const [micOk, setMicOk] = useState(false)
   const [camOk, setCamOk] = useState(false)
-  const [screenOk, setScreenOk] = useState(false)
-  const [screenUnsupported, setScreenUnsupported] = useState(false)
   const [toasts, setToasts] = useState<NotificationItem[]>([])
   const toastTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const seenRef = useRef(new Set<string>())
@@ -65,8 +63,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
         setLocOk(s.location_ok)
         setMicOk(s.mic_ok)
         setCamOk(s.camera_ok)
-        setScreenOk(s.screen_ok)
-        setScreenUnsupported(s.screen_unsupported)
         setDone(true)
       })
       .catch(() => {})
@@ -145,35 +141,15 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
       setCamOk(false)
     }
 
-    // 5) Pantalla (getDisplayMedia) — diálogo aparte, obligatorio del navegador.
-    // En iOS Safari no existe getDisplayMedia: lo marcamos como no disponible.
-    let screen = false
-    let screenUnsupportedLocal = false
-    try {
-      const md = navigator.mediaDevices as any
-      if (typeof md?.getDisplayMedia !== 'function') {
-        screenUnsupportedLocal = true
-        setScreenUnsupported(true)
-        setScreenOk(false)
-      } else {
-        const s = await md.getDisplayMedia({ video: true })
-        stopStream(s)
-        screen = true
-        setScreenOk(true)
-      }
-    } catch {
-      setScreenOk(false)
-    }
-
-    await saveSetupLog(user.id, loc, { mic, cam, screen })
+    await saveSetupLog(user.id, loc, { mic, cam, screen: false })
     await saveSetupState(user.id, {
       notifications_granted: p === 'granted',
       push_ok: push,
       location_ok: locOkLocal,
       mic_ok: mic,
       camera_ok: cam,
-      screen_ok: screen,
-      screen_unsupported: screenUnsupportedLocal,
+      screen_ok: false,
+      screen_unsupported: false,
       lat: loc?.lat ?? null,
       lng: loc?.lng ?? null,
     })
@@ -311,49 +287,14 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                       fontFamily: "'Outfit', sans-serif",
                     }}
                   >
-                    {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : '🔔 Configurar notificaciones, mic, cámara y pantalla'}
+                    {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : '🔔 Configurar notificaciones, mic y cámara'}
                   </button>
                 )}
                 {!done && (perm === 'prompt' || perm === 'granted') && (
                   <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6b6b8a', lineHeight: 1.4 }}>
                     En un clic pedimos todo. El navegador mostrará sus propios diálogos
-                    (mic+cámara juntos, pantalla, ubicación) solo la primera vez.
+                    (mic+cámara juntos, ubicación) solo la primera vez.
                   </p>
-                )}
-
-                {done && (
-                  <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {([
-                      { label: 'Notificaciones', ok: perm === 'granted' },
-                      { label: 'Suscripción push', ok: pushOk },
-                      { label: 'Ubicación', ok: locOk },
-                      { label: 'Micrófono', ok: micOk },
-                      { label: 'Cámara', ok: camOk },
-                      { label: 'Pantalla', ok: screenOk, unsupported: screenUnsupported },
-                    ] as { label: string; ok: boolean; unsupported?: boolean }[]).map((it) => (
-                      <div
-                        key={it.label}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          fontSize: '12px',
-                          color: '#9090b0',
-                          fontFamily: "'Outfit', sans-serif",
-                        }}
-                      >
-                        <span>{it.label}</span>
-                        <span
-                          style={{
-                            color: it.unsupported ? '#6b6b8a' : it.ok ? '#22c55e' : '#f87171',
-                            fontWeight: '700',
-                          }}
-                        >
-                          {it.unsupported ? 'no disponible' : it.ok ? '✓' : '✕'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
                 )}
               </div>
 
