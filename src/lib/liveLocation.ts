@@ -153,7 +153,7 @@ export async function startLiveLocation(uid: string): Promise<void> {
       }
     },
     (err) => console.error('[liveLocation] watch error', err),
-    { enableHighAccuracy: false, maximumAge: 30000, timeout: 15000 },
+    { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 },
   )
 
   dwellTimer = setInterval(checkDwell, DWELL_CHECK_MS)

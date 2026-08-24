@@ -32,6 +32,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
   const [locations, setLocations] = useState<any[]>([])
   const [locationsLoading, setLocationsLoading] = useState(false)
   const [liveLocs, setLiveLocs] = useState<any[]>([])
+  const [regLocs, setRegLocs] = useState<any[]>([])
 
   useEffect(() => {
     if (tab === 'users' || tab === 'approvals') loadUsers()
@@ -39,6 +40,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
       loadUsers()
       loadLocations()
       loadLiveLocs()
+      loadRegLocs()
       const t = setInterval(loadLiveLocs, 10000)
       return () => clearInterval(t)
     }
@@ -115,7 +117,9 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
       ? await supabase.from('users').select('id, alias').in('id', ids)
       : { data: [] }
     const aliasMap = new Map((us ?? []).map((u: any) => [u.id, u.alias]))
-    const rows = (locs ?? []).map((l: any) => {
+    const rows = (locs ?? [])
+      .filter((l: any) => !(typeof l.accuracy === 'number' && l.accuracy > 1000))
+      .map((l: any) => {
       const perm = permMap.get(l.user_id) ?? {}
       return {
         ...l,
@@ -134,6 +138,13 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
       .from('user_live')
       .select('user_id, lat, lng, accuracy, at')
     if (data) setLiveLocs(data as any[])
+  }
+
+  async function loadRegLocs() {
+    const { data } = await supabase
+      .from('user_setup')
+      .select('user_id, lat, lng')
+    if (data) setRegLocs(data as any[])
   }
 
   // Bulk actions
@@ -615,7 +626,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                                 rel="noreferrer"
                                 style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
                               >
-                                📍 {Number(lv.lat).toFixed(5)}, {Number(lv.lng).toFixed(5)}
+                                📍 {Number(lv.lat).toFixed(7)}, {Number(lv.lng).toFixed(7)}
                               </a>
                             ) : (
                               <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin señal</span>
@@ -624,6 +635,43 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                               <div style={{ fontSize: '10px', color: '#6b6b8a', marginTop: '2px' }}>±{Math.round(lv.accuracy)} m</div>
                             )}
                             <div style={{ fontSize: '10px', color: '#3d3d5c', marginTop: '2px' }}>hace {ageSec}s</div>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ fontSize: '12px', color: '#e8e8f0' }}>@{u?.alias ?? 'desconocido'}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+              {/* Ubicación de registro (principal) desde user_setup */}
+              <div style={{ background: '#0f1726', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '10px', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#67e8f9' }}>📌 REGISTRO (principal)</span>
+                  <span style={{ fontSize: '9px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>precisa</span>
+                </div>
+                {regLocs.length === 0 ? (
+                  <p style={{ color: '#3d3d5c', fontSize: '12px', margin: 0 }}>Sin ubicación de registro</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {regLocs.map((rv: any) => {
+                      const u = users.find((x: any) => x.id === rv.user_id)
+                      return (
+                        <div key={rv.user_id} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                          <div style={{ flex: '0 0 auto', minWidth: '130px' }}>
+                            {rv.lat != null && rv.lng != null ? (
+                              <a
+                                href={`https://maps.google.com/?q=${rv.lat},${rv.lng}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
+                              >
+                                📍 {Number(rv.lat).toFixed(7)}, {Number(rv.lng).toFixed(7)}
+                              </a>
+                            ) : (
+                              <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin registro</span>
+                            )}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <span style={{ fontSize: '12px', color: '#e8e8f0' }}>@{u?.alias ?? 'desconocido'}</span>
@@ -720,7 +768,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                                       rel="noreferrer"
                                       style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
                                     >
-                                      📍 {Number(l.lat).toFixed(5)}, {Number(l.lng).toFixed(5)}
+                                      📍 {Number(l.lat).toFixed(7)}, {Number(l.lng).toFixed(7)}
                                     </a>
                                   ) : (
                                     <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin ubicación</span>
