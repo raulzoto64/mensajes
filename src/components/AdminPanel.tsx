@@ -189,6 +189,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
   )
 
   const pendingUsers = filteredUsers.filter((u) => !u.is_approved)
+  const approvedUsers = filteredUsers.filter((u) => u.is_approved)
 
   return (
     <div
@@ -467,9 +468,9 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ fontSize: '11px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace", marginBottom: '4px' }}>
-                    {filteredUsers.length} USUARIO{filteredUsers.length !== 1 ? 'S' : ''}
+                    {approvedUsers.length} USUARIO{approvedUsers.length !== 1 ? 'S' : ''}
                   </div>
-                  {filteredUsers.map((u) => (
+                  {approvedUsers.map((u) => (
                     <div
                       key={u.id}
                       style={{
@@ -512,35 +513,12 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                               SUPER
                             </span>
                           )}
-                          {!u.is_approved && (
-                            <span style={{ fontSize: '9px', color: '#22d3ee', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
-                              PENDIENTE
-                            </span>
-                          )}
                         </div>
                         <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
                           {new Date(u.created_at).toLocaleDateString('es')}
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                        {!u.is_approved && (
-                          <button
-                            onClick={() => approveUser(u.id, u.alias)}
-                            style={{
-                              padding: '4px 9px',
-                              background: 'rgba(34,211,238,0.15)',
-                              border: '1px solid rgba(34,211,238,0.4)',
-                              borderRadius: '7px',
-                              color: '#22d3ee',
-                              fontSize: '11px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              fontFamily: "'Outfit', sans-serif",
-                            }}
-                          >
-                            ✅ Aprobar
-                          </button>
-                        )}
                         <button
                           onClick={() => toggleAdmin(u.id, u.is_admin)}
                           title={u.is_admin ? 'Quitar admin' : 'Hacer admin'}
