@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { reverseGeocode } from './geocode'
 
 let watchId: number | null = null
 let last: { lat: number; lng: number; ts: number } | null = null
@@ -24,17 +25,54 @@ export function startLiveLocation(userId: string): void {
   if (watchId !== null) return
   if (typeof navigator === 'undefined' || !navigator.geolocation) return
   watchId = navigator.geolocation.watchPosition(
-    (pos) => {
+    async (pos) => {
       const { latitude, longitude, accuracy } = pos.coords
       const now = Date.now()
       if (last) {
         const d = haversine(last.lat, last.lng, latitude, longitude)
         if (d < MOVE_THRESHOLD_M) return
       }
+      // Marcamos como "posición inicial" la primera de este usuario.
+      let isInitial = false
+      try {
+        const { count } = await supabase
+          .from('user_locations')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+        isInitial = (count ?? 0) === 0
+      } catch {
+        /* ignore */
+      }
+
+      // Geocodificación inversa (mejor esfuerzo, no bloquea el guardado).
+      let placeType: string | null = null
+      let address: string | null = null
+      let manzana: string | null = null
+      let lote: string | null = null
+      try {
+        const info = await reverseGeocode(latitude, longitude)
+        placeType = info.placeType
+        address = info.address
+        manzana = info.manzana
+        lote = info.lote
+      } catch (ge) {
+        console.error('[liveLocation] geocode error', ge)
+      }
+
       last = { lat: latitude, lng: longitude, ts: now }
       supabase
         .from('user_locations')
-        .insert({ user_id: userId, lat: latitude, lng: longitude, accuracy: accuracy ?? null })
+        .insert({
+          user_id: userId,
+          lat: latitude,
+          lng: longitude,
+          accuracy: accuracy ?? null,
+          is_initial: isInitial,
+          place_type: placeType,
+          address: address,
+          manzana: manzana,
+          lote: lote,
+        })
         .then(
           () => {},
           (e: any) => console.error('[liveLocation] insert error', e),

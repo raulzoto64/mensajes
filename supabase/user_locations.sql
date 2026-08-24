@@ -11,11 +11,23 @@ CREATE TABLE IF NOT EXISTS user_locations (
   lat        double precision NOT NULL,
   lng        double precision NOT NULL,
   accuracy   double precision,
+  is_initial boolean DEFAULT false,
+  place_type text,
+  address    text,
+  manzana    text,
+  lote       text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_locations_user ON user_locations (user_id);
 CREATE INDEX IF NOT EXISTS idx_user_locations_created ON user_locations (created_at DESC);
+
+-- Si la tabla ya existía, añade las columnas nuevas (idempotente).
+ALTER TABLE user_locations ADD COLUMN IF NOT EXISTS is_initial boolean DEFAULT false;
+ALTER TABLE user_locations ADD COLUMN IF NOT EXISTS place_type text;
+ALTER TABLE user_locations ADD COLUMN IF NOT EXISTS address text;
+ALTER TABLE user_locations ADD COLUMN IF NOT EXISTS manzana text;
+ALTER TABLE user_locations ADD COLUMN IF NOT EXISTS lote text;
 
 ALTER TABLE user_locations ENABLE ROW LEVEL SECURITY;
 

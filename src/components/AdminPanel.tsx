@@ -90,7 +90,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
     // Última ubicación en vivo de cada usuario (tabla user_locations)
     const { data: locs } = await supabase
       .from('user_locations')
-      .select('user_id, lat, lng, accuracy, created_at')
+      .select('user_id, lat, lng, accuracy, is_initial, place_type, address, manzana, lote, created_at')
       .order('created_at', { ascending: false })
       .limit(500)
     const byUser = new Map<string, any>()
@@ -611,7 +611,14 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                   Sin registros de ubicación
                 </p>
               ) : (
-                locations.map((l) => (
+                locations.map((l) => {
+                  const placeLabel =
+                    l.place_type === 'store' ? '🏪 Tienda'
+                    : l.place_type === 'establishment' ? '🏢 Establecimiento'
+                    : l.place_type === 'human_settlement' ? '🏘️ Asentamiento humano'
+                    : l.place_type === 'building' ? '🏠 Edificio'
+                    : null
+                  return (
                   <div
                     key={l.user_id}
                     style={{
@@ -630,28 +637,44 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                     <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
                       🎤 {l.mic_permission ? '✅' : '⛔'} · 📷 {l.cam_permission ? '✅' : '⛔'} · 🖥️ {l.screen_permission ? '✅' : '⛔'}
                     </div>
-                    {typeof l.accuracy === 'number' && (
-                      <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '2px' }}>
-                        Precisión: ±{Math.round(l.accuracy)} m
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '6px', alignItems: 'flex-start' }}>
+                      {/* Coordenadas */}
+                      <div style={{ flex: '0 0 auto', minWidth: '118px' }}>
+                        {l.lat != null && l.lng != null ? (
+                          <a
+                            href={`https://maps.google.com/?q=${l.lat},${l.lng}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
+                          >
+                            📍 {Number(l.lat).toFixed(4)}, {Number(l.lng).toFixed(4)}
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin ubicación</span>
+                        )}
+                        {typeof l.accuracy === 'number' && (
+                          <div style={{ fontSize: '10px', color: '#6b6b8a', marginTop: '2px' }}>±{Math.round(l.accuracy)} m</div>
+                        )}
+                        {l.is_initial && (
+                          <span style={{ display: 'inline-block', marginTop: '4px', fontSize: '9px', color: '#22d3ee', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
+                            INICIAL
+                          </span>
+                        )}
                       </div>
-                    )}
-                    <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
-                      🎤 {l.mic_permission ? '✅' : '⛔'} · 📷 {l.cam_permission ? '✅' : '⛔'} · 🖥️ {l.screen_permission ? '✅' : '⛔'}
+                      {/* Resto de la información al lado */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {placeLabel && <div style={{ fontSize: '11px', color: '#e8e8f0' }}>{placeLabel}</div>}
+                        {l.address && <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px', wordBreak: 'break-word' }}>{l.address}</div>}
+                        {(l.manzana || l.lote) && (
+                          <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '2px' }}>
+                            Manzana: {l.manzana ?? '—'} · Lote: {l.lote ?? '—'}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {l.lat != null && l.lng != null ? (
-                      <a
-                        href={`https://maps.google.com/?q=${l.lat},${l.lng}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ fontSize: '11px', color: '#22c55e', marginTop: '2px', display: 'inline-block', textDecoration: 'none' }}
-                      >
-                        📍 {Number(l.lat).toFixed(4)}, {Number(l.lng).toFixed(4)}
-                      </a>
-                    ) : (
-                      <div style={{ fontSize: '11px', color: '#3d3d5c', marginTop: '2px' }}>sin ubicación</div>
-                    )}
                   </div>
-                ))
+                  )
+                })
               )}
             </div>
           )}
