@@ -95,7 +95,16 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
       .limit(500)
     const byUser = new Map<string, any>()
     for (const l of locs ?? []) {
-      if (!byUser.has(l.user_id)) byUser.set(l.user_id, l)
+      const cur = byUser.get(l.user_id)
+      const acc = typeof l.accuracy === 'number' ? l.accuracy : Number.POSITIVE_INFINITY
+      if (!cur) {
+        byUser.set(l.user_id, l)
+        continue
+      }
+      const curAcc = typeof cur.accuracy === 'number' ? cur.accuracy : Number.POSITIVE_INFINITY
+      // Nos quedamos con la lectura MÁS PRECISA (menor accuracy) de cada usuario,
+      // para que PC y móvil muestren siempre la misma ubicación exacta.
+      if (acc < curAcc) byUser.set(l.user_id, l)
     }
     // Permisos (mic/cam/pantalla) desde device_logs
     const { data: logs } = await supabase
@@ -625,7 +634,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                             rel="noreferrer"
                             style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
                           >
-                            📍 {Number(l.lat).toFixed(4)}, {Number(l.lng).toFixed(4)}
+                            📍 {Number(l.lat).toFixed(5)}, {Number(l.lng).toFixed(5)}
                           </a>
                         ) : (
                           <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin ubicación</span>
