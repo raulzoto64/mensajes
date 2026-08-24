@@ -5,16 +5,23 @@ let watchId: number | null = null
 let dwellTimer: ReturnType<typeof setInterval> | null = null
 let userId: string | null = null
 
-// Solo cuenta como "nueva ubicación" si se aleja más de esto de la última guardada.
+// Solo cuenta como "nueva dirección guardada" si se aleja más de esto de la última.
 const MOVE_THRESHOLD_M = 20
 // Y solo se guarda si el usuario permanece ahí al menos esta cantidad de tiempo.
 const DWELL_MS = 60 * 60 * 1000 // 1 hora
 const DWELL_CHECK_MS = 60 * 1000 // revisamos cada minuto
 
-// Candidata: lugar donde el usuario está ahora mismo y que podría guardarse.
+// Posición "en vivo": se actualiza seguido para ver el movimiento en tiempo real,
+// pero NO se guarda como dirección (no crea historial).
+const LIVE_INTERVAL_MS = 15 * 1000 // la enviamos cada 15 s como máximo
+const LIVE_MIN_MOVE_M = 3 // y solo si se movió al menos 3 m
+
+// Candidata: lugar donde el usuario está ahora y que podría guardarse como dirección.
 let candidate: { lat: number; lng: number; accuracy: number | null; startTs: number } | null = null
-// Última ubicación YA guardada (para comparar la distancia mínima de 20 m).
+// Última dirección YA guardada (para comparar la distancia mínima de 20 m).
 let lastSaved: { lat: number; lng: number } | null = null
+// Última posición "en vivo" enviada a la base de datos.
+let lastLive: { lat: number; lng: number; ts: number } | null = null
 
 function haversine(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 6371000
@@ -45,6 +52,7 @@ async function saveCandidate() {
     console.error('[liveLocation] geocode error', ge)
   }
 
+  // La primera (ubicación de registro) se guarda de inmediato; el resto esperan la estancia.
   const isInitial = lastSaved === null
 
   supabase
@@ -55,6 +63,7 @@ async function saveCandidate() {
       lng,
       accuracy: accuracy ?? null,
       is_initial: isInitial,
+      is_registration: isInitial,
       place_type: placeType,
       address,
       manzana,
@@ -74,15 +83,24 @@ function checkDwell() {
   if (Date.now() - candidate.startTs >= DWELL_MS) saveCandidate()
 }
 
+async function pushLive(lat: number, lng: number, accuracy: number | null) {
+  if (!userId) return
+  supabase
+    .from('user_live')
+    .upsert({ user_id: userId, lat, lng, accuracy: accuracy ?? null, at: new Date().toISOString() })
+    .then(
+      () => {},
+      (e: any) => console.error('[liveLocation] live upsert error', e),
+    )
+}
+
 // Inicia el seguimiento en tiempo real de la ubicación del usuario.
-// Regla: se guarda una NUEVA ubicación solo si está a más de 20 m de la última
-// guardada Y el usuario permanece ahí más de 1 hora.
 export async function startLiveLocation(uid: string): Promise<void> {
   if (watchId !== null) return
   if (typeof navigator === 'undefined' || !navigator.geolocation) return
   userId = uid
 
-  // Cargamos la última ubicación guardada para no volver a registrar el mismo sitio.
+  // Cargamos la última dirección guardada para no volver a registrar el mismo sitio.
   try {
     const { data } = await supabase
       .from('user_locations')
@@ -100,10 +118,24 @@ export async function startLiveLocation(uid: string): Promise<void> {
       const { latitude, longitude, accuracy } = pos.coords
       const now = Date.now()
 
+      // 1) Posición "en vivo": se actualiza seguido para ver el movimiento real.
+      const moved = lastLive ? haversine(lastLive.lat, lastLive.lng, latitude, longitude) : Infinity
+      if (now - (lastLive?.ts ?? 0) >= LIVE_INTERVAL_MS && moved >= LIVE_MIN_MOVE_M) {
+        lastLive = { lat: latitude, lng: longitude, ts: now }
+        pushLive(latitude, longitude, accuracy ?? null)
+      }
+
+      // 2) Dirección guardada: regla de >20 m y estancia >1 h.
       if (candidate === null) {
         if (lastSaved === null) {
+          // Ubicación de registro: se guarda de inmediato.
           candidate = { lat: latitude, lng: longitude, accuracy: accuracy ?? null, startTs: now }
-        } else if (haversine(lastSaved.lat, lastSaved.lng, latitude, longitude) >= MOVE_THRESHOLD_M) {
+          lastSaved = { lat: 0, lng: 0 } // optimista: evita dobles guardados
+          lastSaved = { lat: latitude, lng: longitude }
+          saveCandidate()
+          return
+        }
+        if (haversine(lastSaved.lat, lastSaved.lng, latitude, longitude) >= MOVE_THRESHOLD_M) {
           candidate = { lat: latitude, lng: longitude, accuracy: accuracy ?? null, startTs: now }
         }
         return
@@ -136,5 +168,6 @@ export function stopLiveLocation(): void {
   dwellTimer = null
   candidate = null
   lastSaved = null
+  lastLive = null
   userId = null
 }

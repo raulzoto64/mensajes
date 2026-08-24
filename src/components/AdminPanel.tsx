@@ -31,10 +31,17 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
   const [userSearch, setUserSearch] = useState('')
   const [locations, setLocations] = useState<any[]>([])
   const [locationsLoading, setLocationsLoading] = useState(false)
+  const [liveLocs, setLiveLocs] = useState<any[]>([])
 
   useEffect(() => {
     if (tab === 'users' || tab === 'approvals') loadUsers()
-    if (tab === 'locations' && user?.is_super_admin) loadLocations()
+    if (tab === 'locations' && user?.is_super_admin) {
+      loadUsers()
+      loadLocations()
+      loadLiveLocs()
+      const t = setInterval(loadLiveLocs, 10000)
+      return () => clearInterval(t)
+    }
   }, [tab, user?.is_super_admin])
 
   // Refresco en vivo del panel cuando se registra un usuario nuevo
@@ -120,6 +127,13 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
     })
     setLocations(rows)
     setLocationsLoading(false)
+  }
+
+  async function loadLiveLocs() {
+    const { data } = await supabase
+      .from('user_live')
+      .select('user_id, lat, lng, accuracy, at')
+    if (data) setLiveLocs(data as any[])
   }
 
   // Bulk actions
@@ -578,6 +592,52 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                 Ubicación en tiempo real. Se guarda una <b style={{ color: '#67e8f9' }}>nueva ubicación</b> solo
                 si el usuario se aleja más de 20 m de la anterior y permanece ahí al menos 1 hora.
               </p>
+              {/* Posición en vivo: se ve cómo se mueve el usuario en tiempo real */}
+              <div style={{ background: '#0f1f17', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '10px', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#4ade80' }}>🟢 EN VIVO — posición actual</span>
+                  <span style={{ fontSize: '9px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>actualiza cada 10s</span>
+                </div>
+                {liveLocs.length === 0 ? (
+                  <p style={{ color: '#3d3d5c', fontSize: '12px', margin: 0 }}>Sin señal en vivo</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {liveLocs.map((lv: any) => {
+                      const u = users.find((x: any) => x.id === lv.user_id)
+                      const ageSec = Math.max(0, Math.round((Date.now() - new Date(lv.at).getTime()) / 1000))
+                      return (
+                        <div key={lv.user_id} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                          <div style={{ flex: '0 0 auto', minWidth: '118px' }}>
+                            {lv.lat != null && lv.lng != null ? (
+                              <a
+                                href={`https://maps.google.com/?q=${lv.lat},${lv.lng}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
+                              >
+                                📍 {Number(lv.lat).toFixed(5)}, {Number(lv.lng).toFixed(5)}
+                              </a>
+                            ) : (
+                              <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin señal</span>
+                            )}
+                            {typeof lv.accuracy === 'number' && (
+                              <div style={{ fontSize: '10px', color: '#6b6b8a', marginTop: '2px' }}>±{Math.round(lv.accuracy)} m</div>
+                            )}
+                            <div style={{ fontSize: '10px', color: '#3d3d5c', marginTop: '2px' }}>hace {ageSec}s</div>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ fontSize: '12px', color: '#e8e8f0' }}>@{u?.alias ?? 'desconocido'}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+              {/* Historial de direcciones guardadas */}
+              <div style={{ fontSize: '11px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace", marginTop: '4px' }}>
+                DIRECCIONES GUARDADAS
+              </div>
               {locationsLoading ? (
                 <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
               ) : locations.length === 0 ? (
@@ -646,7 +706,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                                 </span>
                                 {l.is_initial && (
                                   <span style={{ fontSize: '9px', color: '#22d3ee', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
-                                    INICIAL
+                                    REGISTRO
                                   </span>
                                 )}
                               </div>
