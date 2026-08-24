@@ -352,7 +352,7 @@ class CallManager {
       }
     }
     pc.ontrack = (e) => {
-      const stream = e.streams[0]
+      const stream = e.streams[0] ?? new MediaStream([e.track])
       console.log('[call] ontrack de', alias ?? userId, 'pistas:', stream?.getAudioTracks().length)
       const peers = { ...this.state.peers }
       if (peers[userId]) peers[userId] = { ...peers[userId], stream, state: 'connected' }

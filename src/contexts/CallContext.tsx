@@ -24,11 +24,16 @@ function peerStateLabel(s: string) {
 function AudioPeer({ stream }: { stream: MediaStream | null }) {
   const ref = useRef<HTMLAudioElement>(null)
   useEffect(() => {
-    if (ref.current && stream && typeof stream === 'object' && stream !== null) {
+    if (ref.current && stream) {
       ref.current.srcObject = stream
+      // Intentar reproducir inmediatamente para desbloquear autoplay
+      ref.current.play().catch(() => { /* autoplay blocked, retry on interaction */ })
     }
   }, [stream])
-  return <audio ref={ref} autoPlay playsInline />
+  const handlePress = () => {
+    ref.current?.play().catch(() => {})
+  }
+  return <audio ref={ref} autoPlay playsInline onClick={handlePress} style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }} />
 }
 
 function CallOverlay({ state }: { state: CallState }) {
