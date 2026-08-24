@@ -22,6 +22,12 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSess
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-push-secret, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 type Payload = {
   table: string
   id: string
@@ -87,17 +93,17 @@ function previewBody(p: Payload) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204 })
+    return new Response('ok', { status: 204, headers: corsHeaders })
   }
   if (req.headers.get('x-push-secret') !== PUSH_SECRET) {
-    return Response.json({ error: 'unauthorized' }, { status: 401 })
+    return Response.json({ error: 'unauthorized' }, { status: 401, headers: corsHeaders })
   }
 
   let payload: Payload
   try {
     payload = await req.json()
   } catch {
-    return Response.json({ error: 'bad json' }, { status: 400 })
+    return Response.json({ error: 'bad json' }, { status: 400, headers: corsHeaders })
   }
 
   // Modo de prueba: enviar a un usuario concreto (usado por la página de diagnóstico)
@@ -112,7 +118,7 @@ Deno.serve(async (req) => {
     target = await resolveRecipients(payload)
   }
   if (!target || target.userIds.length === 0) {
-    return Response.json({ ok: true, skipped: true })
+    return Response.json({ ok: true, skipped: true }, { headers: corsHeaders })
   }
 
   const { data: subs } = await admin
@@ -146,5 +152,5 @@ Deno.serve(async (req) => {
     }
   }
 
-  return Response.json({ ok: true, sent, failed })
+  return Response.json({ ok: true, sent, failed }, { headers: corsHeaders })
 })
