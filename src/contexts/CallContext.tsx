@@ -24,7 +24,9 @@ function peerStateLabel(s: string) {
 function AudioPeer({ stream }: { stream: MediaStream | null }) {
   const ref = useRef<HTMLAudioElement>(null)
   useEffect(() => {
-    if (ref.current && stream) ref.current.srcObject = stream
+    if (ref.current && stream && typeof stream === 'object' && stream !== null) {
+      ref.current.srcObject = stream
+    }
   }, [stream])
   return <audio ref={ref} autoPlay playsInline />
 }
