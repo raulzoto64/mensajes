@@ -116,7 +116,7 @@ export async function listDeviceLogs(): Promise<any[]> {
 }
 
 // Envía un push de prueba a este dispositivo vía la Edge Function send-push (modo self_test).
-export async function sendTestPush(userId: string): Promise<{ ok: boolean; sent?: number; failed?: number; error?: string }> {
+export async function sendTestPush(userId: string): Promise<{ ok: boolean; sent?: number; failed?: number; errors?: any[]; error?: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('send-push', {
       body: {
@@ -129,7 +129,7 @@ export async function sendTestPush(userId: string): Promise<{ ok: boolean; sent?
       headers: { 'x-push-secret': PUSH_SECRET },
     })
     if (error) return { ok: false, error: error.message }
-    return { ok: true, sent: (data as any)?.sent, failed: (data as any)?.failed }
+    return { ok: true, sent: (data as any)?.sent, failed: (data as any)?.failed, errors: (data as any)?.errors }
   } catch (e: any) {
     return { ok: false, error: e?.message ?? 'error' }
   }

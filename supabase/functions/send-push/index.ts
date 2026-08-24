@@ -24,7 +24,7 @@ webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-push-secret, content-type',
+  'Access-Control-Allow-Headers': 'authorization, apikey, x-client-info, x-push-secret, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
@@ -92,11 +92,13 @@ function previewBody(p: Payload) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: corsHeaders })
+  const method = (req.method || '').toUpperCase()
+  const isPreflight = method === 'OPTIONS' || req.headers.has('access-control-request-method')
+  if (isPreflight) {
+    return new Response(null, { status: 204, headers: corsHeaders })
   }
   if (req.headers.get('x-push-secret') !== PUSH_SECRET) {
-    return Response.json({ error: 'unauthorized' }, { status: 401, headers: corsHeaders })
+    return Response.json({ error: 'unauthorized', method }, { status: 401, headers: corsHeaders })
   }
 
   let payload: Payload
@@ -137,6 +139,7 @@ Deno.serve(async (req) => {
 
   let sent = 0
   let failed = 0
+  const errors: { status: number | null; message: string }[] = []
   for (const sub of subs ?? []) {
     try {
       const pushSub = { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }
@@ -145,12 +148,13 @@ Deno.serve(async (req) => {
     } catch (err) {
       failed++
       // 404/410 → suscripción vencida, la borramos
-      const status = (err as { statusCode?: number }).statusCode
+      const status = (err as { statusCode?: number }).statusCode ?? null
+      errors.push({ status, message: err instanceof Error ? err.message : String(err) })
       if (status === 404 || status === 410) {
         await admin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
       }
     }
   }
 
-  return Response.json({ ok: true, sent, failed }, { headers: corsHeaders })
+  return Response.json({ ok: true, sent, failed, errors }, { headers: corsHeaders })
 })

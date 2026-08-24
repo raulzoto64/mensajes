@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { collectDiagnostics, saveDeviceLog, listDeviceLogs, sendTestPush, type Diagnostics } from '../lib/debug'
+import { resubscribePush } from '../lib/push'
 
 function Check({ ok }: { ok: boolean }) {
   return (
@@ -39,6 +40,7 @@ export default function DebugPage() {
   const [logs, setLogs] = useState<any[]>([])
   const [testResult, setTestResult] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [repairing, setRepairing] = useState(false)
   const [locStatus, setLocStatus] = useState<string>('')
 
   const refreshLogs = useCallback(async () => {
@@ -63,10 +65,26 @@ export default function DebugPage() {
     const res = await sendTestPush(user.id)
     setSending(false)
     if (res.ok) {
-      setTestResult(`Resultado: enviadas=${res.sent ?? 0}, fallidas=${res.failed ?? 0}. Ahora pon la app en SEGUNDO PLANO (no la cierres del todo) y espera ~10s. Si llega la notificación del sistema, el push funciona.`)
+      let msg = `Resultado: enviadas=${res.sent ?? 0}, fallidas=${res.failed ?? 0}. Ahora pon la app en SEGUNDO PLANO (no la cierres del todo) y espera ~10s. Si llega la notificación del sistema, el push funciona.`
+      if (res.errors && res.errors.length > 0) {
+        msg += `\nDetalle de fallos: ${JSON.stringify(res.errors).slice(0, 300)}`
+      }
+      setTestResult(msg)
     } else {
       setTestResult(`Error al enviar push de prueba: ${res.error}`)
     }
+  }
+
+  async function handleRepair() {
+    if (!user) return
+    setRepairing(true)
+    setTestResult(null)
+    const ok = await resubscribePush(user.id)
+    const d = await collectDiagnostics(user.id)
+    setDiag(d)
+    await saveDeviceLog(user.id, d)
+    setRepairing(false)
+    setTestResult(ok ? 'Suscripción reparada. Ahora vuelve a pulsar "Enviar push de prueba".' : 'No se pudo reparar la suscripción (¿permiso de notificaciones denegado?).')
   }
 
   async function handleLocation() {
@@ -145,6 +163,16 @@ export default function DebugPage() {
             No hay suscripción válida. Activa las notificaciones en la campanita y recarga esta página.
           </p>
         )}
+        <button
+          onClick={handleRepair}
+          disabled={repairing}
+          style={{ marginTop: 10, width: '100%', padding: '9px', borderRadius: 10, border: '1px solid #1e1e3a', background: '#14142a', color: '#c4b5fd', fontWeight: 600, fontSize: 12, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
+        >
+          {repairing ? 'Reparando…' : '🔄 Reparar / Re-suscribir push'}
+        </button>
+        <p style={{ color: '#3d3d5c', fontSize: '10px', margin: '6px 0 0', lineHeight: 1.4 }}>
+          Úsalo si el push falla (enviadas=0): borra la suscripción vieja y crea una nueva con la clave actual.
+        </p>
         {testResult && (
           <p style={{ color: '#9090b0', fontSize: '12px', margin: '10px 0 0', lineHeight: 1.5 }}>{testResult}</p>
         )}

@@ -50,6 +50,14 @@ export async function subscribePush(userId: string): Promise<boolean> {
   }
 }
 
+// Fuerza una suscripción nueva con la clave VAPID actual: borra la suscripción
+// local y la de la BD, y vuelve a crearlas. Útil cuando el push falla porque la
+// suscripción fue creada con un par VAPID anterior.
+export async function resubscribePush(userId: string): Promise<boolean> {
+  await unsubscribePush(userId)
+  return await subscribePush(userId)
+}
+
 // Quita todas las suscripciones del usuario (por si se desloguea o desactiva).
 export async function unsubscribePush(userId: string): Promise<void> {
   try {
