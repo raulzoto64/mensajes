@@ -27,6 +27,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   const [lastSeen, setLastSeen] = useState<string | null>(null)
   const [autoDeleteHours, setAutoDeleteHours] = useState<number>(24)
   const [showSettings, setShowSettings] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -337,66 +338,58 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
         >
           ◉ PRIVADO
         </div>
-        <button
-          onClick={handleStartCall}
-          title="Llamar (audio)"
-          style={{
-            background: '#14142a',
-            border: '1px solid #1e1e3a',
-            borderRadius: '8px',
-            width: '32px',
-            height: '32px',
-            color: '#22c55e',
-            cursor: 'pointer',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          📞
-        </button>
-        <button
-          onClick={() => setShowSettings(true)}
-          title="Configurar duración de borrado del chat"
-          style={{
-            background: '#14142a',
-            border: '1px solid #1e1e3a',
-            borderRadius: '8px',
-            width: '32px',
-            height: '32px',
-            color: '#6b6b8a',
-            cursor: 'pointer',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          ⚙️
-        </button>
-        <button
-          onClick={() => { setSelectMode((v) => !v); setSelectedIds(new Set()) }}
-          title="Seleccionar mensajes"
-          style={{
-            background: selectMode ? 'rgba(239,68,68,0.12)' : '#14142a',
-            border: `1px solid ${selectMode ? 'rgba(239,68,68,0.35)' : '#1e1e3a'}`,
-            borderRadius: '8px',
-            width: '32px',
-            height: '32px',
-            color: selectMode ? '#f87171' : '#6b6b8a',
-            cursor: 'pointer',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          ☑
-        </button>
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            title="Más opciones"
+            style={{
+              background: '#14142a',
+              border: '1px solid #1e1e3a',
+              borderRadius: '8px',
+              width: '32px',
+              height: '32px',
+              color: '#6b6b8a',
+              cursor: 'pointer',
+              fontSize: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            ⋯
+          </button>
+          {menuOpen && (
+            <>
+              <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 300 }} />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '38px',
+                  right: 0,
+                  zIndex: 301,
+                  minWidth: '190px',
+                  background: '#0f0f1e',
+                  border: '1px solid #2a2a50',
+                  borderRadius: '10px',
+                  padding: '6px',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px',
+                }}
+              >
+                <MenuItem icon="⚙️" label="Configurar" onClick={() => { setMenuOpen(false); setShowSettings(true) }} />
+                <MenuItem
+                  icon="☑"
+                  label="Seleccionar (marcar)"
+                  onClick={() => { setMenuOpen(false); setSelectMode((v) => !v); setSelectedIds(new Set()) }}
+                />
+                <MenuItem icon="📞" label="Llamar (audio)" accent="#22c55e" onClick={() => { setMenuOpen(false); handleStartCall() }} />
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
@@ -513,5 +506,33 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
         </div>
       )}
     </div>
+  )
+}
+
+function MenuItem({ icon, label, onClick, accent }: { icon: string; label: string; onClick: () => void; accent?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        width: '100%',
+        textAlign: 'left',
+        padding: '9px 10px',
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '7px',
+        color: accent ?? '#e8e8f0',
+        fontSize: '13px',
+        cursor: 'pointer',
+        fontFamily: "'Outfit', sans-serif",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+    >
+      <span style={{ fontSize: '15px', width: '18px', textAlign: 'center' }}>{icon}</span>
+      {label}
+    </button>
   )
 }

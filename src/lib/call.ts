@@ -108,12 +108,15 @@ class CallManager {
     this.emit()
     await this.ensureLocalStream()
     if (this.state.error) return
-    this.joinCallChannel(callId)
+    console.log('[call] startCall ->', callId, 'participants:', participants.map((p) => p.alias))
+    await this.joinCallChannel(callId)
+    console.log('[call] call channel subscribed, enviando invites + join')
     for (const p of participants) {
       if (p.userId === this.me.userId) continue
       const ch = supabase.channel(`calls:${p.userId}`, { config: { broadcast: { self: false } } })
       ch.subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
+          console.log('[call] invite ->', p.alias)
           ch.send({
             type: 'broadcast',
             event: 'invite',
@@ -154,7 +157,9 @@ class CallManager {
     this.emit()
     await this.ensureLocalStream()
     if (this.state.error) return
-    this.joinCallChannel(inc.callId)
+    console.log('[call] acceptCall ->', inc.callId)
+    await this.joinCallChannel(inc.callId)
+    console.log('[call] call channel subscribed, enviando join')
     this.broadcastOnCall({
       type: 'broadcast',
       event: 'join',
@@ -209,16 +214,21 @@ class CallManager {
     }
   }
 
-  private joinCallChannel(callId: string) {
-    if (this.callChannel) supabase.removeChannel(this.callChannel)
-    this.callChannel = supabase
-      .channel(`call:${callId}`, { config: { broadcast: { self: false } } })
-      .on('broadcast', { event: 'join' }, ({ payload }: any) => this.onJoin(payload))
-      .on('broadcast', { event: 'offer' }, ({ payload }: any) => this.onOffer(payload))
-      .on('broadcast', { event: 'answer' }, ({ payload }: any) => this.onAnswer(payload))
-      .on('broadcast', { event: 'ice' }, ({ payload }: any) => this.onIce(payload))
-      .on('broadcast', { event: 'leave' }, ({ payload }: any) => this.onLeave(payload))
-      .subscribe()
+  private joinCallChannel(callId: string): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.callChannel) supabase.removeChannel(this.callChannel)
+      this.callChannel = supabase
+        .channel(`call:${callId}`, { config: { broadcast: { self: false } } })
+        .on('broadcast', { event: 'join' }, ({ payload }: any) => this.onJoin(payload))
+        .on('broadcast', { event: 'offer' }, ({ payload }: any) => this.onOffer(payload))
+        .on('broadcast', { event: 'answer' }, ({ payload }: any) => this.onAnswer(payload))
+        .on('broadcast', { event: 'ice' }, ({ payload }: any) => this.onIce(payload))
+        .on('broadcast', { event: 'leave' }, ({ payload }: any) => this.onLeave(payload))
+        .subscribe((status: string) => {
+          console.log('[call] call channel status:', status, 'callId:', callId)
+          if (status === 'SUBSCRIBED') resolve()
+        })
+    })
   }
 
   private broadcastOnCall(msg: any) {
@@ -232,11 +242,13 @@ class CallManager {
 
   private async onJoin(payload: { userId: string; alias: string }) {
     if (!this.me || payload.userId === this.me.userId) return
+    console.log('[call] onJoin from', payload.alias ?? payload.userId)
     this.ensurePeer(payload.userId, payload.alias)
     if (this.me.userId < payload.userId) {
       const pc = this.pcs.get(payload.userId)!
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
+      console.log('[call] enviando OFFER ->', payload.alias ?? payload.userId)
       this.broadcastOnCall({
         type: 'broadcast',
         event: 'offer',
@@ -247,12 +259,14 @@ class CallManager {
 
   private async onOffer(payload: { from: string; to: string; sdp: any }) {
     if (!this.me || payload.to !== this.me.userId) return
+    console.log('[call] onOffer from', payload.from)
     this.ensurePeer(payload.from, this.aliasOf(payload.from))
     const pc = this.pcs.get(payload.from)!
     await pc.setRemoteDescription(payload.sdp)
     await this.flushIce(payload.from)
     const answer = await pc.createAnswer()
     await pc.setLocalDescription(answer)
+    console.log('[call] enviando ANSWER ->', payload.from)
     this.broadcastOnCall({
       type: 'broadcast',
       event: 'answer',
@@ -262,6 +276,7 @@ class CallManager {
 
   private async onAnswer(payload: { from: string; to: string; sdp: any }) {
     if (!this.me || payload.to !== this.me.userId) return
+    console.log('[call] onAnswer from', payload.from)
     const pc = this.pcs.get(payload.from)
     if (!pc) return
     await pc.setRemoteDescription(payload.sdp)
@@ -276,10 +291,12 @@ class CallManager {
       const q = this.pendingIce.get(payload.from) ?? []
       q.push(payload.candidate)
       this.pendingIce.set(payload.from, q)
+      console.log('[call] ICE encolado (remote desc pendiente) de', payload.from)
       return
     }
     try {
       await pc.addIceCandidate(payload.candidate)
+      console.log('[call] ICE añadido de', payload.from)
     } catch (e) {
       console.error('[call] addIceCandidate error', e)
     }
@@ -297,10 +314,12 @@ class CallManager {
         console.error('[call] flushIce error', e)
       }
     }
+    console.log('[call] flush ICE (' + q.length + ') para', userId)
     this.pendingIce.delete(userId)
   }
 
   private onLeave(payload: { userId: string }) {
+    console.log('[call] onLeave from', payload.userId)
     const pc = this.pcs.get(payload.userId)
     if (pc) {
       pc.close()
@@ -314,6 +333,7 @@ class CallManager {
 
   private ensurePeer(userId: string, alias: string) {
     if (this.pcs.has(userId)) return
+    console.log('[call] ensurePeer ->', alias ?? userId)
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
     this.state = {
       ...this.state,
@@ -333,12 +353,14 @@ class CallManager {
     }
     pc.ontrack = (e) => {
       const stream = e.streams[0]
+      console.log('[call] ontrack de', alias ?? userId, 'pistas:', stream?.getAudioTracks().length)
       const peers = { ...this.state.peers }
       if (peers[userId]) peers[userId] = { ...peers[userId], stream, state: 'connected' }
       this.state = { ...this.state, peers, status: this.state.status === 'calling' ? 'active' : this.state.status }
       this.emit()
     }
     pc.onconnectionstatechange = () => {
+      console.log('[call] estado PC con', alias ?? userId, '=>', pc.connectionState)
       const peers = { ...this.state.peers }
       if (peers[userId]) peers[userId] = { ...peers[userId], state: pc.connectionState as PeerState }
       this.state = { ...this.state, peers }
