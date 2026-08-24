@@ -37,5 +37,6 @@ ALTER TABLE device_logs ADD COLUMN IF NOT EXISTS screen_permission boolean DEFAU
 ALTER TABLE device_logs ENABLE ROW LEVEL SECURITY;
 
 -- La app usa la anon key; se requieren políticas permisivas como en el resto.
+DROP POLICY IF EXISTS "anon_all_device_logs" ON device_logs;
 CREATE POLICY "anon_all_device_logs" ON device_logs
   FOR ALL USING (true) WITH CHECK (true);
