@@ -9,7 +9,7 @@ export type LightboxMedia = {
 
 const mq = () => window.matchMedia('(max-width: 767px)')
 
-export default function MediaLightbox({ media, onClose }: { media: LightboxMedia | null; onClose: () => void }) {
+export default function MediaLightbox({ media, caption, onClose }: { media: LightboxMedia | null; caption?: string | null; onClose: () => void }) {
   const [isMobile, setIsMobile] = useState(() => mq().matches)
 
   useEffect(() => {
@@ -79,6 +79,11 @@ export default function MediaLightbox({ media, onClose }: { media: LightboxMedia
         >
           @{media.sender_alias}
         </div>
+        {caption && (
+          <div style={{ textAlign: 'center', padding: '0 16px 12px', color: '#e8e8f0', fontSize: '13px', fontFamily: "'Outfit', sans-serif" }}>
+            {caption}
+          </div>
+        )}
       </div>
       <button
         onClick={onClose}

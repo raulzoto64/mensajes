@@ -58,7 +58,9 @@ export default function MessageBubble({
     if (!mediaConsumed) {
       setMediaConsumed(true)
       console.log('[MessageBubble] multimedia consumido:', msg.id, msg.type)
-      if (onMediaConsumed) onMediaConsumed(msg.id)
+      // En grupos: no borrar automáticamente (todos deben verlo); en individuales: sí
+      const esGrupo = Boolean(msg.group_id)
+      if (!esGrupo && onMediaConsumed) onMediaConsumed(msg.id)
     }
   }
 
@@ -431,6 +433,7 @@ export default function MessageBubble({
 
       <MediaLightbox
         media={lightbox}
+        caption={msg.content}
         onClose={() => { setLightbox(null); consume(); }}
       />
     </div>
