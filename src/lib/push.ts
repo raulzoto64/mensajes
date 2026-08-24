@@ -18,10 +18,19 @@ function pushSupported(): boolean {
 
 // Activa la suscripción de Web Push del dispositivo actual y la guarda en la BD.
 // Idempotente: si ya hay una suscripción activa solo la re-graba.
-export async function subscribePush(userId: string): Promise<boolean> {
+// Devuelve { ok, error } para poder depurar por qué falla.
+export async function subscribePush(userId: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    if (!pushSupported()) return false
-    if (Notification.permission !== 'granted') return false
+    if (!pushSupported()) {
+      const msg = 'push no soportado (sin serviceWorker/PushManager)'
+      console.error('[push]', msg)
+      return { ok: false, error: msg }
+    }
+    if (Notification.permission !== 'granted') {
+      const msg = `permiso de notificación: ${Notification.permission}`
+      console.error('[push]', msg)
+      return { ok: false, error: msg }
+    }
     const reg = await navigator.serviceWorker.ready
     let sub = await reg.pushManager.getSubscription()
     if (!sub) {
@@ -31,7 +40,11 @@ export async function subscribePush(userId: string): Promise<boolean> {
       })
     }
     const json = sub.toJSON()
-    if (!json.keys) return false
+    if (!json.keys) {
+      const msg = 'la suscripción no trae claves p256dh/auth'
+      console.error('[push]', msg)
+      return { ok: false, error: msg }
+    }
     const { data, error } = await supabase
       .from('push_subscriptions')
       .upsert(
@@ -44,16 +57,22 @@ export async function subscribePush(userId: string): Promise<boolean> {
         },
         { onConflict: 'endpoint' },
       )
-    return !error && !!data
-  } catch {
-    return false
+    if (error) {
+      console.error('[push] upsert error', error)
+      return { ok: false, error: error.message }
+    }
+    return { ok: true }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('[push] excepción', e)
+    return { ok: false, error: msg }
   }
 }
 
 // Fuerza una suscripción nueva con la clave VAPID actual: borra la suscripción
 // local y la de la BD, y vuelve a crearlas. Útil cuando el push falla porque la
 // suscripción fue creada con un par VAPID anterior.
-export async function resubscribePush(userId: string): Promise<boolean> {
+export async function resubscribePush(userId: string): Promise<{ ok: boolean; error?: string }> {
   await unsubscribePush(userId)
   return await subscribePush(userId)
 }

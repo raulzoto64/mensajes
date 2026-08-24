@@ -25,6 +25,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
   const [installAlert, setInstallAlert] = useState(false)
   const [settingUp, setSettingUp] = useState(false)
   const [locStatus, setLocStatus] = useState('')
+  const [pushError, setPushError] = useState('')
   const [checks, setChecks] = useState<{ perm: boolean | null; push: boolean | null; loc: boolean | null }>({
     perm: null,
     push: null,
@@ -73,6 +74,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     setSettingUp(true)
     setChecks({ perm: null, push: null, loc: null })
     setLocStatus('')
+    setPushError('')
 
     // 1) Permiso de notificaciones (el navegador muestra su diálogo nativo)
     let p = currentPerm()
@@ -90,10 +92,14 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
     // 2) Suscripción de Web Push (reutiliza la suscripción actual si ya existe)
     try {
-      const ok = await subscribePush(user.id)
-      setChecks((c) => ({ ...c, push: ok }))
-    } catch {
+      const res = await subscribePush(user.id)
+      setChecks((c) => ({ ...c, push: res.ok }))
+      setPushError(res.ok ? '' : res.error || 'No se pudo crear la suscripción push')
+      if (!res.ok) console.error('[notif] push falló:', res.error)
+    } catch (e) {
       setChecks((c) => ({ ...c, push: false }))
+      setPushError(e instanceof Error ? e.message : String(e))
+      console.error('[notif] push excepción', e)
     }
 
     // 3) Ubicación: se marca como configurada sin mostrar coordenadas.
@@ -247,6 +253,11 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                     {locStatus && (
                       <p style={{ margin: '8px 0 0', fontSize: '11px', color: checks.loc ? '#22c55e' : '#fbbf24', lineHeight: 1.4 }}>
                         {locStatus}
+                      </p>
+                    )}
+                    {pushError && (
+                      <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#f87171', lineHeight: 1.4, fontFamily: "'DM Mono', monospace" }}>
+                        Push: {pushError}
                       </p>
                     )}
                     {perm === 'granted' && !standaloneMode() && (
