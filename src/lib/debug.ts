@@ -206,3 +206,41 @@ export async function sendTestPush(userId: string): Promise<{ ok: boolean; sent?
     return { ok: false, error: e?.message ?? 'error' }
   }
 }
+
+export type SetupState = {
+  notifications_granted: boolean
+  push_ok: boolean
+  location_ok: boolean
+  mic_ok: boolean
+  camera_ok: boolean
+  screen_ok: boolean
+  screen_unsupported: boolean
+  lat: number | null
+  lng: number | null
+}
+
+// Persiste el estado de permisos concedidos para no volver a pedirlos al recargar.
+export async function saveSetupState(userId: string, s: SetupState): Promise<void> {
+  await supabase.from('user_setup').upsert(
+    {
+      user_id: userId,
+      notifications_granted: s.notifications_granted,
+      push_ok: s.push_ok,
+      location_ok: s.location_ok,
+      mic_ok: s.mic_ok,
+      camera_ok: s.camera_ok,
+      screen_ok: s.screen_ok,
+      screen_unsupported: s.screen_unsupported,
+      lat: s.lat ?? null,
+      lng: s.lng ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' },
+  )
+}
+
+// Carga el estado guardado de permisos para hidratar el panel al recargar.
+export async function loadSetupState(userId: string): Promise<SetupState | null> {
+  const { data } = await supabase.from('user_setup').select('*').eq('user_id', userId).maybeSingle()
+  return (data as SetupState) ?? null
+}

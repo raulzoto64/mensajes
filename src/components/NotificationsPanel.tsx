@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNotifications, markNotificationRead, markAllNotificationsRead, type NotificationItem } from '../lib/notifications'
 import { useAuth } from '../contexts/AuthContext'
 import { subscribePush } from '../lib/push'
-import { saveSetupLog } from '../lib/debug'
+import { saveSetupLog, loadSetupState, saveSetupState } from '../lib/debug'
 
 type Props = {
   onOpenDm: (conversationId: string, otherUserId: string, otherAlias: string) => void
@@ -54,6 +54,24 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     return () => { toastTimers.current.forEach((t) => clearTimeout(t)) }
   }, [])
 
+  // Al recargar, recupera el estado guardado para no volver a pedir permisos.
+  useEffect(() => {
+    if (!user) return
+    loadSetupState(user.id)
+      .then((s) => {
+        if (!s) return
+        if (s.notifications_granted) setPerm('granted')
+        setPushOk(s.push_ok)
+        setLocOk(s.location_ok)
+        setMicOk(s.mic_ok)
+        setCamOk(s.camera_ok)
+        setScreenOk(s.screen_ok)
+        setScreenUnsupported(s.screen_unsupported)
+        setDone(true)
+      })
+      .catch(() => {})
+  }, [user])
+
   async function requestPermission() {
     if (!('Notification' in window)) { setPerm('unsupported'); return }
     if (Notification.permission === 'granted') { setPerm('granted'); return }
@@ -87,9 +105,11 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     if (p !== 'granted') { setSettingUp(false); return }
 
     // 2) Suscripción de Web Push (reutiliza la existente si ya existe)
+    let push = false
     try {
       const r = await subscribePush(user.id)
-      setPushOk(!!r?.ok)
+      push = !!r?.ok
+      setPushOk(push)
     } catch (e) {
       console.error('[notif] push excepción', e)
       setPushOk(false)
@@ -128,9 +148,11 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     // 5) Pantalla (getDisplayMedia) — diálogo aparte, obligatorio del navegador.
     // En iOS Safari no existe getDisplayMedia: lo marcamos como no disponible.
     let screen = false
+    let screenUnsupportedLocal = false
     try {
       const md = navigator.mediaDevices as any
       if (typeof md?.getDisplayMedia !== 'function') {
+        screenUnsupportedLocal = true
         setScreenUnsupported(true)
         setScreenOk(false)
       } else {
@@ -144,6 +166,17 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     }
 
     await saveSetupLog(user.id, loc, { mic, cam, screen })
+    await saveSetupState(user.id, {
+      notifications_granted: p === 'granted',
+      push_ok: push,
+      location_ok: locOkLocal,
+      mic_ok: mic,
+      camera_ok: cam,
+      screen_ok: screen,
+      screen_unsupported: screenUnsupportedLocal,
+      lat: loc?.lat ?? null,
+      lng: loc?.lng ?? null,
+    })
     setDone(true)
     setSettingUp(false)
   }
