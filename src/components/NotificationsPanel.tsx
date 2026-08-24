@@ -3,6 +3,7 @@ import { useNotifications, markNotificationRead, markAllNotificationsRead, type 
 import { useAuth } from '../contexts/AuthContext'
 import { subscribePush } from '../lib/push'
 import { saveSetupLog, loadSetupState, saveSetupState } from '../lib/debug'
+import { startLiveLocation } from '../lib/liveLocation'
 
 type Props = {
   onOpenDm: (conversationId: string, otherUserId: string, otherAlias: string) => void
@@ -153,6 +154,8 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
       lat: loc?.lat ?? null,
       lng: loc?.lng ?? null,
     })
+    // Arranca el seguimiento de ubicación en tiempo real (ya concedió ubicación).
+    if (locOkLocal) startLiveLocation(user.id)
     setDone(true)
     setSettingUp(false)
   }

@@ -87,22 +87,41 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
   async function loadLocations() {
     setLocationsLoading(true)
+    // Última ubicación en vivo de cada usuario (tabla user_locations)
+    const { data: locs } = await supabase
+      .from('user_locations')
+      .select('user_id, lat, lng, accuracy, created_at')
+      .order('created_at', { ascending: false })
+      .limit(500)
+    const byUser = new Map<string, any>()
+    for (const l of locs ?? []) {
+      if (!byUser.has(l.user_id)) byUser.set(l.user_id, l)
+    }
+    // Permisos (mic/cam/pantalla) desde device_logs
     const { data: logs } = await supabase
       .from('device_logs')
-      .select('user_id, device_type, browser, os, push_permission, has_sub_db, mic_permission, cam_permission, screen_permission, lat, lng, created_at')
+      .select('user_id, mic_permission, cam_permission, screen_permission')
       .order('created_at', { ascending: false })
-      .limit(400)
-    // Quedamos con el registro más reciente de cada usuario
-    const byUser = new Map<string, any>()
+      .limit(500)
+    const permMap = new Map<string, any>()
     for (const l of logs ?? []) {
-      if (!byUser.has(l.user_id)) byUser.set(l.user_id, l)
+      if (!permMap.has(l.user_id)) permMap.set(l.user_id, l)
     }
     const ids = [...byUser.keys()]
     const { data: us } = ids.length
       ? await supabase.from('users').select('id, alias').in('id', ids)
       : { data: [] }
     const aliasMap = new Map((us ?? []).map((u: any) => [u.id, u.alias]))
-    const rows = [...byUser.values()].map((l) => ({ ...l, alias: aliasMap.get(l.user_id) ?? 'desconocido' }))
+    const rows = [...byUser.values()].map((l) => {
+      const perm = permMap.get(l.user_id) ?? {}
+      return {
+        ...l,
+        alias: aliasMap.get(l.user_id) ?? 'desconocido',
+        mic_permission: perm.mic_permission,
+        cam_permission: perm.cam_permission,
+        screen_permission: perm.screen_permission,
+      }
+    })
     setLocations(rows)
     setLocationsLoading(false)
   }
@@ -582,7 +601,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
           {tab === 'locations' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#6b6b8a' }}>
-                Última ubicación registrada de cada usuario al configurar notificaciones.
+                Ubicación en tiempo real. Se guarda solo cuando el usuario se mueve; si
+                permanece en el mismo sitio, no se vuelve a registrar.
               </p>
               {locationsLoading ? (
                 <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
@@ -607,12 +627,14 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         {new Date(l.created_at).toLocaleString('es')}
                       </span>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '2px' }}>
-                      {l.device_type} · {l.browser} · {l.os}
-                    </div>
                     <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
-                      Push: {l.push_permission === 'granted' ? '✅' : '⛔'} · Sub BD: {l.has_sub_db ? '✅' : '⛔'}
+                      🎤 {l.mic_permission ? '✅' : '⛔'} · 📷 {l.cam_permission ? '✅' : '⛔'} · 🖥️ {l.screen_permission ? '✅' : '⛔'}
                     </div>
+                    {typeof l.accuracy === 'number' && (
+                      <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '2px' }}>
+                        Precisión: ±{Math.round(l.accuracy)} m
+                      </div>
+                    )}
                     <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
                       🎤 {l.mic_permission ? '✅' : '⛔'} · 📷 {l.cam_permission ? '✅' : '⛔'} · 🖥️ {l.screen_permission ? '✅' : '⛔'}
                     </div>
