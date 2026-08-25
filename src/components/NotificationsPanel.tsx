@@ -117,8 +117,9 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     let locOkLocal = false
     try {
       if (!navigator.geolocation) throw new Error('Geolocalización no disponible (¿contexto no seguro?)')
+      // enableHighAccuracy: false es mucho más estable y rápido en PCs de escritorio
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }),
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }),
       )
       loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
       locOkLocal = true
@@ -134,14 +135,42 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     let cam = false
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error('mediaDevices no disponible (¿contexto no seguro?)')
-      const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
-      stopStream(s)
-      mic = true
-      cam = true
-      setMicOk(true)
-      setCamOk(true)
+      
+      try {
+        // Intentar pedir ambos juntos primero (para mostrar un solo diálogo)
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        stopStream(s)
+        mic = true
+        cam = true
+      } catch (err: any) {
+        // "NotFoundError" ocurre en PCs de escritorio que no tienen cámara conectada.
+        if (err.name === 'NotFoundError' || err.message?.includes('Requested device not found')) {
+          console.warn('[notif] Falló pedir ambos dispositivos (probablemente falta cámara). Probando por separado...')
+          // 1. Probar solo micrófono
+          try {
+            const sAudio = await navigator.mediaDevices.getUserMedia({ audio: true })
+            stopStream(sAudio)
+            mic = true
+          } catch (e) {
+            console.warn('[notif] Sin micrófono disponible')
+          }
+          // 2. Probar solo cámara
+          try {
+            const sVideo = await navigator.mediaDevices.getUserMedia({ video: true })
+            stopStream(sVideo)
+            cam = true
+          } catch (e) {
+            console.warn('[notif] Sin cámara disponible')
+          }
+        } else {
+          throw err // Otro error, ej. NotAllowedError (usuario lo denegó)
+        }
+      }
+      
+      setMicOk(mic)
+      setCamOk(cam)
     } catch (e: any) {
-      console.error('[notif] Error mic/cam:', e?.message ?? e)
+      console.error('[notif] Error permisos mic/cam:', e?.message ?? e)
       setMicOk(false)
       setCamOk(false)
     }
