@@ -64,20 +64,32 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
       await deleteMediaFiles(...(msgs ?? []).filter((m: any) => staleIds.includes(m.id)).map((m: any) => m.media_url))
     }
 
-    // Gracia vencida (delete_after ya pasó) → borrado con motivo 'viewed'
+    // Gracia vencida (delete_after ya pasó) → borrado con motivo 'viewed' o vaciado de cascarón
     const nowMs = Date.now()
-    const graceExpired = (msgs ?? []).filter((m: any) => m.delete_after && new Date(m.delete_after).getTime() <= nowMs).map((m: any) => m.id)
-    if (graceExpired.length) {
-      await supabase
-        .from('direct_messages')
-        .update({ is_deleted: true, deleted_at: new Date().toISOString(), delete_reason: 'viewed' })
-        .in('id', graceExpired)
-      await deleteMediaFiles(...(msgs ?? []).filter((m: any) => graceExpired.includes(m.id)).map((m: any) => m.media_url))
+    const graceExpiredRows = (msgs ?? []).filter((m: any) => m.delete_after && new Date(m.delete_after).getTime() <= nowMs)
+    const normalExpired = graceExpiredRows.filter((m: any) => !m.one_time_view).map((m: any) => m.id)
+    const oneTimeExpired = graceExpiredRows.filter((m: any) => m.one_time_view).map((m: any) => m.id)
+
+    if (graceExpiredRows.length) {
+      if (normalExpired.length) {
+        await supabase
+          .from('direct_messages')
+          .update({ is_deleted: true, deleted_at: new Date().toISOString(), delete_reason: 'viewed' })
+          .in('id', normalExpired)
+      }
+      if (oneTimeExpired.length) {
+        // En vista única, no borramos el mensaje, lo dejamos como "cascarón" (evidencia)
+        await supabase
+          .from('direct_messages')
+          .update({ content: null, media_url: null, delete_after: null })
+          .in('id', oneTimeExpired)
+      }
+      await deleteMediaFiles(...graceExpiredRows.map((m: any) => m.media_url))
     }
 
     const liveMsgs = (msgs ?? []).filter((m: any) =>
       new Date(m.created_at).getTime() >= cutoff &&
-      !graceExpired.includes(m.id)
+      !normalExpired.includes(m.id)
     )
     if (liveMsgs.length === 0) { setMessages([]); return }
 
@@ -248,10 +260,10 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
       .select('media_url')
       .eq('id', msgId)
       .maybeSingle()
-    // Limpiar media_url pero mantener el mensaje visible con su texto
+    // Limpiar media_url y texto pero mantener el cascarón del mensaje
     await supabase
       .from('direct_messages')
-      .update({ media_url: null })
+      .update({ media_url: null, content: null, delete_after: null })
       .eq('id', msgId)
     // Borrar el archivo multimedia del storage
     if ((msgRow as any)?.media_url) await deleteMediaFiles((msgRow as any).media_url)

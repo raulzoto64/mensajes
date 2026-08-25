@@ -408,7 +408,7 @@ export default function MessageBubble({
             )}
 
             {/* Texto/caption del multimedia */}
-            {isMultimedia && msg.content && (
+            {isMultimedia && msg.content && !isConsumedOneTime && (
               <p style={{ margin: '6px 0 0', fontSize: '14px', color: '#e8e8f0', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {msg.content}
               </p>
