@@ -44,7 +44,8 @@ export default function MessageBubble({
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressed = useRef(false)
   const [lightbox, setLightbox] = useState<LightboxMedia | null>(null)
-  const [mediaHidden, setMediaHidden] = useState(isMultimedia)
+  // Solo ocultar multimedia si es de vista única (one_time_view)
+  const [mediaHidden, setMediaHidden] = useState(isOneTime)
   const [mediaConsumed, setMediaConsumed] = useState(false)
 
   function revealAndConsume() {
@@ -222,8 +223,8 @@ export default function MessageBubble({
                 ENVIANDO…
               </span>
             )}
-            {/* Vista única / oculto badge */}
-            {isMultimedia && (
+            {/* Vista única / oculto badge — solo para mensajes de vista única */}
+            {isOneTime && (
               <div
                 title={mediaHidden ? 'Oculto: toca para revelar' : 'Multimedia'}
                 style={{
@@ -437,7 +438,11 @@ export default function MessageBubble({
       <MediaLightbox
         media={lightbox}
         caption={msg.content}
-        onClose={() => { setLightbox(null); consume(); }}
+        onClose={() => {
+          setLightbox(null)
+          // Solo consumir al cerrar si es vista única
+          if (isOneTime) consume()
+        }}
       />
     </div>
   )

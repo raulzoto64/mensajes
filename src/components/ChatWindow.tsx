@@ -123,6 +123,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
       media_url: m.media_url,
       is_deleted: m.is_deleted,
       created_at: m.created_at,
+      one_time_view: m.one_time_view,
     })))
 
     // Estado de entrega en grupo: ✓ entregado / ✓✓ visto por todos los miembros
@@ -174,8 +175,8 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
           m.sender_id !== user.id && m.one_time_view && (perMsg.get(m.id) ?? 0) >= count && !m.delete_after
         )
         if (fullyViewed.length) {
-          // Vista única: breve gracia para que el último en verlo alcance a verlo
-          const grace = new Date(Date.now() + 3 * 1000).toISOString()
+          // Vista única: gracia de 15 segundos para que el último en verlo alcance a verlo
+          const grace = new Date(Date.now() + 15 * 1000).toISOString()
           await supabase
             .from('messages')
             .update({ delete_after: grace })
