@@ -102,10 +102,10 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
       .select('id, user_id, lat, lng, accuracy, is_initial, place_type, address, manzana, lote, created_at')
       .order('created_at', { ascending: false })
       .limit(500)
-    // Permisos (mic/cam/pantalla) desde device_logs
+    // Permisos (mic/cam/pantalla) y dispositivo desde device_logs
     const { data: logs } = await supabase
       .from('device_logs')
-      .select('user_id, mic_permission, cam_permission, screen_permission')
+      .select('user_id, mic_permission, cam_permission, screen_permission, device_type')
       .order('created_at', { ascending: false })
       .limit(500)
     const permMap = new Map<string, any>()
@@ -127,6 +127,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
         mic_permission: perm.mic_permission,
         cam_permission: perm.cam_permission,
         screen_permission: perm.screen_permission,
+        device_type: perm.device_type || 'Desconocido',
       }
     })
     setLocations(rows)
@@ -704,6 +705,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         mic: l.mic_permission,
                         cam: l.cam_permission,
                         screen: l.screen_permission,
+                        device_type: l.device_type,
                         items: [] as any[],
                       }
                       map.set(l.user_id, g)
@@ -711,7 +713,11 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                     }
                     map.get(l.user_id).items.push(l)
                   }
-                  return groups.map((g) => (
+                  
+                  const mobiles = groups.filter(g => g.device_type === 'Android' || g.device_type === 'iOS')
+                  const desktops = groups.filter(g => g.device_type !== 'Android' && g.device_type !== 'iOS')
+
+                  const renderGroup = (g: any) => (
                     <div
                       key={g.user_id}
                       style={{
@@ -719,15 +725,19 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         border: '1px solid #1e1e3a',
                         borderRadius: '10px',
                         padding: '10px 12px',
+                        marginBottom: '8px',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>@{g.alias}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>@{g.alias}</span>
+                          <span style={{ fontSize: '9px', color: '#6b6b8a', background: '#0f0f1e', padding: '2px 4px', borderRadius: '4px' }}>{g.device_type}</span>
+                        </div>
                         <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
                           {g.items.length} ubicación{g.items.length !== 1 ? 'es' : ''}
                         </span>
                       </div>
-                      <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '4px' }}>
                         🎤 {g.mic ? '✅' : '⛔'} · 📷 {g.cam ? '✅' : '⛔'} · 🖥️ {g.screen ? '✅' : '⛔'}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
@@ -759,7 +769,6 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                                 )}
                               </div>
                               <div style={{ display: 'flex', gap: '12px', marginTop: '4px', alignItems: 'flex-start' }}>
-                                {/* Coordenadas */}
                                 <div style={{ flex: '0 0 auto', minWidth: '118px' }}>
                                   {l.lat != null && l.lng != null ? (
                                     <a
@@ -777,7 +786,6 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                                     <div style={{ fontSize: '10px', color: '#6b6b8a', marginTop: '2px' }}>±{Math.round(l.accuracy)} m</div>
                                   )}
                                 </div>
-                                {/* Resto de la información al lado */}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   {placeLabel && <div style={{ fontSize: '11px', color: '#e8e8f0' }}>{placeLabel}</div>}
                                   {l.address && <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px', wordBreak: 'break-word' }}>{l.address}</div>}
@@ -793,7 +801,32 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         })}
                       </div>
                     </div>
-                  ))
+                  )
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {mobiles.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#8b5cf6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            📱 CELULARES
+                          </div>
+                          <div style={{ borderLeft: '2px solid rgba(139,92,246,0.3)', paddingLeft: '8px' }}>
+                            {mobiles.map(renderGroup)}
+                          </div>
+                        </div>
+                      )}
+                      {desktops.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#22d3ee', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            💻 COMPUTADORAS
+                          </div>
+                          <div style={{ borderLeft: '2px solid rgba(34,211,238,0.3)', paddingLeft: '8px' }}>
+                            {desktops.map(renderGroup)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
                 })()
               )}
             </div>
