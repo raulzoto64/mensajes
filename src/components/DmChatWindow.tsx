@@ -241,11 +241,20 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   }
 
   async function handleMediaConsumed(msgId: string) {
-    console.log('[FRONT] DmChatWindow: multimedia consumido, actualizando DB ->', msgId)
+    console.log('[FRONT] DmChatWindow: multimedia consumido, limpiando media_url ->', msgId)
+    // Obtener media_url antes de limpiar para borrar el archivo
+    const { data: msgRow } = await supabase
+      .from('direct_messages')
+      .select('media_url')
+      .eq('id', msgId)
+      .maybeSingle()
+    // Limpiar media_url pero mantener el mensaje visible con su texto
     await supabase
       .from('direct_messages')
-      .update({ is_deleted: true, deleted_at: new Date().toISOString(), delete_reason: 'multimedia_consumed' })
+      .update({ media_url: null })
       .eq('id', msgId)
+    // Borrar el archivo multimedia del storage
+    if ((msgRow as any)?.media_url) await deleteMediaFiles((msgRow as any).media_url)
     loadMessages()
   }
 

@@ -264,6 +264,8 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                 )}
               </div>
 
+              {/* Sección de permisos: solo se muestra si aún no están configurados */}
+              {!done && (
               <div style={{ padding: '10px 14px', borderBottom: '1px solid #1e1e3a' }}>
                 {perm === 'unsupported' && (
                   <p style={{ margin: 0, fontSize: '11px', color: '#6b6b8a' }}>Este dispositivo no soporta notificaciones.</p>
@@ -280,25 +282,26 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                     style={{
                       width: '100%',
                       padding: '9px',
-                      background: done ? 'rgba(34,197,94,0.12)' : 'rgba(34,211,238,0.14)',
-                      border: `1px solid ${done ? 'rgba(34,197,94,0.3)' : 'rgba(34,211,238,0.35)'}`,
+                      background: 'rgba(34,211,238,0.14)',
+                      border: '1px solid rgba(34,211,238,0.35)',
                       borderRadius: '8px',
-                      color: done ? '#22c55e' : '#67e8f9',
+                      color: '#67e8f9',
                       fontSize: '12px',
                       fontWeight: '700',
                       cursor: settingUp ? 'default' : 'pointer',
                       fontFamily: "'Outfit', sans-serif",
                     }}
                   >
-                    {settingUp ? 'Configurando…' : done ? '✓ Todo listo' : 'Configuraciones necesarias'}
+                    {settingUp ? 'Configurando…' : 'Configuraciones necesarias'}
                   </button>
                 )}
-                {!done && (perm === 'prompt' || perm === 'granted') && (
+                {(perm === 'prompt' || perm === 'granted') && (
                   <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6b6b8a', lineHeight: 1.4 }}>
                     Estos permisos son necesarios para comunicarte de forma segura y 100% anónima.
                   </p>
                 )}
               </div>
+              )}
 
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 {notifications.length === 0 && (

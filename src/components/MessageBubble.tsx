@@ -48,7 +48,11 @@ export default function MessageBubble({
   const [mediaHidden, setMediaHidden] = useState(isOneTime)
   const [mediaConsumed, setMediaConsumed] = useState(false)
 
+  // Estado derivado: mensaje de vista única ya consumido (local o desde DB cuando media_url fue limpiado)
+  const isConsumedOneTime = isOneTime && (mediaConsumed || !msg.media_url)
+
   function revealAndConsume() {
+    if (isConsumedOneTime) return // Ya fue consumido, no permitir
     if (mediaHidden) {
       setMediaHidden(false)
       console.log('[MessageBubble] multimedia revelado:', msg.id, msg.type)
@@ -77,6 +81,8 @@ export default function MessageBubble({
       onToggleSelect()
       return
     }
+    // Ya fue consumido: no permitir reabrir
+    if (isConsumedOneTime) return
 
     // Si es multimedia oculto, al hacer clic primero revela; si ya está revelado, abre lightbox
     if (isMultimedia && msg.media_url) {
@@ -96,9 +102,6 @@ export default function MessageBubble({
       return
     }
   }
-
-  // Si el mensaje es multimedia consumido, mostrar como borrado pero visible
-  const isConsumed = mediaConsumed || msg.is_deleted
 
   function handlePointerDown() {
     if (!isMine) return
@@ -226,7 +229,7 @@ export default function MessageBubble({
             {/* Vista única / oculto badge — solo para mensajes de vista única */}
             {isOneTime && (
               <div
-                title={mediaHidden ? 'Oculto: toca para revelar' : 'Multimedia'}
+                title={mediaHidden ? 'Oculto: toca para revelar' : isConsumedOneTime ? 'Ya fue visto' : 'Multimedia'}
                 style={{
                   position: 'absolute',
                   top: '6px',
@@ -237,16 +240,16 @@ export default function MessageBubble({
                   alignItems: 'center',
                   gap: '3px',
                   padding: '2px 6px',
-                  background: mediaHidden ? 'rgba(139,92,246,0.35)' : 'rgba(0,0,0,0.55)',
+                  background: mediaHidden ? 'rgba(139,92,246,0.35)' : isConsumedOneTime ? 'rgba(34,197,94,0.25)' : 'rgba(0,0,0,0.55)',
                   borderRadius: '10px',
-                  color: mediaHidden ? '#8b5cf6' : '#fbbf24',
+                  color: mediaHidden ? '#8b5cf6' : isConsumedOneTime ? '#22c55e' : '#fbbf24',
                   fontSize: '9px',
                   fontWeight: '700',
                   fontFamily: "'DM Mono', monospace",
                   pointerEvents: 'none',
                 }}
               >
-                {mediaHidden ? '🔒 OCULTO' : isConsumed ? '🗑️ BORRADO' : '📁 MEDIA'}
+                {mediaHidden ? '🔒 OCULTO' : isConsumedOneTime ? '✅ VISTO' : '📁 MEDIA'}
               </div>
             )}
 
@@ -284,8 +287,26 @@ export default function MessageBubble({
               <p style={{ margin: 0, fontSize: '32px', lineHeight: '1.2' }}>{msg.content}</p>
             )}
 
-            {/* Multimedia oculto / revelado / consumido */}
-            {msg.type === 'gif' && msg.media_url && (
+            {/* Vista única consumida: caja "Ya fue visto" — reemplaza todo el multimedia */}
+            {isConsumedOneTime && (
+              <div
+                style={{
+                  width: '160px', height: '80px', borderRadius: '6px',
+                  background: 'linear-gradient(135deg, #1a2a1e, #1e1e3a)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexDirection: 'column', gap: '4px',
+                  color: '#4ade80', fontWeight: '700', fontSize: '12px',
+                  border: '1px dashed rgba(34,197,94,0.35)',
+                  cursor: 'default', userSelect: 'none',
+                }}
+              >
+                <span style={{ fontSize: '18px' }}>✅</span>
+                <span>Ya fue visto</span>
+              </div>
+            )}
+
+            {/* Multimedia oculto / revelado (solo cuando NO está consumido) */}
+            {msg.type === 'gif' && msg.media_url && !isConsumedOneTime && (
               mediaHidden ? (
                 <div
                   onClick={() => { revealAndConsume(); openMedia() }}
@@ -299,10 +320,6 @@ export default function MessageBubble({
                 >
                   🔒 Tocar para ver GIF
                 </div>
-              ) : isConsumed ? (
-                <div style={{ fontSize: '12px', color: '#3d3d5c', padding: '6px 0' }}>
-                  🗑️ GIF consumido (eliminado)
-                </div>
               ) : (
                 <img
                   src={msg.media_url}
@@ -315,7 +332,7 @@ export default function MessageBubble({
               )
             )}
 
-            {msg.type === 'image' && msg.media_url && (
+            {msg.type === 'image' && msg.media_url && !isConsumedOneTime && (
               mediaHidden ? (
                 <div
                   onClick={() => { revealAndConsume(); openMedia() }}
@@ -329,10 +346,6 @@ export default function MessageBubble({
                 >
                   🔒 Tocar para ver imagen
                 </div>
-              ) : isConsumed ? (
-                <div style={{ fontSize: '12px', color: '#3d3d5c', padding: '6px 0' }}>
-                  🗑️ Imagen consumida (eliminado)
-                </div>
               ) : (
                 <img
                   src={msg.media_url}
@@ -344,7 +357,7 @@ export default function MessageBubble({
               )
             )}
 
-            {msg.type === 'audio' && msg.media_url && (
+            {msg.type === 'audio' && msg.media_url && !isConsumedOneTime && (
               mediaHidden ? (
                 <div
                   onClick={() => { revealAndConsume() }}
@@ -358,10 +371,6 @@ export default function MessageBubble({
                 >
                   🔒 Tocar para escuchar audio (1 vez)
                 </div>
-              ) : isConsumed ? (
-                <div style={{ fontSize: '12px', color: '#3d3d5c', padding: '4px 0' }}>
-                  🗑️ Audio consumido (eliminado)
-                </div>
               ) : (
                 <audio
                   controls
@@ -372,7 +381,7 @@ export default function MessageBubble({
               )
             )}
 
-            {msg.type === 'video' && msg.media_url && (
+            {msg.type === 'video' && msg.media_url && !isConsumedOneTime && (
               mediaHidden ? (
                 <div
                   onClick={() => { revealAndConsume(); openMedia() }}
@@ -386,10 +395,6 @@ export default function MessageBubble({
                 >
                   🔒 Tocar para ver video
                 </div>
-              ) : isConsumed ? (
-                <div style={{ fontSize: '12px', color: '#3d3d5c', padding: '6px 0' }}>
-                  🗑️ Video consumido (eliminado)
-                </div>
               ) : (
                 <video
                   controls
@@ -400,6 +405,13 @@ export default function MessageBubble({
                   style={{ width: '100%', maxWidth: '320px', maxHeight: '280px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain', cursor: 'pointer' }}
                 />
               )
+            )}
+
+            {/* Texto/caption del multimedia */}
+            {isMultimedia && msg.content && (
+              <p style={{ margin: '6px 0 0', fontSize: '14px', color: '#e8e8f0', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                {msg.content}
+              </p>
             )}
           </div>
         </div>
