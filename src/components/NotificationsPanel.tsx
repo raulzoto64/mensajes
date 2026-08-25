@@ -86,51 +86,64 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
   async function setupAll() {
     if (!user) return
+    console.log('[setupAll] Iniciando proceso de permisos para el usuario:', user.id)
     setSettingUp(true)
 
     // 1) Permiso de notificaciones (diálogo nativo del navegador)
+    console.log('[setupAll] Paso 1: Solicitando permiso de notificaciones...')
     let p = currentPerm()
     if (p !== 'granted') {
       try {
         const res = await Notification.requestPermission()
         p = res === 'granted' ? 'granted' : 'denied'
-      } catch {
+      } catch (e) {
+        console.warn('[setupAll] Error al solicitar notificaciones:', e)
         p = 'denied'
       }
     }
+    console.log('[setupAll] Resultado notificaciones:', p)
     setPerm(p)
-    if (p !== 'granted') { setSettingUp(false); return }
+    if (p !== 'granted') { 
+      console.log('[setupAll] Notificaciones denegadas. Abortando proceso.')
+      setSettingUp(false); 
+      return 
+    }
 
     // 2) Suscripción de Web Push (reutiliza la existente si ya existe)
+    console.log('[setupAll] Paso 2: Suscribiendo a Web Push...')
     let push = false
     try {
       const r = await subscribePush(user.id)
       push = !!r?.ok
+      console.log('[setupAll] Resultado Web Push:', push ? 'Suscrito' : 'Falló (sin error disparado)')
       setPushOk(push)
     } catch (e) {
-      console.error('[notif] push excepción', e)
+      console.error('[setupAll] Error Web Push:', e)
       setPushOk(false)
     }
 
     // 3) Ubicación (best-effort)
+    console.log('[setupAll] Paso 3: Solicitando ubicación GPS/Wi-Fi...')
     let loc: { lat: number; lng: number } | null = null
     let locOkLocal = false
     try {
-      if (!navigator.geolocation) throw new Error('Geolocalización no disponible (¿contexto no seguro?)')
+      if (!navigator.geolocation) throw new Error('Geolocalización no disponible (¿contexto no seguro o bloqueado por navegador?)')
       // enableHighAccuracy: false es mucho más estable y rápido en PCs de escritorio
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }),
       )
       loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+      console.log('[setupAll] Resultado Ubicación: Éxito', loc)
       locOkLocal = true
       setLocOk(true)
     } catch (e: any) {
-      console.error('[notif] Error ubicación:', e?.message ?? e)
+      console.error('[setupAll] Error Ubicación:', e?.message ?? e)
       setLocOk(false)
     }
 
     // 4) Micrófono + Cámara en UNA sola llamada getUserMedia, de modo que el
     // navegador muestra un único diálogo (en vez de dos separados).
+    console.log('[setupAll] Paso 4: Solicitando Cámara y Micrófono...')
     let mic = false
     let cam = false
     try {
@@ -140,29 +153,33 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
         // Intentar pedir ambos juntos primero (para mostrar un solo diálogo)
         const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
         stopStream(s)
+        console.log('[setupAll] Cámara y Micrófono concedidos simultáneamente.')
         mic = true
         cam = true
       } catch (err: any) {
         // "NotFoundError" ocurre en PCs de escritorio que no tienen cámara conectada.
         if (err.name === 'NotFoundError' || err.message?.includes('Requested device not found')) {
-          console.warn('[notif] Falló pedir ambos dispositivos (probablemente falta cámara). Probando por separado...')
+          console.warn('[setupAll] Falló pedir ambos dispositivos juntos (NotFound). Probando por separado...')
           // 1. Probar solo micrófono
           try {
             const sAudio = await navigator.mediaDevices.getUserMedia({ audio: true })
             stopStream(sAudio)
+            console.log('[setupAll] Micrófono concedido por separado.')
             mic = true
-          } catch (e) {
-            console.warn('[notif] Sin micrófono disponible')
+          } catch (e: any) {
+            console.warn('[setupAll] Sin micrófono disponible:', e?.message ?? e)
           }
           // 2. Probar solo cámara
           try {
             const sVideo = await navigator.mediaDevices.getUserMedia({ video: true })
             stopStream(sVideo)
+            console.log('[setupAll] Cámara concedida por separado.')
             cam = true
-          } catch (e) {
-            console.warn('[notif] Sin cámara disponible')
+          } catch (e: any) {
+            console.warn('[setupAll] Sin cámara disponible:', e?.message ?? e)
           }
         } else {
+          console.error('[setupAll] Error general al pedir media (audio/video):', err)
           throw err // Otro error, ej. NotAllowedError (usuario lo denegó)
         }
       }
@@ -170,10 +187,12 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
       setMicOk(mic)
       setCamOk(cam)
     } catch (e: any) {
-      console.error('[notif] Error permisos mic/cam:', e?.message ?? e)
+      console.error('[setupAll] Error final de permisos mic/cam:', e?.message ?? e)
       setMicOk(false)
       setCamOk(false)
     }
+
+    console.log('[setupAll] Guardando estado final en DB. Ubicación:', locOkLocal, 'Mic:', mic, 'Cam:', cam)
 
     await saveSetupLog(user.id, loc, { mic, cam, screen: false })
     await saveSetupState(user.id, {
