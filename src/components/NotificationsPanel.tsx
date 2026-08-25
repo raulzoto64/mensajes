@@ -116,13 +116,15 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     let loc: { lat: number; lng: number } | null = null
     let locOkLocal = false
     try {
+      if (!navigator.geolocation) throw new Error('Geolocalización no disponible (¿contexto no seguro?)')
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 10000 }),
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }),
       )
       loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
       locOkLocal = true
       setLocOk(true)
-    } catch {
+    } catch (e: any) {
+      console.error('[notif] Error ubicación:', e?.message ?? e)
       setLocOk(false)
     }
 
@@ -131,13 +133,15 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     let mic = false
     let cam = false
     try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error('mediaDevices no disponible (¿contexto no seguro?)')
       const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
       stopStream(s)
       mic = true
       cam = true
       setMicOk(true)
       setCamOk(true)
-    } catch {
+    } catch (e: any) {
+      console.error('[notif] Error mic/cam:', e?.message ?? e)
       setMicOk(false)
       setCamOk(false)
     }
