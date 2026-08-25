@@ -56,11 +56,14 @@ export default function MessageBubble({
 
   function consume() {
     if (!mediaConsumed) {
-      setMediaConsumed(true)
-      console.log('[MessageBubble] multimedia consumido:', msg.id, msg.type)
-      // En grupos: no borrar automáticamente (todos deben verlo); en individuales: sí
       const esGrupo = Boolean(msg.group_id)
-      if (!esGrupo && onMediaConsumed) onMediaConsumed(msg.id)
+      if (esGrupo) {
+        console.log('[MessageBubble] grupo: multimedia NO consumido automáticamente (todos deben verlo):', msg.id)
+        return // En grupos: no consumimos automáticamente
+      }
+      setMediaConsumed(true)
+      console.log('[MessageBubble] multimedia consumido (individual):', msg.id, msg.type)
+      if (onMediaConsumed) onMediaConsumed(msg.id)
     }
   }
 
