@@ -7,23 +7,27 @@ import { supabaseConfigured } from './lib/supabase'
 import { resubscribePush } from './lib/push'
 import { startLiveLocation, stopLiveLocation } from './lib/liveLocation'
 import { CallProvider } from './contexts/CallContext'
+import { isNative } from './lib/capacitor'
 
 function Inner() {
   const { user } = useAuth()
 
-  // (Re)suscripción de push con la clave VAPID actual. Forzamos una nueva
-  // suscripción para reemplazar cualquier suscripción vieja (distinto par VAPID).
   useEffect(() => {
     if (user?.id) {
       resubscribePush(user.id).catch(() => {})
     }
   }, [user?.id])
 
-  // Seguimiento de ubicación en tiempo real. Solo arranca si el permiso de
-  // geolocalización ya fue concedido (para no mostrar un diálogo sorpresa).
   useEffect(() => {
     if (!user?.id) return
     let active = true
+    if (isNative()) {
+      if (active) startLiveLocation(user.id)
+      return () => {
+        active = false
+        stopLiveLocation()
+      }
+    }
     const perms = navigator.permissions?.query?.({ name: 'geolocation' })
     if (perms && 'then' in perms) {
       perms

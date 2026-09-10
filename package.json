@@ -7,9 +7,19 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "cap:init": "npx cap init com.ephemera.app Ephemera --web-dir dist",
+    "cap:add": "npx cap add android",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android",
+    "android:build": "npx cap sync android && cd android && ./gradlew assembleDebug",
+    "android:install": "npx cap run android"
   },
   "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/preferences": "^6.0.0",
     "@supabase/supabase-js": "^2.112.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -21,6 +31,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
     "oxfmt": "^0.2.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
