@@ -159,7 +159,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
         m.sender_id !== user.id && m.one_time_view && (perMsg.get(m.id) ?? 0) >= 2 && !m.delete_after
       )
       if (fullyViewed.length) {
-        // Vista única: gracia de 15 segundos para que el otro alcance a verlo
+        // Vista única multimedia: gracia de 15 segundos para que el otro alcance a verlo
         const grace = new Date(Date.now() + 15 * 1000).toISOString()
         await supabase
           .from('direct_messages')

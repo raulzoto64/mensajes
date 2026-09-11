@@ -60,7 +60,7 @@ export default function DurationSettingsModal({ title, current, onClose, onSave 
             </button>
           </div>
           <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#6b6b8a' }}>
-            Los mensajes se borran automáticamente pasada esta duración. La multimedia de vista única se borra al ser vista, sin importar esto.
+            Los mensajes de texto se borran automáticamente pasada esta duración. La multimedia se borra al ser vista por todos.
           </p>
         </div>
 
