@@ -6,6 +6,7 @@ import { lastSeenLabel } from '../lib/time'
 import { unsubscribePush } from '../lib/push'
 import NotificationsPanel from './NotificationsPanel'
 import { addNotification } from '../lib/notifications'
+import { checkForUpdate } from '../lib/updater'
 
 type Group = {
   id: string
@@ -46,12 +47,18 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
   const [dmResults, setDmResults] = useState<{ id: string; alias: string }[]>([])
   const [supabaseMissing] = useState(!supabaseConfigured)
   const [pendingCount, setPendingCount] = useState(0)
+  const [updateInfo, setUpdateInfo] = useState<{ version: string; downloadUrl: string } | null>(null)
 
   useEffect(() => {
     if (!user) return
     loadMyGroups()
     loadDms()
     loadPendingCount()
+    checkForUpdate().then((info) => {
+      if (info.needsUpdate && info.downloadUrl) {
+        setUpdateInfo({ version: info.version, downloadUrl: info.downloadUrl })
+      }
+    })
     const channel = supabase
       .channel('sidebar-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, (payload: any) => {
@@ -383,6 +390,44 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
           <span style={{ color: '#6b6b8a', fontFamily: "'Outfit', sans-serif", fontSize: '11px' }}>
             Crea un .env con VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY
           </span>
+        </div>
+      )}
+
+      {/* Update banner */}
+      {updateInfo && (
+        <div
+          style={{
+            margin: '8px',
+            padding: '10px 12px',
+            background: 'rgba(34,211,238,0.08)',
+            border: '1px solid rgba(34,211,238,0.25)',
+            borderRadius: '10px',
+            fontSize: '11px',
+            color: '#67e8f9',
+            fontFamily: "'Outfit', sans-serif",
+            lineHeight: '1.5',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+            <span style={{ fontWeight: '700' }}>Nueva versión v{updateInfo.version}</span>
+          </div>
+          <button
+            onClick={() => window.open(updateInfo.downloadUrl, '_blank')}
+            style={{
+              width: '100%',
+              padding: '6px',
+              background: 'rgba(34,211,238,0.15)',
+              border: '1px solid rgba(34,211,238,0.3)',
+              borderRadius: '7px',
+              color: '#67e8f9',
+              fontSize: '11px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontFamily: "'Outfit', sans-serif",
+            }}
+          >
+            Actualizar ahora
+          </button>
         </div>
       )}
 
