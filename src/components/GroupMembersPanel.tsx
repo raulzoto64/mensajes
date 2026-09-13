@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useOnlineUsers } from '../lib/realtime'
 
 type Member = {
   user_id: string
@@ -16,6 +17,7 @@ type Props = {
 
 export default function GroupMembersPanel({ groupId, onClose }: Props) {
   const { user } = useAuth()
+  const onlineUsers = useOnlineUsers(user?.id ?? null)
   const [members, setMembers] = useState<Member[]>([])
   const [groupName, setGroupName] = useState('')
   const [leaving, setLeaving] = useState(false)
@@ -270,6 +272,7 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
                 <div style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '14px', color: '#111b21', fontWeight: '500' }}>@{m.alias}</span>
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: onlineUsers.has(m.user_id) ? '#25d366' : '#adb5bd', flexShrink: 0 }} />
                     {m.is_admin && (
                       <span style={{ fontSize: '10px', color: '#ea4335', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(234,67,53,0.2)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
                         ADMIN

@@ -16,6 +16,7 @@ import GroupList from '../components/GroupList'
 import { useActivityHeartbeat } from '../lib/realtime'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { clearNotificationsForChat } from '../lib/notifications'
 
 type Tab = 'chats' | 'groups' | 'stories' | 'calls'
 type GroupView = { id: string; name: string }
@@ -167,6 +168,7 @@ export default function ChatPage() {
     setGroupView({ id, name })
     setDmView(null)
     setShowMembers(false)
+    clearNotificationsForChat(undefined, id)
     if (isMobile) setSidebarOpen(false)
   }
 
@@ -174,6 +176,7 @@ export default function ChatPage() {
     setDmView({ conversationId, otherUserId, otherAlias })
     setGroupView(null)
     setShowMembers(false)
+    clearNotificationsForChat(conversationId)
     if (isMobile) setSidebarOpen(false)
   }
 

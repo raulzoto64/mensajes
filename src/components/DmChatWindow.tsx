@@ -32,19 +32,33 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   const bottomRef = useRef<HTMLDivElement>(null)
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const loadIdRef = useRef(0)
   const onlineUsers = useOnlineUsers(user?.id ?? null)
   const pending = usePendingMessages(`dm-${conversationId}`)
 
   const loadMessages = useCallback(async () => {
     if (!user) return
 
+    const myLoadId = ++loadIdRef.current
+
     const { data: convInfo } = await supabase
       .from('direct_conversations')
       .select('auto_delete_hours')
       .eq('id', conversationId)
       .maybeSingle()
+    if (loadIdRef.current !== myLoadId) return
     const convHours = (convInfo as any)?.auto_delete_hours ?? 24
     setAutoDeleteHours(convHours)
+
+    const cacheKey = `ephemera_cache_dm_${conversationId}`
+    let msgsFromServer: any[] | null = null
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null') as { messages: Message[]; timestamp: number } | null
+      if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000 && cached.messages.length > 0) {
+        setMessages(cached.messages)
+      }
+    } catch { /* ignore corrupt cache */ }
 
     const { data: msgs } = await supabase
       .from('direct_messages')
@@ -53,21 +67,24 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
       .eq('is_deleted', false)
       .is('deleted_at', null)
       .order('created_at', { ascending: true })
+    if (loadIdRef.current !== myLoadId) return
+    msgsFromServer = msgs
 
     // Borrado con motivo: pasada la duración configurada de la conversación
     const cutoff = expiryCutoff(convHours)
-    const staleIds = (msgs ?? []).filter((m: any) => new Date(m.created_at).getTime() < cutoff).map((m: any) => m.id)
+    const staleIds = (msgsFromServer ?? []).filter((m: any) => new Date(m.created_at).getTime() < cutoff).map((m: any) => m.id)
     if (staleIds.length) {
       await supabase
         .from('direct_messages')
         .update({ is_deleted: true, deleted_at: new Date().toISOString(), delete_reason: '24h' })
         .in('id', staleIds)
-      await deleteMediaFiles(...(msgs ?? []).filter((m: any) => staleIds.includes(m.id)).map((m: any) => m.media_url))
+      if (loadIdRef.current !== myLoadId) return
+      await deleteMediaFiles(...(msgsFromServer ?? []).filter((m: any) => staleIds.includes(m.id)).map((m: any) => m.media_url))
     }
 
     // Gracia vencida (delete_after ya pasó) → borrado con motivo 'viewed' o vaciado de cascarón
     const nowMs = Date.now()
-    const graceExpiredRows = (msgs ?? []).filter((m: any) => m.delete_after && new Date(m.delete_after).getTime() <= nowMs)
+    const graceExpiredRows = (msgsFromServer ?? []).filter((m: any) => m.delete_after && new Date(m.delete_after).getTime() <= nowMs)
     const normalExpired = graceExpiredRows.filter((m: any) => !m.one_time_view).map((m: any) => m.id)
     const oneTimeExpired = graceExpiredRows.filter((m: any) => m.one_time_view).map((m: any) => m.id)
 
@@ -86,9 +103,10 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
           .in('id', oneTimeExpired)
       }
       await deleteMediaFiles(...graceExpiredRows.map((m: any) => m.media_url))
+      if (loadIdRef.current !== myLoadId) return
     }
 
-    const liveMsgs = (msgs ?? []).filter((m: any) =>
+    const liveMsgs = (msgsFromServer ?? []).filter((m: any) =>
       new Date(m.created_at).getTime() >= cutoff &&
       !normalExpired.includes(m.id)
     )
@@ -98,9 +116,10 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
     const { data: senders } = senderIds.length
       ? await supabase.from('users').select('id, alias').in('id', senderIds)
       : { data: [] }
+    if (loadIdRef.current !== myLoadId) return
     const aliasMap = new Map((senders ?? []).map((s: any) => [s.id, s.alias]))
 
-    setMessages(liveMsgs.map((m: any) => ({
+    const mappedMessages = liveMsgs.map((m: any) => ({
       id: m.id,
       sender_id: m.sender_id,
       sender_alias: aliasMap.get(m.sender_id) ?? 'usuario',
@@ -110,7 +129,12 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
       is_deleted: m.is_deleted,
       created_at: m.created_at,
       one_time_view: m.one_time_view,
-    })))
+    }))
+    setMessages(mappedMessages)
+
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ messages: mappedMessages, timestamp: Date.now() }))
+    } catch { /* storage full – ignore */ }
 
     // Estado de entrega: ✓ entregado / ✓✓ visto por el otro usuario
     const myIds = liveMsgs.filter((m: any) => m.sender_id === user.id).map((m: any) => m.id)
@@ -124,6 +148,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
       const seen = new Set((views ?? []).map((v: any) => v.message_id))
       for (const id of myIds) newReceipts[id] = seen.has(id) ? 'seen' : 'delivered'
     }
+    if (loadIdRef.current !== myLoadId) return
     setReceipts(newReceipts)
 
     // Timer: recargar cuando venza la gracia más cercana para ocultar el mensaje
@@ -150,6 +175,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
           .from('direct_message_views')
           .upsert(toView.map((id) => ({ message_id: id, user_id: user.id })), { onConflict: 'message_id,user_id' })
       }
+      if (loadIdRef.current !== myLoadId) return
       const { data: counts } = await supabase
         .from('direct_message_views')
         .select('message_id')

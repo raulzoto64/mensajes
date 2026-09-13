@@ -33,6 +33,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const bottomRef = useRef<HTMLDivElement>(null)
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const loadIdRef = useRef(0)
   const pending = usePendingMessages(`group-${groupId}`)
 
   async function handleStartCall() {
@@ -50,10 +51,25 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const loadMessages = useCallback(async () => {
     if (!user) return
 
+    const myLoadId = ++loadIdRef.current
+    const cacheKey = `ephemera_cache_group_${groupId}`
+
+    const isStale = () => loadIdRef.current !== myLoadId
+
+    // Try to load from cache and show immediately
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null') as { messages: Message[]; timestamp: number } | null
+      if (cached && Array.isArray(cached.messages) && Date.now() - cached.timestamp < 60 * 60 * 1000) {
+        setMessages(cached.messages)
+      }
+    } catch { /* ignore corrupted cache */ }
+
     const { data: members } = await supabase
       .from('group_members')
       .select('user_id')
       .eq('group_id', groupId)
+
+    if (isStale()) return
 
     const count = members?.length ?? 0
     setMemberCount(count)
@@ -63,6 +79,8 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
       .select('created_by, auto_delete_hours')
       .eq('id', groupId)
       .maybeSingle()
+    if (isStale()) return
+
     setIsCreator((grpInfo as any)?.created_by === user.id)
     const groupHours = (grpInfo as any)?.auto_delete_hours ?? 24
     setAutoDeleteHours(groupHours)
@@ -75,6 +93,9 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
       .eq('group_id', groupId)
       .eq('is_deleted', false)
       .is('deleted_at', null)
+      .order('created_at', { ascending: true })
+
+    if (isStale()) return
 
     if (!rows || rows.length === 0) { setMessages([]); return }
 
@@ -87,6 +108,8 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
         .in('id', staleIds)
       await deleteMediaFiles(...rows.filter((m: any) => staleIds.includes(m.id)).map((m: any) => m.media_url))
     }
+
+    if (isStale()) return
 
     // Gracia vencida (delete_after ya pasó) → borrado con motivo 'viewed' o vaciado de cascarón
     const nowMs = Date.now()
@@ -111,6 +134,8 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
       await deleteMediaFiles(...graceExpiredRows.map((m: any) => m.media_url))
     }
 
+    if (isStale()) return
+
     const msgs = rows.filter((m: any) =>
       new Date(m.created_at).getTime() >= cutoff &&
       !normalExpired.includes(m.id)
@@ -122,9 +147,12 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
     const { data: senders } = senderIds.length
       ? await supabase.from('users').select('id, alias').in('id', senderIds)
       : { data: [] }
+
+    if (isStale()) return
+
     const aliasMap = new Map((senders ?? []).map((s: any) => [s.id, s.alias]))
 
-    setMessages(msgs.map((m: any) => ({
+    const finalMessages = msgs.map((m: any) => ({
       id: m.id,
       group_id: m.group_id,
       sender_id: m.sender_id,
@@ -135,7 +163,14 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
       is_deleted: m.is_deleted,
       created_at: m.created_at,
       one_time_view: m.one_time_view,
-    })))
+    }))
+
+    setMessages(finalMessages)
+
+    // Save to cache
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ messages: finalMessages, timestamp: Date.now() }))
+    } catch { /* ignore quota errors */ }
 
     // Estado de entrega en grupo: ✓ entregado / ✓✓ visto por todos los miembros
     const myIds = msgs.filter((m: any) => m.sender_id === user.id).map((m: any) => m.id)
@@ -176,6 +211,9 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             .from('message_views')
             .upsert(toView.map((id) => ({ message_id: id, user_id: user.id })), { onConflict: 'message_id,user_id' })
         }
+
+        if (isStale()) return
+
         const { data: counts } = await supabase
           .from('message_views')
           .select('message_id')
@@ -195,6 +233,8 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
         }
       }
     }
+
+    if (isStale()) return
 
     // Barrido: elimina archivos de mensajes ya marcados como borrados (restos de cron/faltantes)
     const { data: deletedRows } = await supabase

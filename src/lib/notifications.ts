@@ -49,6 +49,15 @@ export function markNotificationRead(id: string) {
   emit()
 }
 
+export function clearNotificationsForChat(conversationId?: string, groupId?: string) {
+  items = items.map((n) => {
+    if (conversationId && n.conversationId === conversationId) return { ...n, read: true }
+    if (groupId && n.groupId === groupId) return { ...n, read: true }
+    return n
+  })
+  emit()
+}
+
 export function markAllNotificationsRead() {
   items = items.map((n) => ({ ...n, read: true }))
   emit()
