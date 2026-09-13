@@ -151,7 +151,7 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
       {/* Header */}
       <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#111b21' }}>Chats</h2>
+          {/* No header text */}
         </div>
         {/* Search */}
         <div style={{ position: 'relative' }}>
