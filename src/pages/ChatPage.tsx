@@ -36,6 +36,7 @@ export default function ChatPage() {
   const [storyViewerStory, setStoryViewerStory] = useState<any>(null)
   const [storyViewerIndex, setStoryViewerIndex] = useState(0)
   const [showStoryCreator, setShowStoryCreator] = useState(false)
+  const [storiesRefreshKey, setStoriesRefreshKey] = useState(0)
   const [unreadChats, setUnreadChats] = useState(0)
   const [unreadGroups, setUnreadGroups] = useState(0)
   const [storyCount, setStoryCount] = useState(0)
@@ -275,6 +276,7 @@ export default function ChatPage() {
           )}
           {!showChat && activeTab === 'stories' && (
             <StoriesTab
+              key={storiesRefreshKey}
               onViewStory={(story) => { setStoryViewerStory(story); setStoryViewerIndex(0) }}
               onCreateStory={() => setShowStoryCreator(true)}
             />
@@ -304,7 +306,7 @@ export default function ChatPage() {
       )}
       {showPermissions && <PermissionsRequest onClose={() => setShowPermissions(false)} />}
       {showStoryCreator && (
-        <StoryCreator onClose={() => setShowStoryCreator(false)} onCreated={loadStoryCount} />
+        <StoryCreator onClose={() => setShowStoryCreator(false)} onCreated={() => { loadStoryCount(); setStoriesRefreshKey(k => k + 1) }} />
       )}
       {storyViewerStory && (
         <StoryViewer
