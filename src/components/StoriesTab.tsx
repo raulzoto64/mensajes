@@ -283,7 +283,11 @@ function ReelCard({ story, isMine, canDelete, timeAgo, onClick, onDelete }: { st
       onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
     >
       {story.media_type === 'video' ? (
-        <video src={story.thumbnail_url || story.media_url} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        story.thumbnail_url ? (
+          <img src={story.thumbnail_url} alt="Portada video" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <video src={story.media_url} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        )
       ) : (
         <img src={story.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       )}
