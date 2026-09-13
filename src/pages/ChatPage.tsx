@@ -244,7 +244,7 @@ export default function ChatPage() {
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: !showChat ? '60px' : '0' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: !showChat && !showAdmin ? '60px' : '0' }}>
           {/* Active chat view (DM or Group) */}
           {showChat && dmView && (
             <>
@@ -274,21 +274,21 @@ export default function ChatPage() {
             </>
           )}
 
-          {/* Tab content - only when no chat is active */}
-          {!showChat && activeTab === 'chats' && (
+          {/* Tab content - only when no chat is active and not in admin mode */}
+          {!showChat && !showAdmin && activeTab === 'chats' && (
             <DmList
               activeDmId={dmView?.conversationId ?? null}
               onSelectDm={handleSelectDm}
             />
           )}
-          {!showChat && activeTab === 'groups' && (
+          {!showChat && !showAdmin && activeTab === 'groups' && (
             <GroupList
               activeGroupId={groupView?.id ?? null}
               onSelectGroup={handleSelectGroup}
               onAdminPanel={() => setShowAdmin(true)}
             />
           )}
-          {!showChat && activeTab === 'stories' && (
+          {!showChat && !showAdmin && activeTab === 'stories' && (
             <StoriesTab
               key={storiesRefreshKey}
               onViewStory={(story) => { setStoryViewerStory(story); setStoryViewerIndex(0) }}
@@ -296,14 +296,14 @@ export default function ChatPage() {
               onCreateStory={() => setShowStoryCreator(true)}
             />
           )}
-          {!showChat && activeTab === 'calls' && (
+          {!showChat && !showAdmin && activeTab === 'calls' && (
             <CallsTab onCallGroup={(id, name) => { handleSelectGroup(id, name); setActiveTab('groups') }} />
           )}
         </div>
       </div>
 
-      {/* Bottom Navigation - hidden when inside a chat */}
-      {!showChat && (
+      {/* Bottom Navigation - hidden when inside a chat or admin */}
+      {!showChat && !showAdmin && (
         <BottomNav
           active={activeTab}
           onTabChange={handleTabChange}
@@ -314,8 +314,12 @@ export default function ChatPage() {
         />
       )}
 
+      {/* Admin Panel - full page */}
+      {showAdmin && (
+        <AdminPanel initialTab="approvals" onClose={() => setShowAdmin(false)} />
+      )}
+
       {/* Overlays */}
-      {showAdmin && <AdminPanel initialTab="approvals" onClose={() => setShowAdmin(false)} />}
       {showMembers && groupView && (
         <GroupMembersPanel groupId={groupView.id} onClose={() => setShowMembers(false)} />
       )}

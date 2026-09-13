@@ -216,90 +216,36 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
   return (
     <div
       style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(7,7,17,0.8)',
+        flex: 1,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 200,
-        backdropFilter: 'blur(6px)',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: '#f0f2f5',
         fontFamily: "'Outfit', sans-serif",
-        padding: '24px',
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div
-        style={{
-          background: '#ffffff',
-          border: '1px solid #d1d7db',
-          borderRadius: '20px',
-          width: '100%',
-          maxWidth: '520px',
-          maxHeight: '85vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.8)',
-          overflow: 'hidden',
-        }}
-      >
         {/* Header */}
-        <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#111b21' }}>
-                Panel de Administrador
-              </h2>
-              <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
-                ACCESO CON PRIVILEGIOS COMPLETOS
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              style={{ background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 10px', color: '#8696a0', cursor: 'pointer', fontSize: '14px' }}
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Tabs */}
-          <div style={{ display: 'flex', background: '#f0f2f5', borderRadius: '9px', padding: '3px', gap: '2px' }}>
-            {(['actions', 'approvals', 'users', 'locations'] as const).map((t) => {
-              if (t === 'locations' && !user?.is_super_admin) return null
-              const active = tab === t
-              const color = t === 'locations' ? '#25d366' : t === 'users' ? '#00a884' : t === 'approvals' ? '#0088cc' : '#ea4335'
-              const label =
-                t === 'actions' ? '⚡ Acciones'
-                : t === 'approvals' ? `🛃 Aprobaciones (${pendingUsers.length})`
-                : t === 'users' ? '👤 Usuarios'
-                : '📍 Ubicaciones'
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  style={{
-                    flex: 1,
-                    padding: '7px',
-                    borderRadius: '7px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    fontFamily: "'Outfit', sans-serif",
-                    transition: 'all 0.15s',
-                    background: active ? color : 'transparent',
-                    color: active ? (t === 'approvals' ? '#ffffff' : '#fff') : '#8696a0',
-                  }}
-                >
-                  {label}
-                </button>
-              )
-            })}
+        <div style={{ padding: '14px 16px', borderBottom: '1px solid #e5e7eb', background: '#ffffff', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={onClose}
+            style={{ background: '#f0f2f5', border: '1px solid #e5e7eb', color: '#8696a0', cursor: 'pointer', fontSize: '16px', padding: '4px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e7eb'; e.currentTarget.style.color = '#111b21' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f2f5'; e.currentTarget.style.color = '#8696a0' }}
+          >
+            ←
+          </button>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#111b21' }}>
+              Panel de Administrador
+            </h2>
+            <p style={{ margin: '2px 0 0', fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
+              PRIVILEGIOS COMPLETOS
+            </p>
           </div>
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: '80px' }}>
           {tab === 'actions' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {bulkActions.map((action) => (
@@ -835,11 +781,11 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
         {/* Activity log */}
         {log.length > 0 && (
-          <div style={{ padding: '12px 20px 16px', borderTop: '1px solid #e5e7eb', flexShrink: 0 }}>
-            <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", marginBottom: '6px' }}>
+          <div style={{ padding: '10px 16px', borderTop: '1px solid #e5e7eb', background: '#ffffff', flexShrink: 0 }}>
+            <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", marginBottom: '4px' }}>
               LOG
             </div>
-            <div style={{ maxHeight: '80px', overflowY: 'auto' }}>
+            <div style={{ maxHeight: '60px', overflowY: 'auto' }}>
               {log.map((entry, i) => (
                 <div key={i} style={{ fontSize: '11px', color: '#8696a0', fontFamily: "'DM Mono', monospace", marginBottom: '2px' }}>
                   {entry}
@@ -848,8 +794,61 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
             </div>
           </div>
         )}
+
+        {/* Admin Bottom Nav */}
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          height: '60px',
+          background: '#ffffff',
+          borderTop: '1px solid #e5e7eb',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+          zIndex: 100,
+          fontFamily: "'Outfit', sans-serif",
+        }}>
+          {([
+            { id: 'actions' as Tab, icon: '⚡', label: 'Acciones', color: '#ea4335' },
+            { id: 'approvals' as Tab, icon: '🛃', label: 'Aprobaciones', color: '#0088cc', badge: pendingUsers.length },
+            { id: 'users' as Tab, icon: '👤', label: 'Usuarios', color: '#00a884' },
+            ...(user?.is_super_admin ? [{ id: 'locations' as Tab, icon: '📍', label: 'Ubicaciones', color: '#25d366' }] : []),
+          ]).map((t) => {
+            const active = tab === t.id
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
+                  padding: '6px 14px', background: 'transparent', border: 'none', cursor: 'pointer',
+                  position: 'relative', color: active ? t.color : '#8696a0', transition: 'color 0.2s',
+                  minWidth: '60px',
+                }}
+              >
+                <div style={{ position: 'relative' }}>
+                  <span style={{ fontSize: '20px' }}>{t.icon}</span>
+                  {'badge' in t && t.badge && t.badge > 0 && (
+                    <span style={{
+                      position: 'absolute', top: '-4px', right: '-8px',
+                      minWidth: '16px', height: '16px', background: t.color,
+                      borderRadius: '8px', color: '#fff', fontSize: '9px', fontWeight: '700',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0 3px', border: '2px solid #ffffff',
+                    }}>
+                      {t.badge > 99 ? '99+' : t.badge}
+                    </span>
+                  )}
+                </div>
+                <span style={{ fontSize: '10px', fontWeight: active ? '600' : '400' }}>{t.label}</span>
+                {active && (
+                  <div style={{
+                    position: 'absolute', top: '-1px', left: '20%', right: '20%',
+                    height: '2px', background: t.color, borderRadius: '1px',
+                  }} />
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
-    </div>
   )
 }
 
