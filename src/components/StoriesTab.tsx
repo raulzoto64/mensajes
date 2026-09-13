@@ -183,7 +183,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+        gridTemplateColumns: 'repeat(2, 1fr)',
         gap: '10px',
       }}>
         {stories.map((story) => (

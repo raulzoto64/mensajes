@@ -229,7 +229,7 @@ export default function ChatPage() {
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: !isMobile && !showChat ? '60px' : '0' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: !showChat ? '60px' : '0' }}>
           {/* Active chat view (DM or Group) */}
           {showChat && dmView && (
             <>
@@ -285,8 +285,8 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Bottom Navigation - only on desktop and when not in a chat */}
-      {!isMobile && !showChat && (
+      {/* Bottom Navigation - hidden when inside a chat */}
+      {!showChat && (
         <BottomNav
           active={activeTab}
           onTabChange={handleTabChange}
