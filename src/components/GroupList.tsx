@@ -237,7 +237,7 @@ export default function GroupList({ activeGroupId, onSelectGroup, onAdminPanel }
       </div>
 
       {/* Group list */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
         {!supabaseConfigured && (
           <div style={{ margin: '8px', padding: '10px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '10px', fontSize: '11px', color: '#fbbf24', fontFamily: "'DM Mono', monospace", lineHeight: '1.5' }}>
             ⚠ SUPABASE NO CONFIGURADO
@@ -257,16 +257,16 @@ export default function GroupList({ activeGroupId, onSelectGroup, onAdminPanel }
             <button
               key={g.id}
               onClick={() => onSelectGroup(g.id, g.name)}
-              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.06)' }}
-              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
-              onMouseDown={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.14)' }}
-              onMouseUp={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.06)' }}
+              onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = 'rgba(0,168,132,0.2)' } }}
+              onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = '#f8f9fa'; e.currentTarget.style.borderColor = '#e9ecef' } }}
+              onMouseDown={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.06)' }}
+              onMouseUp={(e) => { if (!active) { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = 'rgba(0,168,132,0.2)' } }}
               style={{
                 width: '100%', textAlign: 'left',
                 padding: '10px 12px',
-                background: active ? 'rgba(0,168,132,0.12)' : 'transparent',
-                border: `1px solid ${active ? 'rgba(0,168,132,0.25)' : 'transparent'}`,
-                borderRadius: '10px', cursor: 'pointer', marginBottom: '2px',
+                background: active ? 'rgba(0,168,132,0.08)' : '#f8f9fa',
+                border: `1px solid ${active ? 'rgba(0,168,132,0.25)' : '#e9ecef'}`,
+                borderRadius: '12px', cursor: 'pointer', marginBottom: '6px',
                 display: 'flex', alignItems: 'center', gap: '10px',
                 fontFamily: "'Outfit', sans-serif",
                 transition: 'background 0.15s, border-color 0.15s',
