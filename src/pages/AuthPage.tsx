@@ -7,6 +7,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [alias, setAlias] = useState('')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
@@ -20,7 +21,7 @@ export default function AuthPage() {
     setLoading(true)
     try {
       const fn = mode === 'login' ? login : register
-      const { user, error: err, pending } = await fn(alias, password)
+      const { user, error: err, pending } = mode === 'login' ? await fn(alias, password) : await fn(alias, password, phone || '+51')
       if (err) setError(err)
       else if (pending) {
         setInfo('Ya estás registrado, pídele al administrador que te apruebe el ingreso.')
@@ -159,6 +160,56 @@ export default function AuthPage() {
                 onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
               />
             </div>
+
+            {mode === 'register' && (
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#8696a0', marginBottom: '8px', fontWeight: '500' }}>
+                  CELULAR
+                </label>
+                <div style={{ display: 'flex', gap: '0' }}>
+                  {/* Country code selector */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: '#f0f2f5',
+                      border: '1px solid #e5e7eb',
+                      borderRight: 'none',
+                      borderRadius: '10px 0 0 10px',
+                      padding: '0 12px',
+                      fontSize: '15px',
+                      color: '#111b21',
+                      fontFamily: "'Outfit', sans-serif",
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span style={{ fontSize: '20px' }}>🇵🇪</span>
+                    <span style={{ fontWeight: '500' }}>+51</span>
+                  </div>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="999 888 777"
+                    required
+                    style={{
+                      flex: 1,
+                      background: '#f0f2f5',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0 10px 10px 0',
+                      padding: '12px 16px',
+                      color: '#111b21',
+                      fontSize: '15px',
+                      fontFamily: "'Outfit', sans-serif",
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = '#00a884')}
+                    onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', color: '#8696a0', marginBottom: '8px', fontWeight: '500' }}>

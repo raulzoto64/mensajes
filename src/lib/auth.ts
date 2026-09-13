@@ -6,6 +6,7 @@ export type SessionUser = {
   id: string
   alias: string
   avatar_url: string | null
+  phone: string | null
   is_admin: boolean
   is_super_admin: boolean
   is_approved: boolean
@@ -33,6 +34,7 @@ export function clearSession(): void {
 export async function register(
   alias: string,
   password: string,
+  phone?: string,
 ): Promise<{ user: SessionUser | null; error: string | null; pending: boolean }> {
   const trimmed = alias.trim().toLowerCase()
 
@@ -47,9 +49,12 @@ export async function register(
   const salt = generateSalt()
   const password_hash = await hashPassword(password, salt)
 
+  const insertData: Record<string, unknown> = { alias: trimmed, password_hash, salt, is_admin: false, is_approved: false }
+  if (phone?.trim()) insertData.phone = phone.trim()
+
   const { error } = await supabase
     .from('users')
-    .insert({ alias: trimmed, password_hash, salt, is_admin: false, is_approved: false })
+    .insert(insertData)
 
   if (error) return { user: null, error: error.message, pending: false }
 
@@ -73,7 +78,7 @@ export async function login(
 
   const { data, error } = await supabase
     .from('users')
-    .select('id, alias, avatar_url, password_hash, salt, is_admin, is_super_admin, is_approved')
+    .select('id, alias, avatar_url, phone, password_hash, salt, is_admin, is_super_admin, is_approved')
     .eq('alias', trimmed)
     .maybeSingle()
 
@@ -86,7 +91,7 @@ export async function login(
     return { user: null, error: 'Ya estás registrado, pídele al administrador que te apruebe el ingreso.', pending: true }
   }
 
-  const user: SessionUser = { id: data.id, alias: data.alias, avatar_url: data.avatar_url ?? null, is_admin: data.is_admin, is_super_admin: data.is_super_admin, is_approved: data.is_approved }
+  const user: SessionUser = { id: data.id, alias: data.alias, avatar_url: data.avatar_url ?? null, phone: data.phone ?? null, is_admin: data.is_admin, is_super_admin: data.is_super_admin, is_approved: data.is_approved }
   saveSession(user)
   return { user, error: null, pending: false }
 }

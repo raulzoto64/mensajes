@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   salt          text NOT NULL,          -- salt aleatorio de 16 bytes hex
   is_admin      boolean NOT NULL DEFAULT false,
   is_approved   boolean NOT NULL DEFAULT false,  -- aprobado por el admin para entrar
+  phone         text,                   -- número de celular con prefijo (ej: +51999888777)
   created_at    timestamptz NOT NULL DEFAULT now()
 );
 
