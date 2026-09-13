@@ -37,11 +37,13 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
     if (!user) return
     setLoading(true)
     const now = new Date().toISOString()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('stories')
-      .select('*, users!stories_user_id_fkey(alias, avatar_url)')
+      .select('*, users!stories_user_id_fkey(alias)')
       .gt('expires_at', now)
       .order('created_at', { ascending: false })
+
+    if (error) { console.error('[STORIES] load error:', error); setLoading(false); return }
 
     if (data) {
       const { data: viewed } = await supabase
@@ -55,7 +57,6 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
         id: s.id,
         user_id: s.user_id,
         user_alias: s.users?.alias ?? 'usuario',
-        avatar_url: s.users?.avatar_url ?? null,
         media_url: s.media_url,
         media_type: s.media_type,
         caption: s.caption,
