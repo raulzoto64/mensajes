@@ -8,6 +8,7 @@ type Story = {
   user_alias: string
   media_url: string
   media_type: 'image' | 'video'
+  thumbnail_url: string | null
   caption: string | null
   created_at: string
   expires_at: string

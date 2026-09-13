@@ -35,6 +35,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadIdRef = useRef(0)
   const pending = usePendingMessages(`group-${groupId}`)
+  const [optimistic, setOptimistic] = useState<{ tempId: string; type: string; content: string | null; mediaUrl: string | null; createdAt: string; error: boolean }[]>([])
 
   async function handleStartCall() {
     if (!user) return

@@ -4,15 +4,23 @@ import { useAuth } from '../contexts/AuthContext'
 import { unsubscribePush } from '../lib/push'
 import { checkForUpdate } from '../lib/updater'
 
+type Tab = 'chats' | 'groups' | 'stories' | 'calls' | 'contacts'
+
 type Props = {
   activeGroupId: string | null
   activeDmId: string | null
+  activeTab: Tab
+  unreadChats: number
+  unreadGroups: number
+  storyCount: number
   onSelectGroup: (id: string, name: string) => void
   onSelectDm: (conversationId: string, otherUserId: string, otherAlias: string) => void
+  onTabChange: (tab: Tab) => void
   onAdminPanel: () => void
+  onSettings: () => void
 }
 
-export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSelectDm, onAdminPanel }: Props) {
+export default function Sidebar({ activeGroupId, activeDmId, activeTab, unreadChats, unreadGroups, storyCount, onSelectGroup, onSelectDm, onTabChange, onAdminPanel, onSettings }: Props) {
   const { user, logout, setUser } = useAuth()
   const [supabaseMissing] = useState(!supabaseConfigured)
   const [updateInfo, setUpdateInfo] = useState<{ version: string; downloadUrl: string } | null>(null)
@@ -50,6 +58,29 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
     localStorage.setItem('ephemera_session', JSON.stringify(updated))
     setUploadingAvatar(false)
   }
+
+  const tabs: { id: Tab; label: string; icon: React.ReactNode; badge: number }[] = [
+    {
+      id: 'chats', label: 'Chats', badge: unreadChats,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+    },
+    {
+      id: 'groups', label: 'Grupos', badge: unreadGroups,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
+    },
+    {
+      id: 'stories', label: 'Historias', badge: storyCount,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="4" /><line x1="21.17" y1="8" x2="12" y2="8" /><line x1="3.95" y1="6.06" x2="8.54" y2="14" /><line x1="10.88" y1="21.94" x2="15.46" y2="14" /></svg>,
+    },
+    {
+      id: 'calls', label: 'Llamadas', badge: 0,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>,
+    },
+    {
+      id: 'contacts', label: 'Contactos', badge: 0,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>,
+    },
+  ]
 
   return (
     <div
@@ -133,6 +164,94 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
           </span>
         </div>
         <input ref={avatarRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
+      </div>
+
+      {/* Navigation tabs */}
+      <div style={{ padding: '8px' }}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                background: isActive ? 'rgba(0,168,132,0.08)' : 'transparent',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                color: isActive ? '#00a884' : '#667781',
+                fontSize: '14px',
+                fontWeight: isActive ? '600' : '400',
+                fontFamily: "'Outfit', sans-serif",
+                transition: 'all 0.15s',
+                textAlign: 'left',
+              }}
+              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = '#f0f2f5' }}
+              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+            >
+              <div style={{ position: 'relative' }}>
+                {tab.icon}
+                {tab.badge > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-6px', right: '-8px',
+                    minWidth: '16px', height: '16px',
+                    background: '#00a884', borderRadius: '8px',
+                    color: '#fff', fontSize: '9px', fontWeight: '700',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '0 4px',
+                  }}>
+                    {tab.badge > 99 ? '99+' : tab.badge}
+                  </span>
+                )}
+              </div>
+              <span>{tab.label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Admin & Settings */}
+      <div style={{ padding: '4px 8px' }}>
+        {user?.is_admin && (
+          <button
+            onClick={onAdminPanel}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '10px 12px', background: 'transparent', border: 'none', borderRadius: '10px',
+              cursor: 'pointer', color: '#ea4335', fontSize: '14px', fontWeight: '500',
+              fontFamily: "'Outfit', sans-serif", textAlign: 'left',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(234,67,53,0.06)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Administrar
+          </button>
+        )}
+        <button
+          onClick={onSettings}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+            padding: '10px 12px', background: 'transparent', border: 'none', borderRadius: '10px',
+            cursor: 'pointer', color: '#667781', fontSize: '14px', fontWeight: '500',
+            fontFamily: "'Outfit', sans-serif", textAlign: 'left',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f2f5')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          Configuración
+        </button>
       </div>
 
       {/* Spacer */}

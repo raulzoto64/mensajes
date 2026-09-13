@@ -226,6 +226,15 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
         zIndex: 150,
       }}
     >
+      <style>{`
+        @media (max-width: 767px) {
+          .admin-desktop-sidebar { display: none !important; }
+          .admin-mobile-nav { display: flex !important; }
+        }
+        @media (min-width: 768px) {
+          .admin-mobile-nav { display: none !important; }
+        }
+      `}</style>
         {/* Header */}
         <div style={{ padding: '14px 16px', borderBottom: '1px solid #e5e7eb', background: '#ffffff', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
@@ -247,8 +256,58 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: '80px' }}>
-          {tab === 'actions' && (
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Desktop sidebar nav */}
+          <div className="admin-desktop-sidebar" style={{
+            width: '220px', flexShrink: 0, background: '#ffffff', borderRight: '1px solid #e5e7eb',
+            display: 'flex', flexDirection: 'column', padding: '12px 8px',
+            fontFamily: "'Outfit', sans-serif",
+          }}>
+            {([
+              { id: 'actions' as Tab, icon: '⚡', label: 'Acciones', color: '#ea4335' },
+              { id: 'approvals' as Tab, icon: '🛃', label: 'Aprobaciones', color: '#0088cc', badge: pendingUsers.length },
+              { id: 'users' as Tab, icon: '👤', label: 'Usuarios', color: '#00a884' },
+              ...(user?.is_super_admin ? [{ id: 'locations' as Tab, icon: '📍', label: 'Ubicaciones', color: '#25d366' }] : []),
+            ]).map((t) => {
+              const active = tab === t.id
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '10px 12px', background: active ? `${t.color}10` : 'transparent',
+                    border: 'none', borderRadius: '10px', cursor: 'pointer',
+                    color: active ? t.color : '#667781', fontSize: '14px', fontWeight: active ? '600' : '400',
+                    fontFamily: "'Outfit', sans-serif", textAlign: 'left', width: '100%',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = '#f0f2f5' }}
+                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                >
+                  <div style={{ position: 'relative', fontSize: '18px', width: '24px', textAlign: 'center' }}>
+                    {t.icon}
+                    {'badge' in t && t.badge && t.badge > 0 && (
+                      <span style={{
+                        position: 'absolute', top: '-6px', right: '-10px',
+                        minWidth: '16px', height: '16px', background: t.color,
+                        borderRadius: '8px', color: '#fff', fontSize: '9px', fontWeight: '700',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '0 4px',
+                      }}>
+                        {t.badge > 99 ? '99+' : t.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span>{t.label}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Content area */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+            {tab === 'actions' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {bulkActions.map((action) => (
                 <div
@@ -778,35 +837,20 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                 })()
               )}
             </div>
-          )}
+           )}
+          </div>
         </div>
 
-        {/* Activity log */}
-        {log.length > 0 && (
-          <div style={{ padding: '10px 16px', borderTop: '1px solid #e5e7eb', background: '#ffffff', flexShrink: 0 }}>
-            <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", marginBottom: '4px' }}>
-              LOG
-            </div>
-            <div style={{ maxHeight: '60px', overflowY: 'auto' }}>
-              {log.map((entry, i) => (
-                <div key={i} style={{ fontSize: '11px', color: '#8696a0', fontFamily: "'DM Mono', monospace", marginBottom: '2px' }}>
-                  {entry}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Admin Bottom Nav */}
+        {/* Admin Bottom Nav - mobile only */}
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
           height: '60px',
           background: '#ffffff',
           borderTop: '1px solid #e5e7eb',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+          display: 'none', alignItems: 'center', justifyContent: 'space-around',
           zIndex: 100,
           fontFamily: "'Outfit', sans-serif",
-        }}>
+        }} className="admin-mobile-nav">
           {([
             { id: 'actions' as Tab, icon: '⚡', label: 'Acciones', color: '#ea4335' },
             { id: 'approvals' as Tab, icon: '🛃', label: 'Aprobaciones', color: '#0088cc', badge: pendingUsers.length },

@@ -24,6 +24,8 @@ export default function MessageBubble({
   onLongPress,
   formatTime,
   sending,
+  error,
+  onRetry,
   receipt,
   onMediaConsumed,
 }: {
@@ -36,6 +38,8 @@ export default function MessageBubble({
   onLongPress: () => void
   formatTime: (s: string) => string
   sending?: boolean
+  error?: boolean
+  onRetry?: () => void
   receipt?: 'sending' | 'delivered' | 'seen'
   onMediaConsumed?: (msgId: string) => void
 }) {
@@ -190,7 +194,7 @@ export default function MessageBubble({
               overflow: 'hidden',
               boxShadow: selected ? '0 0 0 1px rgba(239,68,68,0.4)' : 'none',
               userSelect: selectMode ? 'none' : 'text',
-              opacity: sending ? 0.65 : 1,
+              opacity: sending ? 0.65 : error ? 0.7 : 1,
             }}
           >
             {sending && (
@@ -220,6 +224,33 @@ export default function MessageBubble({
                   style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', display: 'inline-block' }}
                 />
                 ENVIANDO…
+              </span>
+            )}
+            {error && (
+              <span
+                onClick={(e) => { e.stopPropagation(); onRetry?.() }}
+                title="Error al enviar. Toca para reintentar"
+                style={{
+                  position: 'absolute',
+                  top: '6px',
+                  right: isMine ? '6px' : 'auto',
+                  left: isMine ? 'auto' : '6px',
+                  zIndex: 6,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '3px 8px',
+                  background: 'rgba(239,68,68,0.85)',
+                  borderRadius: '10px',
+                  color: '#fff',
+                  fontSize: '9px',
+                  fontWeight: '700',
+                  fontFamily: "'DM Mono', monospace",
+                  letterSpacing: '0.05em',
+                  cursor: 'pointer',
+                }}
+              >
+                ⚠ ERROR · ↻ Reintentar
               </span>
             )}
             {/* Vista única / oculto badge — solo para mensajes de vista única */}

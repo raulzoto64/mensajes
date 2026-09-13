@@ -10,13 +10,15 @@ type Props = {
   groupId?: string
   conversationId?: string
   onSent: () => void
+  onSending?: (msg: { tempId: string; type: string; content: string | null; mediaUrl: string | null }) => void
+  onSendResult?: (tempId: string, ok: boolean) => void
   isMobile?: boolean
 }
 
 type PickerMode = 'none' | 'emoji' | 'gif'
 type RecordMode = 'none' | 'audio' | 'video'
 
-export default function MessageInput({ groupId, conversationId, onSent, isMobile }: Props) {
+export default function MessageInput({ groupId, conversationId, onSent, onSending, onSendResult, isMobile }: Props) {
   const { user } = useAuth()
   const [text, setText] = useState('')
   const [picker, setPicker] = useState<PickerMode>('none')
@@ -66,7 +68,6 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
   async function sendMessage(type: string, content: string | null, mediaUrl: string | null, tempId?: string, oneTimeView?: boolean) {
     if (!user) return
     const scope = groupId ? `group-${groupId}` : conversationId ? `dm-${conversationId}` : ''
-    // Vista única solo aplica a multimedia (no a texto ni emoji)
     const isOneTime = Boolean(oneTimeView) && type !== 'text' && type !== 'emoji'
     setSending(true)
     setUploadError('')
@@ -134,9 +135,11 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
     if (tempId && scope) removePendingMessage(scope, tempId)
     if (insertError) {
       setUploadError(`No se pudo enviar: ${insertError}`)
+      if (tempId && onSendResult) onSendResult(tempId, false)
       return
     }
     if (isOneTime) setOneTimeView(false)
+    if (tempId && onSendResult) onSendResult(tempId, true)
     notifyChatChanged()
     onSent()
   }
@@ -146,7 +149,12 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
     if (!trimmed) return
     setText('')
     resizeTextarea()
-    await sendMessage('text', trimmed, null)
+    const tempId = genTempId()
+    const scope = groupId ? `group-${groupId}` : conversationId ? `dm-${conversationId}` : ''
+    if (scope) {
+      addPendingMessage(scope, { tempId, type: 'text', content: trimmed, mediaUrl: null, createdAt: new Date().toISOString() })
+    }
+    await sendMessage('text', trimmed, null, tempId)
   }
 
   function handleEmojiSelect(emoji: string) {

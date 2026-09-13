@@ -1,10 +1,25 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 type Props = {
   onClose: () => void
   onCreated: () => void
+}
+
+function captureVideoFrame(video: HTMLVideoElement): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    video.currentTime = 1
+    video.onseeked = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { resolve(null); return }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7)
+    }
+  })
 }
 
 export default function StoryCreator({ onClose, onCreated }: Props) {
@@ -15,6 +30,7 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
   const [caption, setCaption] = useState('')
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -25,35 +41,46 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
   }
 
   async function upload() {
-    if (!mediaFile || !user) { console.log('[STORY] upload abort: no mediaFile o no user'); return }
+    if (!mediaFile || !user) return
     setUploading(true)
 
     const ext = mediaFile.name.split('.').pop() ?? 'jpg'
     const path = `stories/${user.id}/${Date.now()}.${ext}`
-    console.log('[STORY] subiendo archivo:', path, 'tipo:', mediaFile.type, 'tamaño:', mediaFile.size)
 
     const { data: uploadData, error: uploadError } = await supabase.storage.from('media').upload(path, mediaFile, {
       contentType: mediaFile.type,
     })
-    console.log('[STORY] upload result:', uploadError ? 'ERROR: ' + uploadError.message : 'OK', uploadData)
-    if (uploadError) { console.error('[STORY] upload error:', uploadError); setUploading(false); return }
+    if (uploadError) { setUploading(false); return }
 
     const { data: urlData } = supabase.storage.from('media').getPublicUrl(path)
-    console.log('[STORY] public URL:', urlData.publicUrl)
+    const mediaUrl = urlData.publicUrl
+
+    // Capture thumbnail for videos
+    let thumbnailUrl: string | null = null
+    if (mediaType === 'video' && videoRef.current) {
+      const blob = await captureVideoFrame(videoRef.current)
+      if (blob) {
+        const thumbPath = `stories/${user.id}/${Date.now()}_thumb.jpg`
+        const { error: thumbErr } = await supabase.storage.from('media').upload(thumbPath, blob, { contentType: 'image/jpeg' })
+        if (!thumbErr) {
+          const { data: thumbUrl } = supabase.storage.from('media').getPublicUrl(thumbPath)
+          thumbnailUrl = thumbUrl.publicUrl
+        }
+      }
+    }
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
-    const insertPayload = {
+    const insertPayload: Record<string, unknown> = {
       user_id: user.id,
-      media_url: urlData.publicUrl,
+      media_url: mediaUrl,
       media_type: mediaType,
       caption: caption.trim() || null,
       expires_at: expiresAt,
     }
-    console.log('[STORY] insertando en DB:', insertPayload)
+    if (thumbnailUrl) insertPayload.thumbnail_url = thumbnailUrl
 
-    const { data: insertData, error: insertError } = await supabase.from('stories').insert(insertPayload)
-    console.log('[STORY] insert result:', insertError ? 'ERROR: ' + insertError.message : 'OK', insertData)
+    const { error: insertError } = await supabase.from('stories').insert(insertPayload)
     if (insertError) console.error('[STORY] insert error:', insertError)
 
     setUploading(false)
@@ -120,6 +147,7 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
           <div style={{ position: 'relative', maxWidth: '100%', maxHeight: '70%' }}>
             {mediaType === 'video' ? (
               <video
+                ref={videoRef}
                 src={preview}
                 autoPlay
                 playsInline

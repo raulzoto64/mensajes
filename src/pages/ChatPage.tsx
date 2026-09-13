@@ -10,9 +10,11 @@ import StoriesTab from '../components/StoriesTab'
 import StoryViewer from '../components/StoryViewer'
 import StoryCreator from '../components/StoryCreator'
 import CallsTab from '../components/CallsTab'
+import ContactsTab from '../components/ContactsTab'
 import PermissionsRequest from '../components/PermissionsRequest'
 import DmList from '../components/DmList'
 import GroupList from '../components/GroupList'
+import SettingsPanel from '../components/SettingsPanel'
 import { useActivityHeartbeat } from '../lib/realtime'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
@@ -29,12 +31,14 @@ export default function ChatPage() {
   const [groupView, setGroupView] = useState<GroupView | null>(null)
   const [dmView, setDmView] = useState<DmView | null>(null)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [showPermissions, setShowPermissions] = useState(false)
   const [storyViewerStory, setStoryViewerStory] = useState<any>(null)
+  const [viewerStories, setViewerStories] = useState<any[]>([])
   const [storyViewerIndex, setStoryViewerIndex] = useState(0)
   const [showStoryCreator, setShowStoryCreator] = useState(false)
   const [storiesRefreshKey, setStoriesRefreshKey] = useState(0)
@@ -233,9 +237,15 @@ export default function ChatPage() {
             <Sidebar
               activeGroupId={groupView?.id ?? null}
               activeDmId={dmView?.conversationId ?? null}
+              activeTab={activeTab}
+              unreadChats={unreadChats}
+              unreadGroups={unreadGroups}
+              storyCount={storyCount}
               onSelectGroup={(id, name) => { handleSelectGroup(id, name); setActiveTab('groups') }}
               onSelectDm={handleSelectDm}
+              onTabChange={handleTabChange}
               onAdminPanel={() => setShowAdmin(true)}
+              onSettings={() => setShowSettings(true)}
             />
           </div>
         )}
@@ -256,15 +266,21 @@ export default function ChatPage() {
             <Sidebar
               activeGroupId={groupView?.id ?? null}
               activeDmId={dmView?.conversationId ?? null}
+              activeTab={activeTab}
+              unreadChats={unreadChats}
+              unreadGroups={unreadGroups}
+              storyCount={storyCount}
               onSelectGroup={(id, name) => { handleSelectGroup(id, name); setActiveTab('groups') }}
               onSelectDm={handleSelectDm}
+              onTabChange={handleTabChange}
               onAdminPanel={() => setShowAdmin(true)}
+              onSettings={() => { setSidebarOpen(false); setShowSettings(true) }}
             />
           </div>
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: !showChat && !showAdmin ? '60px' : '0' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobile && !showChat && !showAdmin ? '60px' : '0' }}>
           {/* Active chat view (DM or Group) */}
           {showChat && dmView && (
             <>
@@ -311,7 +327,7 @@ export default function ChatPage() {
           {!showChat && !showAdmin && activeTab === 'stories' && (
             <StoriesTab
               key={storiesRefreshKey}
-              onViewStory={(story) => { setStoryViewerStory(story); setStoryViewerIndex(0) }}
+              onViewStory={(story, allSorted) => { setStoryViewerStory(story); setViewerStories(allSorted); setStoryViewerIndex(allSorted.findIndex(s => s.id === story.id)) }}
               onStoryViewed={loadStoryCount}
               onCreateStory={() => setShowStoryCreator(true)}
             />
@@ -322,8 +338,8 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Bottom Navigation - hidden when inside a chat or admin */}
-      {!showChat && !showAdmin && (
+      {/* Bottom Navigation - only on mobile, hidden inside chat or admin */}
+      {isMobile && !showChat && !showAdmin && (
         <BottomNav
           active={activeTab}
           onTabChange={handleTabChange}
@@ -340,6 +356,7 @@ export default function ChatPage() {
       )}
 
       {/* Overlays */}
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
       {showMembers && groupView && (
         <GroupMembersPanel groupId={groupView.id} onClose={() => setShowMembers(false)} />
       )}
@@ -350,11 +367,11 @@ export default function ChatPage() {
       {storyViewerStory && (
         <StoryViewer
           story={storyViewerStory}
-          allStories={[]}
+          allStories={viewerStories}
           currentIndex={storyViewerIndex}
           onClose={() => setStoryViewerStory(null)}
-          onNext={() => setStoryViewerIndex((i) => i + 1)}
-          onPrev={() => setStoryViewerIndex((i) => Math.max(i - 1, 0))}
+          onNext={() => { const next = storyViewerIndex + 1; if (next < viewerStories.length) { setStoryViewerIndex(next); setStoryViewerStory(viewerStories[next]) } else { setStoryViewerStory(null) } }}
+          onPrev={() => { const prev = storyViewerIndex - 1; if (prev >= 0) { setStoryViewerIndex(prev); setStoryViewerStory(viewerStories[prev]) } }}
           onDelete={() => { setStoryViewerStory(null); setStoriesRefreshKey(k => k + 1) }}
         />
       )}

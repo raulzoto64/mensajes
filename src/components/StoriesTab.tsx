@@ -8,6 +8,7 @@ type Story = {
   user_alias: string
   media_url: string
   media_type: 'image' | 'video'
+  thumbnail_url: string | null
   caption: string | null
   created_at: string
   expires_at: string
@@ -15,7 +16,7 @@ type Story = {
 }
 
 type Props = {
-  onViewStory: (story: Story) => void
+  onViewStory: (story: Story, allSorted: Story[]) => void
   onStoryViewed: () => void
   onCreateStory: () => void
 }
@@ -24,6 +25,7 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
   const { user } = useAuth()
   const [stories, setStories] = useState<Story[]>([])
   const [loading, setLoading] = useState(true)
+  const [confirmDelete, setConfirmDelete] = useState<Story | null>(null)
 
   useEffect(() => {
     loadStories()
@@ -72,6 +74,7 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
         user_alias: s.users?.alias ?? 'usuario',
         media_url: s.media_url,
         media_type: s.media_type,
+        thumbnail_url: s.thumbnail_url ?? null,
         caption: s.caption,
         created_at: s.created_at,
         expires_at: s.expires_at,
@@ -112,6 +115,12 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
     acc[s.user_id].push(s)
     return acc
   }, {})
+
+  // Sort: unviewed first, then viewed (for viewer)
+  const sortedForViewer = [...stories].sort((a, b) => {
+    if (a.viewed === b.viewed) return 0
+    return a.viewed ? 1 : -1
+  })
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
@@ -208,10 +217,45 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
         {stories.map((story) => {
           const canDelete = user && (story.user_id === user.id || user.is_admin || user.is_super_admin)
           return (
-            <ReelCard key={story.id} story={story} isMine={story.user_id === user?.id} canDelete={!!canDelete} timeAgo={timeAgo} onClick={() => { markViewed(story.id); onViewStory(story) }} onDelete={() => deleteStory(story.id)} />
+            <ReelCard key={story.id} story={story} isMine={story.user_id === user?.id} canDelete={!!canDelete} timeAgo={timeAgo} onClick={() => { markViewed(story.id); onViewStory(story, sortedForViewer) }} onDelete={() => setConfirmDelete(story)} />
           )
         })}
       </div>
+
+      {/* Delete confirmation dialog */}
+      {confirmDelete && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}
+          onClick={() => setConfirmDelete(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: '16px', padding: '28px 24px', width: '320px', maxWidth: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', fontFamily: "'Outfit', sans-serif" }}
+          >
+            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '36px' }}>🗑️</span>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#111b21', marginBottom: '8px', textAlign: 'center' }}>Eliminar historia</div>
+            <p style={{ fontSize: '14px', color: '#667781', margin: '0 0 20px', textAlign: 'center', lineHeight: '1.5' }}>
+              ¿Estás seguro de que quieres eliminar esta historia de <strong>@{confirmDelete.user_alias}</strong>?
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                style={{ flex: 1, padding: '11px', background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#667781', fontSize: '14px', fontWeight: '500', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { deleteStory(confirmDelete.id); setConfirmDelete(null) }}
+                style={{ flex: 1, padding: '11px', background: '#ea4335', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -233,7 +277,7 @@ function ReelCard({ story, isMine, canDelete, timeAgo, onClick, onDelete }: { st
       onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
     >
       {story.media_type === 'video' ? (
-        <video src={story.media_url} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <video src={story.thumbnail_url || story.media_url} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
         <img src={story.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       )}
