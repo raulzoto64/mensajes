@@ -25,13 +25,15 @@ type GroupView = { id: string; name: string }
 type DmView = { conversationId: string; otherUserId: string; otherAlias: string }
 
 export default function ChatPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, setUser } = useAuth()
   useActivityHeartbeat(user?.id ?? null)
   const [activeTab, setActiveTab] = useState<Tab>('chats')
   const [groupView, setGroupView] = useState<GroupView | null>(null)
   const [dmView, setDmView] = useState<DmView | null>(null)
   const [showAdmin, setShowAdmin] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showPhonePopup, setShowPhonePopup] = useState(false)
+  const [phoneInput, setPhoneInput] = useState('')
   const [showMembers, setShowMembers] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -46,6 +48,15 @@ export default function ChatPage() {
   const [unreadChats, setUnreadChats] = useState(0)
   const [unreadGroups, setUnreadGroups] = useState(0)
   const [storyCount, setStoryCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    if (!user.phone || user.phone.trim() === '') {
+      setShowPhonePopup(true)
+    } else {
+      setShowPhonePopup(false)
+    }
+  }, [user])
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)
@@ -402,6 +413,62 @@ export default function ChatPage() {
       {/* Admin Panel - full page */}
       {showAdmin && (
         <AdminPanel initialTab="approvals" onClose={() => setShowAdmin(false)} />
+      )}
+
+      {/* Phone popup for users without a registered number */}
+      {showPhonePopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(6px)' }}>
+          <div style={{ background: '#fff', borderRadius: '20px', padding: '32px 24px', width: '340px', maxWidth: '92%', boxShadow: '0 24px 60px rgba(0,0,0,0.4)', fontFamily: "'Outfit', sans-serif" }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ width: '56px', height: '56px', margin: '0 auto 12px', background: 'linear-gradient(135deg, #00a884, #0088cc)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', color: '#fff', boxShadow: '0 8px 24px rgba(0,168,132,0.3)' }}>
+                🇵🇪
+              </div>
+              <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111b21', margin: '0 0 6px' }}>Registra tu número</h2>
+              <p style={{ fontSize: '13px', color: '#8696a0', margin: 0 }}>Tu celular es necesario para utilizar todas las funciones</p>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', color: '#8696a0', marginBottom: '8px', fontWeight: '500' }}>
+                CELULAR
+              </label>
+              <div style={{ display: 'flex', gap: '0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f0f2f5', border: '1px solid #e5e7eb', borderRight: 'none', borderRadius: '10px 0 0 10px', padding: '0 12px', fontSize: '15px', color: '#111b21', fontFamily: "'Outfit', sans-serif" }}>
+                  <span style={{ fontSize: '18px' }}>🇵🇪</span>
+                  <span style={{ fontWeight: '500' }}>+51</span>
+                </div>
+                <input
+                  type="tel"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="999 888 777"
+                  autoFocus
+                  style={{ flex: 1, background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '0 10px 10px 0', padding: '12px 16px', color: '#111b21', fontSize: '15px', fontFamily: "'Outfit', sans-serif", outline: 'none' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button
+                onClick={() => setShowPhonePopup(false)}
+                style={{ flex: 1, padding: '12px', background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#667781', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
+              >
+                Después
+              </button>
+              <button
+                onClick={async () => {
+                  if (!user || !phoneInput.trim()) return
+                  await supabase.from('users').update({ phone: '+51' + phoneInput.trim() }).eq('id', user.id)
+                  const updated = { ...user, phone: '+51' + phoneInput.trim() }
+                  setUser(updated)
+                  localStorage.setItem('ephemera_session', JSON.stringify(updated))
+                  setShowPhonePopup(false)
+                  setPhoneInput('')
+                }}
+                style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #00a884, #0088cc)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Overlays */}
