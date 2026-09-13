@@ -220,6 +220,26 @@ export default function ChatPage() {
       )}
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <div
+            style={{
+              width: '288px',
+              height: '100%',
+              flexShrink: 0,
+              borderRight: '1px solid #e5e7eb',
+            }}
+          >
+            <Sidebar
+              activeGroupId={groupView?.id ?? null}
+              activeDmId={dmView?.conversationId ?? null}
+              onSelectGroup={(id, name) => { handleSelectGroup(id, name); setActiveTab('groups') }}
+              onSelectDm={handleSelectDm}
+              onAdminPanel={() => setShowAdmin(true)}
+            />
+          </div>
+        )}
+
         {/* Mobile sidebar - only on mobile */}
         {isMobile && (
           <div
