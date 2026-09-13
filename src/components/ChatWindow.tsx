@@ -329,13 +329,13 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const typerLabel = typings.length ? `@${typings[0]} escribiendo…` : null
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#070711', position: 'relative' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f0f2f5', position: 'relative' }}>
       {/* Header */}
       <div
         style={{
           padding: '12px 16px',
-          borderBottom: '1px solid #1e1e3a',
-          background: '#0a0a18',
+          borderBottom: '1px solid #e5e7eb',
+          background: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -345,7 +345,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
         {isMobile && (
           <button
             onClick={onMenuToggle}
-            style={{ background: 'transparent', border: 'none', color: '#6b6b8a', cursor: 'pointer', fontSize: '20px', padding: '2px 6px 2px 0', display: 'flex', alignItems: 'center' }}
+            style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '20px', padding: '2px 6px 2px 0', display: 'flex', alignItems: 'center' }}
           >
             ☰
           </button>
@@ -355,24 +355,24 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             width: '36px',
             height: '36px',
             minWidth: '36px',
-            background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(34,211,238,0.2))',
+            background: 'linear-gradient(135deg, rgba(0,168,132,0.25), rgba(34,211,238,0.2))',
             borderRadius: '10px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '16px',
-            color: '#c4b5fd',
+            color: '#00a884',
             fontWeight: '700',
-            border: '1px solid rgba(139,92,246,0.2)',
+            border: '1px solid rgba(0,168,132,0.12)',
           }}
         >
           {groupName[0]?.toUpperCase()}
         </div>
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <div style={{ fontWeight: '600', color: '#e8e8f0', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontWeight: '600', color: '#111b21', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {groupName}
           </div>
-          <div style={{ fontSize: '11px', color: typerLabel ? '#fbbf24' : '#3d3d5c', fontFamily: typerLabel ? "'Outfit', sans-serif" : "'DM Mono', monospace" }}>
+          <div style={{ fontSize: '11px', color: typerLabel ? '#fbbf24' : '#adb5bd', fontFamily: typerLabel ? "'Outfit', sans-serif" : "'DM Mono', monospace" }}>
             {typerLabel ? (
               <span className="animate-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                 {typerLabel}
@@ -387,12 +387,12 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             onClick={() => setMenuOpen((v) => !v)}
             title="Más opciones"
             style={{
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '8px',
               width: '32px',
               height: '32px',
-              color: '#6b6b8a',
+              color: '#8696a0',
               cursor: 'pointer',
               fontSize: '18px',
               display: 'flex',
@@ -413,8 +413,8 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
                   right: 0,
                   zIndex: 301,
                   minWidth: '190px',
-                  background: '#0f0f1e',
-                  border: '1px solid #2a2a50',
+                  background: '#ffffff',
+                  border: '1px solid #d1d7db',
                   borderRadius: '10px',
                   padding: '6px',
                   boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
@@ -435,7 +435,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
                   label="Seleccionar (marcar)"
                   onClick={() => { setMenuOpen(false); setSelectMode((v) => !v); setSelectedIds(new Set()) }}
                 />
-                <MenuItem icon="📞" label="Llamar (audio)" accent="#22c55e" onClick={() => { setMenuOpen(false); handleStartCall() }} />
+                <MenuItem icon="📞" label="Llamar (audio)" accent="#25d366" onClick={() => { setMenuOpen(false); handleStartCall() }} />
               </div>
             </>
           )}
@@ -445,7 +445,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
         {messages.length === 0 && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#3d3d5c', gap: '10px', minHeight: '200px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#adb5bd', gap: '10px', minHeight: '200px' }}>
             <div style={{ fontSize: '36px', opacity: 0.3 }}>◈</div>
             <p style={{ fontSize: '12px', fontFamily: "'DM Mono', monospace", margin: 0 }}>SIN MENSAJES · ENVÍA EL PRIMERO</p>
           </div>
@@ -501,23 +501,23 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             alignItems: 'center',
             gap: '10px',
             padding: '8px 16px',
-            borderTop: '1px solid #1e1e3a',
-            background: '#0a0a18',
+            borderTop: '1px solid #e5e7eb',
+            background: '#ffffff',
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: '12px', color: '#6b6b8a', fontFamily: "'DM Mono', monospace" }}>
+          <span style={{ fontSize: '12px', color: '#8696a0', fontFamily: "'DM Mono', monospace" }}>
             {selectedIds.size} SELECCIONADO{selectedIds.size !== 1 ? 'S' : ''}
           </span>
           <button
             onClick={deleteSelected}
             disabled={selectedIds.size === 0}
             style={{
-              background: 'rgba(239,68,68,0.12)',
+              background: 'rgba(234,67,53,0.12)',
               border: '1px solid rgba(239,68,68,0.3)',
               borderRadius: '8px',
               padding: '6px 14px',
-              color: selectedIds.size ? '#f87171' : '#3d3d5c',
+              color: selectedIds.size ? '#ea4335' : '#adb5bd',
               fontSize: '12px',
               fontWeight: '600',
               cursor: selectedIds.size ? 'pointer' : 'default',
@@ -529,11 +529,11 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
           <button
             onClick={() => { setSelectMode(false); setSelectedIds(new Set()) }}
             style={{
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '8px',
               padding: '6px 12px',
-              color: '#6b6b8a',
+              color: '#8696a0',
               fontSize: '12px',
               cursor: 'pointer',
               fontFamily: "'Outfit', sans-serif",
@@ -553,7 +553,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
             left: '50%',
             transform: 'translateX(-50%)',
             background: 'rgba(15,15,30,0.97)',
-            border: '1px solid rgba(34,211,238,0.35)',
+            border: '1px solid rgba(0,136,204,0.3)',
             borderRadius: '12px',
             padding: '10px 18px',
             display: 'flex',
@@ -566,7 +566,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
           }}
         >
           <span style={{ fontSize: '16px' }}>✅</span>
-          <span style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: '#111b21' }}>
             Enlace copiado — compártelo
           </span>
         </div>
@@ -602,7 +602,7 @@ function MenuItem({ icon, label, onClick, accent }: { icon: string; label: strin
         background: 'transparent',
         border: 'none',
         borderRadius: '7px',
-        color: accent ?? '#e8e8f0',
+        color: accent ?? '#111b21',
         fontSize: '13px',
         cursor: 'pointer',
         fontFamily: "'Outfit', sans-serif",

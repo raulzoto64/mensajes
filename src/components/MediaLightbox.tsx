@@ -80,7 +80,7 @@ export default function MediaLightbox({ media, caption, onClose }: { media: Ligh
           @{media.sender_alias}
         </div>
         {caption && (
-          <div style={{ textAlign: 'center', padding: '0 16px 12px', color: '#e8e8f0', fontSize: '13px', fontFamily: "'Outfit', sans-serif" }}>
+          <div style={{ textAlign: 'center', padding: '0 16px 12px', color: '#111b21', fontSize: '13px', fontFamily: "'Outfit', sans-serif" }}>
             {caption}
           </div>
         )}

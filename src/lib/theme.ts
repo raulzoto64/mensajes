@@ -1,0 +1,47 @@
+export const theme = {
+  bg: {
+    main: '#f0f2f5',
+    white: '#ffffff',
+    card: '#ffffff',
+    input: '#f0f2f5',
+    hover: '#f5f6f6',
+    sidebar: '#ffffff',
+    modal: 'rgba(0,0,0,0.5)',
+  },
+  border: {
+    light: '#e5e7eb',
+    default: '#d1d7db',
+    strong: '#c5ccd3',
+  },
+  text: {
+    primary: '#111b21',
+    secondary: '#667781',
+    muted: '#8696a0',
+    light: '#adb5bd',
+    white: '#ffffff',
+  },
+  accent: {
+    green: '#00a884',
+    greenLight: 'rgba(0,168,132,0.1)',
+    greenHover: 'rgba(0,168,132,0.08)',
+    blue: '#0088cc',
+    blueLight: 'rgba(0,136,204,0.1)',
+    blueHover: 'rgba(0,136,204,0.08)',
+    violet: '#7c5cfc',
+    violetLight: 'rgba(124,92,252,0.1)',
+  },
+  status: {
+    online: '#25d366',
+    offline: '#c5ccd3',
+    error: '#ea4335',
+    errorLight: 'rgba(234,67,53,0.08)',
+    warning: '#f59e0b',
+    warningLight: 'rgba(245,158,11,0.08)',
+  },
+  bubble: {
+    sent: '#d9fdd3',
+    sentText: '#111b21',
+    received: '#ffffff',
+    receivedText: '#111b21',
+  },
+} as const

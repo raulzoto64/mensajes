@@ -309,8 +309,8 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
       style={{
         position: 'relative',
         padding: '10px 12px',
-        borderTop: '1px solid #1e1e3a',
-        background: '#0a0a18',
+        borderTop: '1px solid #e5e7eb',
+        background: '#ffffff',
         flexShrink: 0,
       }}
     >
@@ -364,7 +364,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
 
       {/* Video preview */}
       {recordMode === 'video' && recording && (
-        <div style={{ marginBottom: '8px', borderRadius: '10px', overflow: 'hidden', maxHeight: '140px', background: '#000', border: '1px solid #1e1e3a' }}>
+        <div style={{ marginBottom: '8px', borderRadius: '10px', overflow: 'hidden', maxHeight: '140px', background: '#000', border: '1px solid #e5e7eb' }}>
           <video ref={videoPreviewRef} style={{ width: '100%', maxHeight: '140px', objectFit: 'cover', display: 'block' }} muted playsInline />
         </div>
       )}
@@ -378,7 +378,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
             gap: '10px',
             padding: '9px 12px',
             background: 'rgba(239,68,68,0.07)',
-            border: '1px solid rgba(239,68,68,0.18)',
+            border: '1px solid rgba(234,67,53,0.18)',
             borderRadius: '10px',
             marginBottom: '8px',
           }}
@@ -387,7 +387,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
             className="record-dot"
             style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', flexShrink: 0 }}
           />
-          <span style={{ color: '#f87171', fontSize: '12px', fontFamily: "'DM Mono', monospace", flex: 1 }}>
+          <span style={{ color: '#ea4335', fontSize: '12px', fontFamily: "'DM Mono', monospace", flex: 1 }}>
             {recordMode === 'audio' ? 'AUDIO' : 'VIDEO'} · {formatTime(recordTime)}
           </span>
           <button
@@ -398,7 +398,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
           </button>
           <button
             onClick={cancelRecording}
-            style={{ background: 'transparent', border: '1px solid #2a2a50', borderRadius: '7px', padding: '5px 10px', color: '#6b6b8a', fontSize: '12px', cursor: 'pointer', fontFamily: "'Outfit', sans-serif' " }}
+            style={{ background: 'transparent', border: '1px solid #d1d7db', borderRadius: '7px', padding: '5px 10px', color: '#8696a0', fontSize: '12px', cursor: 'pointer', fontFamily: "'Outfit', sans-serif' " }}
           >
             ✕
           </button>
@@ -412,10 +412,10 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
             onClick={() => startRecording(recordMode)}
             style={{
               flex: 1, padding: '9px',
-              background: 'rgba(139,92,246,0.08)',
-              border: '1px solid rgba(139,92,246,0.25)',
+              background: 'rgba(0,168,132,0.08)',
+              border: '1px solid rgba(0,168,132,0.2)',
               borderRadius: '10px',
-              color: '#c4b5fd', fontSize: '13px',
+              color: '#00a884', fontSize: '13px',
               cursor: 'pointer',
               fontFamily: "'Outfit', sans-serif",
             }}
@@ -424,7 +424,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
           </button>
           <button
             onClick={() => setRecordMode('none')}
-            style={{ padding: '9px 12px', background: '#14142a', border: '1px solid #1e1e3a', borderRadius: '10px', color: '#6b6b8a', fontSize: '13px', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
+            style={{ padding: '9px 12px', background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#8696a0', fontSize: '13px', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
           >
             ✕
           </button>
@@ -440,17 +440,17 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
             gap: '8px',
             padding: '8px 12px',
             marginBottom: '8px',
-            background: 'rgba(239,68,68,0.08)',
-            border: '1px solid rgba(239,68,68,0.25)',
+            background: 'rgba(234,67,53,0.08)',
+            border: '1px solid rgba(234,67,53,0.25)',
             borderRadius: '10px',
           }}
         >
-          <span style={{ flex: 1, fontSize: '12px', color: '#f87171', fontFamily: "'Outfit', sans-serif" }}>
+          <span style={{ flex: 1, fontSize: '12px', color: '#ea4335', fontFamily: "'Outfit', sans-serif" }}>
             {uploadError}
           </span>
           <button
             onClick={() => setUploadError('')}
-            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '14px', padding: '2px 4px' }}
+            style={{ background: 'transparent', border: 'none', color: '#ea4335', cursor: 'pointer', fontSize: '14px', padding: '2px 4px' }}
           >
             ✕
           </button>
@@ -475,8 +475,8 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
             style={{
               flex: 1,
               display: 'flex',
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '12px',
               alignItems: 'flex-end',
               padding: '0 4px 4px 4px',
@@ -499,7 +499,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
                 background: 'transparent',
                 border: 'none',
                 padding: '10px 10px 0',
-                color: '#e8e8f0',
+                color: '#111b21',
                 fontSize: '14px',
                 fontFamily: "'Outfit', sans-serif",
                 resize: 'none',
@@ -515,10 +515,10 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
                 width: '34px',
                 height: '34px',
                 minWidth: '34px',
-                background: text.trim() ? '#8b5cf6' : 'transparent',
+                background: text.trim() ? '#00a884' : 'transparent',
                 border: 'none',
                 borderRadius: '9px',
-                color: text.trim() ? '#fff' : '#3d3d5c',
+                color: text.trim() ? '#fff' : '#adb5bd',
                 fontSize: '15px',
                 cursor: text.trim() ? 'pointer' : 'default',
                 display: 'flex',
@@ -547,8 +547,8 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
                         position: 'absolute',
                         right: 0,
                         bottom: 'calc(100% + 8px)',
-                        background: '#0f0f1e',
-                        border: '1px solid #1e1e3a',
+                        background: '#ffffff',
+                        border: '1px solid #e5e7eb',
                         borderRadius: '12px',
                         padding: '6px',
                         zIndex: 120,
@@ -592,7 +592,7 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
             position: 'fixed',
             inset: 0,
             zIndex: 500,
-            background: isMobile ? '#0a0a18' : 'rgba(0,0,0,0.6)',
+            background: isMobile ? '#ffffff' : 'rgba(0,0,0,0.6)',
             display: 'flex',
             justifyContent: isMobile ? 'stretch' : 'flex-start',
             fontFamily: "'Outfit', sans-serif",
@@ -600,41 +600,41 @@ export default function MessageInput({ groupId, conversationId, onSent, isMobile
         >
           <div
             style={{
-              background: '#0a0a18',
+              background: '#ffffff',
               display: 'flex',
               flexDirection: 'column',
               width: isMobile ? '100%' : '420px',
               height: '100%',
-              borderRight: isMobile ? 'none' : '1px solid #1e1e3a',
+              borderRight: isMobile ? 'none' : '1px solid #e5e7eb',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px', borderBottom: '1px solid #1e1e3a' }}>
-              <span style={{ fontWeight: 600, fontSize: '14px', color: '#e8e8f0' }}>Vista previa</span>
-              <button onClick={cancelMedia} style={{ background: 'transparent', border: 'none', color: '#6b6b8a', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px', borderBottom: '1px solid #e5e7eb' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px', color: '#111b21' }}>Vista previa</span>
+              <button onClick={cancelMedia} style={{ background: 'transparent', border: 'none', color: '#8696a0', fontSize: '18px', cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px', overflow: 'hidden' }}>
               {pendingMedia.kind === 'image' && <img src={pendingMedia.previewUrl} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '10px' }} />}
               {pendingMedia.kind === 'video' && <video src={pendingMedia.previewUrl} controls autoPlay style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '10px' }} />}
               {pendingMedia.kind === 'audio' && <audio src={pendingMedia.previewUrl} controls style={{ width: '100%' }} />}
             </div>
-            <div style={{ padding: '12px 14px', borderTop: '1px solid #1e1e3a', display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            <div style={{ padding: '12px 14px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
               <input
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 placeholder="Escribe un mensaje…"
-                style={{ flex: 1, background: '#14142a', border: '1px solid #1e1e3a', borderRadius: '10px', padding: '10px 12px', color: '#e8e8f0', fontSize: '14px', fontFamily: "'Outfit', sans-serif", outline: 'none' }}
+                style={{ flex: 1, background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '10px 12px', color: '#111b21', fontSize: '14px', fontFamily: "'Outfit', sans-serif", outline: 'none' }}
               />
               <button
                 onClick={() => setOneTimeView((v) => !v)}
                 title="Vista única: el multimedia se borra al ser visto"
-                style={{ width: '40px', height: '40px', background: oneTimeView ? 'rgba(251,191,36,0.15)' : '#14142a', border: `1px solid ${oneTimeView ? 'rgba(251,191,36,0.4)' : '#1e1e3a'}`, borderRadius: '10px', color: oneTimeView ? '#fbbf24' : '#6b6b8a', fontSize: '16px', cursor: 'pointer', flexShrink: 0 }}
+                style={{ width: '40px', height: '40px', background: oneTimeView ? 'rgba(251,191,36,0.15)' : '#f0f2f5', border: `1px solid ${oneTimeView ? 'rgba(251,191,36,0.4)' : '#e5e7eb'}`, borderRadius: '10px', color: oneTimeView ? '#fbbf24' : '#8696a0', fontSize: '16px', cursor: 'pointer', flexShrink: 0 }}
               >
                 👁️
               </button>
               <button
                 onClick={confirmMedia}
                 disabled={sending}
-                style={{ width: '40px', height: '40px', background: '#8b5cf6', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '16px', cursor: sending ? 'default' : 'pointer', flexShrink: 0 }}
+                style={{ width: '40px', height: '40px', background: '#00a884', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '16px', cursor: sending ? 'default' : 'pointer', flexShrink: 0 }}
               >
                 ➤
               </button>
@@ -666,10 +666,10 @@ function IconBtn({
       style={{
         width: '36px',
         height: '36px',
-        background: active ? 'rgba(139,92,246,0.12)' : '#14142a',
-        border: `1px solid ${active ? '#8b5cf6' : '#1e1e3a'}`,
+        background: active ? 'rgba(0,168,132,0.1)' : '#f0f2f5',
+        border: `1px solid ${active ? '#00a884' : '#e5e7eb'}`,
         borderRadius: '10px',
-        color: active ? '#c4b5fd' : '#6b6b8a',
+        color: active ? '#00a884' : '#8696a0',
         fontSize: mono ? '11px' : '15px',
         fontWeight: mono ? '700' : '400',
         cursor: 'pointer',
@@ -699,7 +699,7 @@ function MenuItem({ onClick, label }: { onClick: () => void; label: string }) {
         background: 'transparent',
         border: 'none',
         borderRadius: '8px',
-        color: '#e8e8f0',
+        color: '#111b21',
         fontSize: '13px',
         cursor: 'pointer',
         fontFamily: "'Outfit', sans-serif",

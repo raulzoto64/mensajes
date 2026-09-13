@@ -31,8 +31,8 @@ export default function EmojiPicker({ onInsert, onSend, onClose, hasText }: Prop
         position: 'absolute',
         bottom: '64px',
         left: '0',
-        background: '#0f0f1e',
-        border: '1px solid #1e1e3a',
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
         borderRadius: '16px',
         padding: '12px',
         width: '300px',
@@ -45,24 +45,24 @@ export default function EmojiPicker({ onInsert, onSend, onClose, hasText }: Prop
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <div>
-          <span style={{ fontSize: '11px', color: '#6b6b8a', fontFamily: "'DM Mono', monospace" }}>EMOJIS</span>
+          <span style={{ fontSize: '11px', color: '#8696a0', fontFamily: "'DM Mono', monospace" }}>EMOJIS</span>
           {!hasText && (
-            <span style={{ fontSize: '11px', color: '#3d3d5c', marginLeft: '8px' }}>· click = enviar como mensaje</span>
+            <span style={{ fontSize: '11px', color: '#adb5bd', marginLeft: '8px' }}>· click = enviar como mensaje</span>
           )}
           {hasText && (
-            <span style={{ fontSize: '11px', color: '#3d3d5c', marginLeft: '8px' }}>· click = insertar en texto</span>
+            <span style={{ fontSize: '11px', color: '#adb5bd', marginLeft: '8px' }}>· click = insertar en texto</span>
           )}
         </div>
         <button
           onClick={onClose}
-          style={{ background: 'none', border: 'none', color: '#3d3d5c', cursor: 'pointer', fontSize: '14px', padding: '2px 4px' }}
+          style={{ background: 'none', border: 'none', color: '#adb5bd', cursor: 'pointer', fontSize: '14px', padding: '2px 4px' }}
         >
           ✕
         </button>
       </div>
       {EMOJI_GROUPS.map((group) => (
         <div key={group.label} style={{ marginBottom: '10px' }}>
-          <div style={{ fontSize: '10px', color: '#3d3d5c', marginBottom: '5px', fontFamily: "'DM Mono', monospace", letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: '10px', color: '#adb5bd', marginBottom: '5px', fontFamily: "'DM Mono', monospace", letterSpacing: '0.06em' }}>
             {group.label.toUpperCase()}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px' }}>
@@ -86,7 +86,7 @@ export default function EmojiPicker({ onInsert, onSend, onClose, hasText }: Prop
                   justifyContent: 'center',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#14142a')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f2f5')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 {emoji}

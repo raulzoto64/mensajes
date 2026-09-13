@@ -71,8 +71,8 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
         right: 0,
         height: isNative() ? '64px' : '60px',
         paddingBottom: isNative() ? 'env(safe-area-inset-bottom)' : '0',
-        background: '#0a0a18',
-        borderTop: '1px solid #1e1e3a',
+        background: '#ffffff',
+        borderTop: '1px solid #e5e7eb',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
@@ -96,7 +96,7 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
               border: 'none',
               cursor: 'pointer',
               position: 'relative',
-              color: isActive ? '#8b5cf6' : '#4a4a6a',
+              color: isActive ? '#00a884' : '#8696a0',
               transition: 'color 0.2s',
               minWidth: '64px',
             }}
@@ -111,7 +111,7 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
                     right: '-10px',
                     minWidth: '18px',
                     height: '18px',
-                    background: '#8b5cf6',
+                    background: '#00a884',
                     borderRadius: '9px',
                     color: '#fff',
                     fontSize: '10px',
@@ -120,7 +120,7 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '0 4px',
-                    border: '2px solid #0a0a18',
+                    border: '2px solid #ffffff',
                   }}
                 >
                   {tab.badge > 99 ? '99+' : tab.badge}
@@ -144,7 +144,7 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
                   left: '20%',
                   right: '20%',
                   height: '2px',
-                  background: '#8b5cf6',
+                  background: '#00a884',
                   borderRadius: '1px',
                 }}
               />

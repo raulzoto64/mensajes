@@ -136,9 +136,9 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #1e1e3a' }}>
+      <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#e8e8f0' }}>Chats</h2>
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#111b21' }}>Chats</h2>
         </div>
         {/* Search */}
         <div style={{ position: 'relative' }}>
@@ -152,26 +152,26 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
             placeholder="Buscar usuario @alias..."
             style={{
               width: '100%',
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '10px',
               padding: '10px 12px 10px 36px',
-              color: '#e8e8f0',
+              color: '#111b21',
               fontSize: '13px',
               fontFamily: "'Outfit', sans-serif",
               outline: 'none',
               boxSizing: 'border-box',
             }}
-            onFocus={(e) => (e.target.style.borderColor = '#8b5cf6')}
-            onBlur={(e) => (e.target.style.borderColor = '#1e1e3a')}
+            onFocus={(e) => (e.target.style.borderColor = '#00a884')}
+            onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
           />
-          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: '#3d3d5c', pointerEvents: 'none' }}>
+          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: '#adb5bd', pointerEvents: 'none' }}>
             🔍
           </span>
         </div>
         {/* Search results */}
         {results.length > 0 && (
-          <div style={{ marginTop: '8px', border: '1px solid #1e1e3a', borderRadius: '10px', background: '#0f0f1e', overflow: 'hidden' }}>
+          <div style={{ marginTop: '8px', border: '1px solid #e5e7eb', borderRadius: '10px', background: '#ffffff', overflow: 'hidden' }}>
             {results.map((u) => (
               <button
                 key={u.id}
@@ -184,26 +184,26 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
                   padding: '10px 12px',
                   background: 'transparent',
                   border: 'none',
-                  borderBottom: '1px solid #14142a',
-                  color: '#e8e8f0',
+                  borderBottom: '1px solid #f0f2f5',
+                  color: '#111b21',
                   fontSize: '13px',
                   textAlign: 'left',
                   cursor: 'pointer',
                   fontFamily: "'Outfit', sans-serif",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139,92,246,0.06)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,168,132,0.06)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 <div style={{
                   width: '32px', height: '32px', borderRadius: '50%',
-                  background: 'rgba(139,92,246,0.15)',
+                  background: 'rgba(0,168,132,0.12)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '13px', color: '#c4b5fd', fontWeight: '700', flexShrink: 0,
+                  fontSize: '13px', color: '#00a884', fontWeight: '700', flexShrink: 0,
                 }}>
                   {u.alias[0]?.toUpperCase()}
                 </div>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '12px', color: '#c4b5fd' }}>@{u.alias}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#22d3ee' }}>↗</span>
+                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '12px', color: '#00a884' }}>@{u.alias}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#0088cc' }}>↗</span>
               </button>
             ))}
           </div>
@@ -213,15 +213,15 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
       {/* DM list */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
         {!supabaseConfigured && (
-          <div style={{ margin: '8px', padding: '10px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '10px', fontSize: '11px', color: '#fbbf24', fontFamily: "'DM Mono', monospace", lineHeight: '1.5' }}>
+          <div style={{ margin: '8px', padding: '10px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '10px', fontSize: '11px', color: '#fbbf24', fontFamily: "'DM Mono', monospace", lineHeight: '1.5' }}>
             ⚠ SUPABASE NO CONFIGURADO
           </div>
         )}
         {loading && dms.length === 0 && (
-          <p style={{ color: '#3d3d5c', fontSize: '12px', textAlign: 'center', padding: '40px 20px' }}>Cargando...</p>
+          <p style={{ color: '#adb5bd', fontSize: '12px', textAlign: 'center', padding: '40px 20px' }}>Cargando...</p>
         )}
         {!loading && dms.length === 0 && (
-          <p style={{ color: '#3d3d5c', fontSize: '12px', textAlign: 'center', padding: '40px 20px' }}>
+          <p style={{ color: '#adb5bd', fontSize: '12px', textAlign: 'center', padding: '40px 20px' }}>
             Sin conversaciones privadas
           </p>
         )}
@@ -236,7 +236,7 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
                 textAlign: 'left',
                 padding: '10px 12px',
                 background: active ? 'rgba(34,211,238,0.1)' : 'transparent',
-                border: `1px solid ${active ? 'rgba(34,211,238,0.25)' : 'transparent'}`,
+                border: `1px solid ${active ? 'rgba(0,136,204,0.2)' : 'transparent'}`,
                 borderRadius: '10px',
                 cursor: 'pointer',
                 marginBottom: '2px',
@@ -251,33 +251,33 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
             >
               <div style={{
                 width: '40px', height: '40px', minWidth: '40px', borderRadius: '50%',
-                background: active ? 'rgba(34,211,238,0.18)' : '#14142a',
+                background: active ? 'rgba(34,211,238,0.18)' : '#f0f2f5',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '14px', color: active ? '#67e8f9' : '#6b6b8a', fontWeight: '700',
+                fontSize: '14px', color: active ? '#0088cc' : '#8696a0', fontWeight: '700',
               }}>
                 {d.otherAlias[0]?.toUpperCase()}
               </div>
               <div style={{ flex: 1, overflow: 'hidden' }}>
                 <div style={{
                   fontSize: '14px', fontWeight: d.unreadCount > 0 ? '600' : '400',
-                  color: active ? '#e8e8f0' : d.unreadCount > 0 ? '#67e8f9' : '#9090b0',
+                  color: active ? '#111b21' : d.unreadCount > 0 ? '#0088cc' : '#667781',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   @{d.otherAlias}
                 </div>
-                <div style={{ fontSize: '11px', color: onlineUsers.has(d.otherUserId) ? '#22c55e' : '#3d3d5c' }}>
+                <div style={{ fontSize: '11px', color: onlineUsers.has(d.otherUserId) ? '#25d366' : '#adb5bd' }}>
                   {onlineUsers.has(d.otherUserId) ? 'En línea' : lastSeenLabel(d.otherLastSeen)}
                 </div>
               </div>
               <div style={{
                 width: '8px', height: '8px', minWidth: '8px', borderRadius: '50%',
-                background: onlineUsers.has(d.otherUserId) ? '#22c55e' : '#3d3d5c', flexShrink: 0,
+                background: onlineUsers.has(d.otherUserId) ? '#25d366' : '#adb5bd', flexShrink: 0,
               }} />
               {d.unreadCount > 0 && !active && (
                 <div style={{
-                  minWidth: '20px', height: '20px', background: '#22d3ee', borderRadius: '10px',
+                  minWidth: '20px', height: '20px', background: '#0088cc', borderRadius: '10px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '11px', fontWeight: '700', color: '#070711', padding: '0 5px',
+                  fontSize: '11px', fontWeight: '700', color: '#f0f2f5', padding: '0 5px',
                 }}>
                   {d.unreadCount > 99 ? '99+' : d.unreadCount}
                 </div>

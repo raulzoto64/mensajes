@@ -299,16 +299,16 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   }, [otherUserId, isOnline])
 
   const statusLabel = typing ? 'Escribiendo…' : isOnline ? 'En línea' : lastSeenLabel(lastSeen)
-  const statusColor = typing ? '#fbbf24' : isOnline ? '#22c55e' : '#3d3d5c'
+  const statusColor = typing ? '#fbbf24' : isOnline ? '#25d366' : '#adb5bd'
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#070711' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f0f2f5' }}>
       {/* Header */}
       <div
         style={{
           padding: '12px 16px',
-          borderBottom: '1px solid #1e1e3a',
-          background: '#0a0a18',
+          borderBottom: '1px solid #e5e7eb',
+          background: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -318,7 +318,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
         {isMobile && (
           <button
             onClick={onMenuToggle}
-            style={{ background: 'transparent', border: 'none', color: '#6b6b8a', cursor: 'pointer', fontSize: '20px', padding: '2px 6px 2px 0', display: 'flex', alignItems: 'center' }}
+            style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '20px', padding: '2px 6px 2px 0', display: 'flex', alignItems: 'center' }}
           >
             ☰
           </button>
@@ -328,21 +328,21 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
             width: '36px',
             height: '36px',
             minWidth: '36px',
-            background: 'rgba(34,211,238,0.15)',
+            background: 'rgba(0,136,204,0.12)',
             borderRadius: '10px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '16px',
-            color: '#67e8f9',
+            color: '#0088cc',
             fontWeight: '700',
-            border: '1px solid rgba(34,211,238,0.25)',
+            border: '1px solid rgba(0,136,204,0.2)',
           }}
         >
           {otherAlias[0]?.toUpperCase()}
         </div>
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <div style={{ fontWeight: '600', color: '#e8e8f0', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontWeight: '600', color: '#111b21', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             @{otherAlias}
           </div>
           <div style={{ fontSize: '11px', color: statusColor, fontFamily: typing ? "'Outfit', sans-serif" : "'DM Mono', monospace" }}>
@@ -359,10 +359,10 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
           style={{
             padding: '3px 9px',
             background: 'rgba(34,211,238,0.06)',
-            border: '1px solid rgba(34,211,238,0.15)',
+            border: '1px solid rgba(0,136,204,0.12)',
             borderRadius: '20px',
             fontSize: '10px',
-            color: '#22d3ee',
+            color: '#0088cc',
             fontFamily: "'DM Mono', monospace",
             whiteSpace: 'nowrap',
           }}
@@ -374,12 +374,12 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
             onClick={() => setMenuOpen((v) => !v)}
             title="Más opciones"
             style={{
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '8px',
               width: '32px',
               height: '32px',
-              color: '#6b6b8a',
+              color: '#8696a0',
               cursor: 'pointer',
               fontSize: '18px',
               display: 'flex',
@@ -400,8 +400,8 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
                   right: 0,
                   zIndex: 301,
                   minWidth: '190px',
-                  background: '#0f0f1e',
-                  border: '1px solid #2a2a50',
+                  background: '#ffffff',
+                  border: '1px solid #d1d7db',
                   borderRadius: '10px',
                   padding: '6px',
                   boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
@@ -416,7 +416,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
                   label="Seleccionar (marcar)"
                   onClick={() => { setMenuOpen(false); setSelectMode((v) => !v); setSelectedIds(new Set()) }}
                 />
-                <MenuItem icon="📞" label="Llamar (audio)" accent="#22c55e" onClick={() => { setMenuOpen(false); handleStartCall() }} />
+                <MenuItem icon="📞" label="Llamar (audio)" accent="#25d366" onClick={() => { setMenuOpen(false); handleStartCall() }} />
               </div>
             </>
           )}
@@ -426,7 +426,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
         {messages.length === 0 && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#3d3d5c', gap: '10px', minHeight: '200px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#adb5bd', gap: '10px', minHeight: '200px' }}>
             <div style={{ fontSize: '36px', opacity: 0.3 }}>◈</div>
             <p style={{ fontSize: '12px', fontFamily: "'DM Mono', monospace", margin: 0 }}>SIN MENSAJES · ENVÍA EL PRIMERO EN PRIVADO</p>
           </div>
@@ -495,23 +495,23 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
             alignItems: 'center',
             gap: '10px',
             padding: '8px 16px',
-            borderTop: '1px solid #1e1e3a',
-            background: '#0a0a18',
+            borderTop: '1px solid #e5e7eb',
+            background: '#ffffff',
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: '12px', color: '#6b6b8a', fontFamily: "'DM Mono', monospace" }}>
+          <span style={{ fontSize: '12px', color: '#8696a0', fontFamily: "'DM Mono', monospace" }}>
             {selectedIds.size} SELECCIONADO{selectedIds.size !== 1 ? 'S' : ''}
           </span>
           <button
             onClick={deleteSelected}
             disabled={selectedIds.size === 0}
             style={{
-              background: 'rgba(239,68,68,0.12)',
+              background: 'rgba(234,67,53,0.12)',
               border: '1px solid rgba(239,68,68,0.3)',
               borderRadius: '8px',
               padding: '6px 14px',
-              color: selectedIds.size ? '#f87171' : '#3d3d5c',
+              color: selectedIds.size ? '#ea4335' : '#adb5bd',
               fontSize: '12px',
               fontWeight: '600',
               cursor: selectedIds.size ? 'pointer' : 'default',
@@ -523,11 +523,11 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
           <button
             onClick={() => { setSelectMode(false); setSelectedIds(new Set()) }}
             style={{
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '8px',
               padding: '6px 12px',
-              color: '#6b6b8a',
+              color: '#8696a0',
               fontSize: '12px',
               cursor: 'pointer',
               fontFamily: "'Outfit', sans-serif",
@@ -555,7 +555,7 @@ function MenuItem({ icon, label, onClick, accent }: { icon: string; label: strin
         background: 'transparent',
         border: 'none',
         borderRadius: '7px',
-        color: accent ?? '#e8e8f0',
+        color: accent ?? '#111b21',
         fontSize: '13px',
         cursor: 'pointer',
         fontFamily: "'Outfit', sans-serif",

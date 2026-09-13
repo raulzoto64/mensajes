@@ -38,8 +38,8 @@ export default function DurationSettingsModal({ title, current, onClose, onSave 
     >
       <div
         style={{
-          background: '#0f0f1e',
-          border: '1px solid #2a2a50',
+          background: '#ffffff',
+          border: '1px solid #d1d7db',
           borderRadius: '20px',
           width: '100%',
           maxWidth: '380px',
@@ -47,19 +47,19 @@ export default function DurationSettingsModal({ title, current, onClose, onSave 
           overflow: 'hidden',
         }}
       >
-        <div style={{ padding: '20px 22px 14px', borderBottom: '1px solid #1e1e3a' }}>
+        <div style={{ padding: '20px 22px 14px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#e8e8f0' }}>
+            <h2 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#111b21' }}>
               {title}
             </h2>
             <button
               onClick={onClose}
-              style={{ background: '#14142a', border: '1px solid #1e1e3a', borderRadius: '8px', padding: '6px 10px', color: '#6b6b8a', cursor: 'pointer', fontSize: '14px' }}
+              style={{ background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 10px', color: '#8696a0', cursor: 'pointer', fontSize: '14px' }}
             >
               ✕
             </button>
           </div>
-          <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#6b6b8a' }}>
+          <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#8696a0' }}>
             Los mensajes de texto se borran automáticamente pasada esta duración. La multimedia se borra al ser vista por todos.
           </p>
         </div>
@@ -76,10 +76,10 @@ export default function DurationSettingsModal({ title, current, onClose, onSave 
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '11px 14px',
-                  background: active ? 'rgba(139,92,246,0.12)' : '#14142a',
-                  border: `1px solid ${active ? '#8b5cf6' : '#1e1e3a'}`,
+                  background: active ? 'rgba(0,168,132,0.1)' : '#f0f2f5',
+                  border: `1px solid ${active ? '#00a884' : '#e5e7eb'}`,
                   borderRadius: '10px',
-                  color: active ? '#c4b5fd' : '#9090b0',
+                  color: active ? '#00a884' : '#667781',
                   fontSize: '13px',
                   fontWeight: active ? '600' : '400',
                   cursor: 'pointer',
@@ -100,7 +100,7 @@ export default function DurationSettingsModal({ title, current, onClose, onSave 
             style={{
               flex: 1,
               padding: '10px',
-              background: '#8b5cf6',
+              background: '#00a884',
               border: 'none',
               borderRadius: '10px',
               color: '#fff',
@@ -115,7 +115,7 @@ export default function DurationSettingsModal({ title, current, onClose, onSave 
           </button>
           <button
             onClick={onClose}
-            style={{ padding: '10px 16px', background: '#14142a', border: '1px solid #1e1e3a', borderRadius: '10px', color: '#6b6b8a', fontSize: '13px', cursor: 'pointer', fontFamily: FONT }}
+            style={{ padding: '10px 16px', background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#8696a0', fontSize: '13px', cursor: 'pointer', fontFamily: FONT }}
           >
             Cancelar
           </button>

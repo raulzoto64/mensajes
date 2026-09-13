@@ -179,7 +179,7 @@ export default function ChatPage() {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        background: '#070711',
+        background: '#f0f2f5',
         fontFamily: "'Outfit', sans-serif",
         overflow: 'hidden',
         position: 'relative',

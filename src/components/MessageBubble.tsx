@@ -144,13 +144,13 @@ export default function MessageBubble({
             width: '26px',
             height: '26px',
             minWidth: '26px',
-            background: '#1e1e3a',
+            background: '#e5e7eb',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '11px',
-            color: '#8b5cf6',
+            color: '#00a884',
             fontWeight: '600',
             marginBottom: '2px',
           }}
@@ -168,7 +168,7 @@ export default function MessageBubble({
         }}
       >
         {!isMine && (
-          <span style={{ fontSize: '11px', color: '#6b6b8a', marginBottom: '2px', paddingLeft: '4px' }}>
+          <span style={{ fontSize: '11px', color: '#8696a0', marginBottom: '2px', paddingLeft: '4px' }}>
             @{msg.sender_alias}
           </span>
         )}
@@ -182,11 +182,11 @@ export default function MessageBubble({
             style={{
               position: 'relative',
               background: isMine
-                ? 'linear-gradient(135deg, rgba(139,92,246,0.22), rgba(124,58,237,0.16))'
-                : '#14142a',
+                ? '#d9fdd3'
+                : '#ffffff',
               border: selected
                 ? '1px solid #ef4444'
-                : `1px solid ${isMine ? 'rgba(139,92,246,0.3)' : '#1e1e3a'}`,
+                : `1px solid ${isMine ? 'rgba(0,168,132,0.25)' : '#e5e7eb'}`,
               borderRadius: isMine ? '14px 3px 14px 14px' : '3px 14px 14px 14px',
               padding: msg.type === 'emoji' ? '6px 10px' : '10px 13px',
               cursor: selectMode && selectable ? 'pointer' : 'default',
@@ -240,9 +240,9 @@ export default function MessageBubble({
                   alignItems: 'center',
                   gap: '3px',
                   padding: '2px 6px',
-                  background: mediaHidden ? 'rgba(139,92,246,0.35)' : isConsumedOneTime ? 'rgba(34,197,94,0.25)' : 'rgba(0,0,0,0.55)',
+                   background: mediaHidden ? 'rgba(0,168,132,0.35)' : isConsumedOneTime ? 'rgba(34,197,94,0.25)' : 'rgba(0,0,0,0.55)',
                   borderRadius: '10px',
-                  color: mediaHidden ? '#8b5cf6' : isConsumedOneTime ? '#22c55e' : '#fbbf24',
+                  color: mediaHidden ? '#00a884' : isConsumedOneTime ? '#25d366' : '#fbbf24',
                   fontSize: '9px',
                   fontWeight: '700',
                   fontFamily: "'DM Mono', monospace",
@@ -264,8 +264,8 @@ export default function MessageBubble({
                   width: '20px',
                   height: '20px',
                   borderRadius: '50%',
-                  background: selected ? '#ef4444' : '#0f0f1e',
-                  border: `1px solid ${selected ? '#ef4444' : '#3d3d5c'}`,
+                  background: selected ? '#ef4444' : '#ffffff',
+                  border: `1px solid ${selected ? '#ef4444' : '#adb5bd'}`,
                   color: '#fff',
                   fontSize: '11px',
                   display: 'flex',
@@ -279,7 +279,7 @@ export default function MessageBubble({
             )}
 
             {msg.type === 'text' && (
-              <p style={{ margin: 0, fontSize: '14px', color: '#e8e8f0', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <p style={{ margin: 0, fontSize: '14px', color: '#111b21', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {msg.content}
               </p>
             )}
@@ -292,7 +292,7 @@ export default function MessageBubble({
               <div
                 style={{
                   width: '160px', height: '80px', borderRadius: '6px',
-                  background: 'linear-gradient(135deg, #1a2a1e, #1e1e3a)',
+                  background: 'linear-gradient(135deg, #1a2a1e, #e5e7eb)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexDirection: 'column', gap: '4px',
                   color: '#4ade80', fontWeight: '700', fontSize: '12px',
@@ -312,10 +312,10 @@ export default function MessageBubble({
                   onClick={() => { revealAndConsume(); openMedia() }}
                   style={{
                     width: '120px', height: '90px', borderRadius: '6px',
-                    background: 'linear-gradient(135deg, #2a2a3e, #1e1e3a)',
+                    background: 'linear-gradient(135deg, #2a2a3e, #e5e7eb)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#8b5cf6', fontWeight: '700', fontSize: '12px',
-                    border: '1px dashed rgba(139,92,246,0.3)', cursor: 'pointer',
+                    color: '#00a884', fontWeight: '700', fontSize: '12px',
+                    border: '1px dashed rgba(0,168,132,0.25)', cursor: 'pointer',
                   }}
                 >
                   🔒 Tocar para ver GIF
@@ -338,10 +338,10 @@ export default function MessageBubble({
                   onClick={() => { revealAndConsume(); openMedia() }}
                   style={{
                     width: '140px', height: '100px', borderRadius: '6px',
-                    background: 'linear-gradient(135deg, #2a2a3e, #1e1e3a)',
+                    background: 'linear-gradient(135deg, #2a2a3e, #e5e7eb)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#8b5cf6', fontWeight: '700', fontSize: '12px',
-                    border: '1px dashed rgba(139,92,246,0.3)', cursor: 'pointer',
+                    color: '#00a884', fontWeight: '700', fontSize: '12px',
+                    border: '1px dashed rgba(0,168,132,0.25)', cursor: 'pointer',
                   }}
                 >
                   🔒 Tocar para ver imagen
@@ -363,9 +363,9 @@ export default function MessageBubble({
                   onClick={() => { revealAndConsume() }}
                   style={{
                     padding: '8px 14px', borderRadius: '8px',
-                    background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(124,58,237,0.1))',
-                    border: '1px dashed rgba(139,92,246,0.35)',
-                    color: '#8b5cf6', fontWeight: '600', fontSize: '13px',
+                    background: 'linear-gradient(135deg, rgba(0,168,132,0.12), rgba(124,58,237,0.1))',
+                    border: '1px dashed rgba(0,168,132,0.35)',
+                    color: '#00a884', fontWeight: '600', fontSize: '13px',
                     cursor: 'pointer', userSelect: 'none',
                   }}
                 >
@@ -387,10 +387,10 @@ export default function MessageBubble({
                   onClick={() => { revealAndConsume(); openMedia() }}
                   style={{
                     width: '160px', height: '100px', borderRadius: '6px',
-                    background: 'linear-gradient(135deg, #2a2a3e, #1e1e3a)',
+                    background: 'linear-gradient(135deg, #2a2a3e, #e5e7eb)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#8b5cf6', fontWeight: '700', fontSize: '12px',
-                    border: '1px dashed rgba(139,92,246,0.3)', cursor: 'pointer',
+                    color: '#00a884', fontWeight: '700', fontSize: '12px',
+                    border: '1px dashed rgba(0,168,132,0.25)', cursor: 'pointer',
                   }}
                 >
                   🔒 Tocar para ver video
@@ -409,7 +409,7 @@ export default function MessageBubble({
 
             {/* Texto/caption del multimedia */}
             {isMultimedia && msg.content && !isConsumedOneTime && (
-              <p style={{ margin: '6px 0 0', fontSize: '14px', color: '#e8e8f0', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <p style={{ margin: '6px 0 0', fontSize: '14px', color: '#111b21', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {msg.content}
               </p>
             )}
@@ -426,7 +426,7 @@ export default function MessageBubble({
             padding: isMine ? '0 4px 0 0' : '0 0 0 4px',
           }}
         >
-          <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+          <span style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
             {formatTime(msg.created_at)}
           </span>
           {isMine && receipt && (
@@ -436,7 +436,7 @@ export default function MessageBubble({
               }
               style={{
                 fontSize: '10px',
-                color: receipt === 'seen' ? '#22d3ee' : '#3d3d5c',
+                color: receipt === 'seen' ? '#0088cc' : '#adb5bd',
                 lineHeight: 1,
                 letterSpacing: '-1px',
               }}

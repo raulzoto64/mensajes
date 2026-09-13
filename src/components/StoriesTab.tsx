@@ -104,9 +104,9 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
             alignItems: 'center',
             gap: '12px',
             padding: '12px',
-            background: '#14142a',
+            background: '#f0f2f5',
             borderRadius: '12px',
-            border: '1px solid #1e1e3a',
+            border: '1px solid #e5e7eb',
           }}
         >
           <div
@@ -115,24 +115,24 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
               width: '52px',
               height: '52px',
               borderRadius: '50%',
-              background: 'rgba(139,92,246,0.15)',
-              border: '2px dashed #8b5cf6',
+              background: 'rgba(0,168,132,0.12)',
+              border: '2px dashed #00a884',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               fontSize: '22px',
-              color: '#8b5cf6',
+              color: '#00a884',
               flexShrink: 0,
             }}
           >
             +
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: '#e8e8f0' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: '#111b21' }}>
               Mi historia
             </div>
-            <div style={{ fontSize: '12px', color: '#6b6b8a' }}>
+            <div style={{ fontSize: '12px', color: '#8696a0' }}>
               {myStories.length > 0
                 ? `${myStories.length} historia${myStories.length > 1 ? 's' : ''} · Expira en ${timeUntilExpiry(myStories[0].expires_at)}`
                 : 'Toca para crear una historia'}
@@ -145,7 +145,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
                 height: '48px',
                 borderRadius: '10px',
                 overflow: 'hidden',
-                border: '2px solid #8b5cf6',
+                border: '2px solid #00a884',
               }}
             >
               <img
@@ -161,7 +161,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
       {/* Unviewed stories */}
       {unviewedStories.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace", letterSpacing: '0.08em', padding: '0 4px 8px' }}>
+          <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", letterSpacing: '0.08em', padding: '0 4px 8px' }}>
             SIN VER
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -174,13 +174,13 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
                   alignItems: 'center',
                   gap: '12px',
                   padding: '10px 12px',
-                  background: '#14142a',
+                  background: '#f0f2f5',
                   borderRadius: '10px',
                   cursor: 'pointer',
                   border: '1px solid transparent',
                   transition: 'border-color 0.15s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)')}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(0,168,132,0.25)')}
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'transparent')}
               >
                 <div
@@ -188,7 +188,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
                     width: '44px',
                     height: '44px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #8b5cf6, #22d3ee)',
+                    background: 'linear-gradient(135deg, #00a884, #0088cc)',
                     padding: '2px',
                     flexShrink: 0,
                   }}
@@ -198,23 +198,23 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
                       width: '100%',
                       height: '100%',
                       borderRadius: '50%',
-                      background: '#0a0a18',
+                      background: '#ffffff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '15px',
                       fontWeight: '700',
-                      color: '#c4b5fd',
+                      color: '#00a884',
                     }}
                   >
                     {story.user_alias[0]?.toUpperCase()}
                   </div>
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#111b21' }}>
                     @{story.user_alias}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#6b6b8a' }}>
+                  <div style={{ fontSize: '11px', color: '#8696a0' }}>
                     {timeAgo(story.created_at)} · {story.media_type === 'video' ? 'Video' : 'Foto'}
                   </div>
                 </div>
@@ -242,7 +242,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
       {/* Viewed stories */}
       {viewedStories.length > 0 && (
         <div>
-          <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace", letterSpacing: '0.08em', padding: '0 4px 8px' }}>
+          <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", letterSpacing: '0.08em', padding: '0 4px 8px' }}>
             VISTAS
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -255,7 +255,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
                   alignItems: 'center',
                   gap: '12px',
                   padding: '10px 12px',
-                  background: '#14142a',
+                  background: '#f0f2f5',
                   borderRadius: '10px',
                   cursor: 'pointer',
                   opacity: 0.7,
@@ -266,7 +266,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
                     width: '44px',
                     height: '44px',
                     borderRadius: '50%',
-                    border: '2px solid #3d3d5c',
+                    border: '2px solid #adb5bd',
                     padding: '2px',
                     flexShrink: 0,
                   }}
@@ -276,23 +276,23 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
                       width: '100%',
                       height: '100%',
                       borderRadius: '50%',
-                      background: '#14142a',
+                      background: '#f0f2f5',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '15px',
                       fontWeight: '700',
-                      color: '#6b6b8a',
+                      color: '#8696a0',
                     }}
                   >
                     {story.user_alias[0]?.toUpperCase()}
                   </div>
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontSize: '13px', color: '#6b6b8a' }}>
+                  <div style={{ fontSize: '13px', color: '#8696a0' }}>
                     @{story.user_alias}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#3d3d5c' }}>
+                  <div style={{ fontSize: '11px', color: '#adb5bd' }}>
                     {timeAgo(story.created_at)}
                   </div>
                 </div>
@@ -303,9 +303,9 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
       )}
 
       {!loading && stories.length === 0 && myStories.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#3d3d5c' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#adb5bd' }}>
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>📖</div>
-          <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px', color: '#6b6b8a' }}>
+          <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px', color: '#8696a0' }}>
             No hay historias
           </div>
           <div style={{ fontSize: '12px' }}>

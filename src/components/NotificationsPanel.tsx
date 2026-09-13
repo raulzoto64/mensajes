@@ -243,12 +243,12 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
           onClick={() => { setOpen((v) => !v) }}
           title="Notificaciones"
           style={{
-            background: open ? 'rgba(34,211,238,0.12)' : 'transparent',
-            border: `1px solid ${open ? 'rgba(34,211,238,0.3)' : 'transparent'}`,
+            background: open ? 'rgba(0,136,204,0.1)' : 'transparent',
+            border: `1px solid ${open ? 'rgba(0,136,204,0.25)' : 'transparent'}`,
             borderRadius: '8px',
             width: '30px',
             height: '30px',
-            color: '#67e8f9',
+            color: '#0088cc',
             fontSize: '14px',
             cursor: 'pointer',
             display: 'flex',
@@ -295,8 +295,8 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                 transform: 'translateX(-50%)',
                 width: '340px',
                 maxWidth: 'calc(100vw - 24px)',
-                background: '#0f0f1e',
-                border: '1px solid #1e1e3a',
+                background: '#ffffff',
+                border: '1px solid #e5e7eb',
                 borderRadius: '12px',
                 overflow: 'hidden',
                 zIndex: 200,
@@ -304,12 +304,12 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                 fontFamily: "'Outfit', sans-serif",
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 14px', borderBottom: '1px solid #1e1e3a', background: '#0a0a18' }}>
-                <span style={{ flex: 1, fontWeight: '600', fontSize: '13px', color: '#e8e8f0' }}>Notificaciones</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 14px', borderBottom: '1px solid #e5e7eb', background: '#ffffff' }}>
+                <span style={{ flex: 1, fontWeight: '600', fontSize: '13px', color: '#111b21' }}>Notificaciones</span>
                 {unread > 0 && (
                   <button
                     onClick={markAllNotificationsRead}
-                    style={{ background: 'transparent', border: 'none', color: '#22d3ee', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
+                    style={{ background: 'transparent', border: 'none', color: '#0088cc', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
                   >
                     Marcar leídas
                   </button>
@@ -318,12 +318,12 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
               {/* Sección de permisos: solo se muestra si aún no están configurados */}
               {!done && (
-              <div style={{ padding: '10px 14px', borderBottom: '1px solid #1e1e3a' }}>
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid #e5e7eb' }}>
                 {perm === 'unsupported' && (
-                  <p style={{ margin: 0, fontSize: '11px', color: '#6b6b8a' }}>Este dispositivo no soporta notificaciones.</p>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#8696a0' }}>Este dispositivo no soporta notificaciones.</p>
                 )}
                 {perm === 'denied' && (
-                  <p style={{ margin: 0, fontSize: '11px', color: '#f87171' }}>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#ea4335' }}>
                     Notificaciones bloqueadas. Habilítalas en la configuración del navegador.
                   </p>
                 )}
@@ -335,9 +335,9 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                       width: '100%',
                       padding: '9px',
                       background: 'rgba(34,211,238,0.14)',
-                      border: '1px solid rgba(34,211,238,0.35)',
+                      border: '1px solid rgba(0,136,204,0.3)',
                       borderRadius: '8px',
-                      color: '#67e8f9',
+                      color: '#0088cc',
                       fontSize: '12px',
                       fontWeight: '700',
                       cursor: settingUp ? 'default' : 'pointer',
@@ -348,7 +348,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                   </button>
                 )}
                 {(perm === 'prompt' || perm === 'granted') && (
-                  <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6b6b8a', lineHeight: 1.4 }}>
+                  <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#8696a0', lineHeight: 1.4 }}>
                     Estos permisos son necesarios para comunicarte de forma segura y 100% anónima.
                   </p>
                 )}
@@ -357,7 +357,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 {notifications.length === 0 && (
-                  <p style={{ margin: 0, padding: '24px 14px', textAlign: 'center', fontSize: '12px', color: '#3d3d5c' }}>
+                  <p style={{ margin: 0, padding: '24px 14px', textAlign: 'center', fontSize: '12px', color: '#adb5bd' }}>
                     Sin notificaciones por ahora
                   </p>
                 )}
@@ -370,22 +370,22 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                       display: 'flex',
                       gap: '10px',
                       padding: '10px 14px',
-                      background: n.read ? 'transparent' : 'rgba(34,211,238,0.05)',
+                      background: n.read ? 'transparent' : 'rgba(0,136,204,0.05)',
                       border: 'none',
-                      borderBottom: '1px solid #14142a',
+                      borderBottom: '1px solid #f0f2f5',
                       cursor: 'pointer',
                       textAlign: 'left',
                       fontFamily: "'Outfit', sans-serif",
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = n.read ? 'transparent' : 'rgba(34,211,238,0.05)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = n.read ? 'transparent' : 'rgba(0,136,204,0.05)')}
                   >
                     <div
                       style={{
                         width: '30px',
                         height: '30px',
                         minWidth: '30px',
-                        background: n.type === 'dm' ? 'rgba(34,211,238,0.12)' : n.type === 'approval' ? 'rgba(245,158,11,0.12)' : 'rgba(139,92,246,0.12)',
+                        background: n.type === 'dm' ? 'rgba(0,136,204,0.1)' : n.type === 'approval' ? 'rgba(245,158,11,0.1)' : 'rgba(0,168,132,0.1)',
                         borderRadius: '8px',
                         display: 'flex',
                         alignItems: 'center',
@@ -397,16 +397,16 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: '600', color: '#e8e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: '#111b21', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {n.title}
                         </span>
-                        {!n.read && <span style={{ width: '6px', height: '6px', minWidth: '6px', borderRadius: '50%', background: '#22d3ee' }} />}
+                        {!n.read && <span style={{ width: '6px', height: '6px', minWidth: '6px', borderRadius: '50%', background: '#0088cc' }} />}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: '11px', color: '#8696a0', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {n.body}
                       </div>
                     </div>
-                    <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace", whiteSpace: 'nowrap', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", whiteSpace: 'nowrap', paddingTop: '2px' }}>
                       {timeAgo(n.at)}
                     </span>
                   </button>
@@ -433,7 +433,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
               gap: '10px',
               padding: '10px 12px',
               background: 'rgba(15,15,30,0.97)',
-              border: '1px solid rgba(34,211,238,0.3)',
+              border: '1px solid rgba(0,136,204,0.25)',
               borderRadius: '12px',
               cursor: 'pointer',
               textAlign: 'left',
@@ -447,7 +447,7 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
                 width: '32px',
                 height: '32px',
                 minWidth: '32px',
-                background: t.type === 'dm' ? 'rgba(34,211,238,0.15)' : t.type === 'approval' ? 'rgba(245,158,11,0.15)' : 'rgba(139,92,246,0.15)',
+                background: t.type === 'dm' ? 'rgba(0,136,204,0.12)' : t.type === 'approval' ? 'rgba(245,158,11,0.15)' : 'rgba(0,168,132,0.12)',
                 borderRadius: '9px',
                 display: 'flex',
                 alignItems: 'center',
@@ -458,10 +458,10 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
               {t.type === 'dm' ? '💬' : t.type === 'approval' ? '🛃' : '👥'}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#e8e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#111b21', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {t.title}
               </div>
-              <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '11px', color: '#667781', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {t.body}
               </div>
             </div>

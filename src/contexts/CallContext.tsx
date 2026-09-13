@@ -65,8 +65,8 @@ function CallOverlay({ state }: { state: CallState }) {
       >
         <div
           style={{
-            background: '#0f0f1e',
-            border: '1px solid #2a2a50',
+            background: '#ffffff',
+            border: '1px solid #d1d7db',
             borderRadius: '18px',
             padding: '26px 28px',
             width: 'min(360px, 90vw)',
@@ -74,14 +74,14 @@ function CallOverlay({ state }: { state: CallState }) {
           }}
         >
           <div style={{ fontSize: '40px', marginBottom: '8px' }}>📞</div>
-          <div style={{ fontSize: '16px', color: '#e8e8f0', fontWeight: '600' }}>Llamada entrante</div>
-          <div style={{ fontSize: '13px', color: '#9090b0', marginTop: '4px' }}>
+          <div style={{ fontSize: '16px', color: '#111b21', fontWeight: '600' }}>Llamada entrante</div>
+          <div style={{ fontSize: '13px', color: '#667781', marginTop: '4px' }}>
             de @{inc.initiatorAlias}
           </div>
           <div style={{ display: 'flex', gap: '12px', marginTop: '20px', justifyContent: 'center' }}>
             <button
               onClick={rejectCall}
-              style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.35)', background: 'rgba(239,68,68,0.12)', color: '#f87171', fontWeight: '600', cursor: 'pointer' }}
+              style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid rgba(234,67,53,0.3)', background: 'rgba(234,67,53,0.12)', color: '#ea4335', fontWeight: '600', cursor: 'pointer' }}
             >
               Rechazar
             </button>
@@ -111,8 +111,8 @@ function CallOverlay({ state }: { state: CallState }) {
         bottom: '18px',
         left: '50%',
         transform: 'translateX(-50%)',
-        background: '#0f0f1e',
-        border: '1px solid #2a2a50',
+        background: '#ffffff',
+        border: '1px solid #d1d7db',
         borderRadius: '16px',
         padding: '14px 16px',
         width: 'min(420px, 94vw)',
@@ -122,10 +122,10 @@ function CallOverlay({ state }: { state: CallState }) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-        <div style={{ fontSize: '13px', color: '#e8e8f0', fontWeight: '600' }}>
+        <div style={{ fontSize: '13px', color: '#111b21', fontWeight: '600' }}>
           📞 {state.status === 'calling' ? 'Llamando…' : connected > 0 ? 'En llamada' : 'Conectando…'}
         </div>
-        <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+        <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
           {state.kind === 'audio' ? 'AUDIO' : 'VIDEO'}
         </div>
       </div>
@@ -141,12 +141,12 @@ function CallOverlay({ state }: { state: CallState }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: '#14142a',
-                border: `1px solid ${connected ? 'rgba(34,197,94,0.4)' : '#1e1e3a'}`,
+                background: '#f0f2f5',
+                border: `1px solid ${connected ? 'rgba(34,197,94,0.4)' : '#e5e7eb'}`,
                 borderRadius: '8px',
                 padding: '5px 9px',
                 fontSize: '12px',
-                color: connected ? '#e8e8f0' : '#6b6b8a',
+                color: connected ? '#111b21' : '#8696a0',
               }}
             >
               <span
@@ -154,7 +154,7 @@ function CallOverlay({ state }: { state: CallState }) {
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  background: connected ? '#22c55e' : '#3d3d5c',
+                  background: connected ? '#25d366' : '#adb5bd',
                 }}
               />
               @{p.alias}
@@ -171,9 +171,9 @@ function CallOverlay({ state }: { state: CallState }) {
             flex: 1,
             padding: '10px',
             borderRadius: '10px',
-            border: `1px solid ${state.muted ? 'rgba(239,68,68,0.4)' : '#1e1e3a'}`,
-            background: state.muted ? 'rgba(239,68,68,0.12)' : '#14142a',
-            color: state.muted ? '#f87171' : '#e8e8f0',
+            border: `1px solid ${state.muted ? 'rgba(239,68,68,0.4)' : '#e5e7eb'}`,
+            background: state.muted ? 'rgba(234,67,53,0.12)' : '#f0f2f5',
+            color: state.muted ? '#ea4335' : '#111b21',
             fontWeight: '600',
             cursor: 'pointer',
           }}
@@ -188,7 +188,7 @@ function CallOverlay({ state }: { state: CallState }) {
             borderRadius: '10px',
             border: '1px solid rgba(239,68,68,0.4)',
             background: 'rgba(239,68,68,0.15)',
-            color: '#f87171',
+            color: '#ea4335',
             fontWeight: '600',
             cursor: 'pointer',
           }}

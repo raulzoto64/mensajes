@@ -87,8 +87,8 @@ export default function GifPicker({ onSelect, onClose }: Props) {
         position: 'absolute',
         bottom: '64px',
         left: '0',
-        background: '#0f0f1e',
-        border: '1px solid #1e1e3a',
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
         borderRadius: '16px',
         padding: '12px',
         width: '340px',
@@ -105,10 +105,10 @@ export default function GifPicker({ onSelect, onClose }: Props) {
               onClick={() => setTab(t)}
               style={{
                 padding: '4px 12px',
-                background: tab === t ? '#8b5cf6' : '#14142a',
-                border: `1px solid ${tab === t ? '#8b5cf6' : '#1e1e3a'}`,
+                background: tab === t ? '#00a884' : '#f0f2f5',
+                border: `1px solid ${tab === t ? '#00a884' : '#e5e7eb'}`,
                 borderRadius: '20px',
-                color: tab === t ? '#fff' : '#6b6b8a',
+                color: tab === t ? '#fff' : '#8696a0',
                 fontSize: '12px',
                 fontWeight: '500',
                 cursor: 'pointer',
@@ -119,7 +119,7 @@ export default function GifPicker({ onSelect, onClose }: Props) {
             </button>
           ))}
         </div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#3d3d5c', cursor: 'pointer', fontSize: '16px' }}>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#adb5bd', cursor: 'pointer', fontSize: '16px' }}>
           ✕
         </button>
       </div>
@@ -132,11 +132,11 @@ export default function GifPicker({ onSelect, onClose }: Props) {
             placeholder={GIPHY_KEY ? 'Buscar en Giphy...' : 'Buscar (configura VITE_GIPHY_API_KEY)'}
             style={{
               width: '100%',
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '8px',
               padding: '8px 12px',
-              color: '#e8e8f0',
+              color: '#111b21',
               fontSize: '13px',
               fontFamily: "'Outfit', sans-serif",
               marginBottom: '10px',
@@ -149,15 +149,15 @@ export default function GifPicker({ onSelect, onClose }: Props) {
                 onClick={() => { onSelect(g.url); onClose() }}
                 style={{
                   padding: 0,
-                  border: '1px solid #1e1e3a',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   overflow: 'hidden',
-                  background: '#14142a',
+                  background: '#f0f2f5',
                   aspectRatio: '4/3',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#8b5cf6')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1e1e3a')}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00a884')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
               >
                 <img src={g.preview} alt={g.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </button>
@@ -174,10 +174,10 @@ export default function GifPicker({ onSelect, onClose }: Props) {
             style={{
               width: '100%',
               padding: '10px',
-              background: 'rgba(139,92,246,0.1)',
-              border: '1px dashed #8b5cf6',
+              background: 'rgba(0,168,132,0.1)',
+              border: '1px dashed #00a884',
               borderRadius: '10px',
-              color: '#c4b5fd',
+              color: '#00a884',
               fontSize: '13px',
               cursor: uploading ? 'default' : 'pointer',
               fontFamily: "'Outfit', sans-serif",
@@ -195,7 +195,7 @@ export default function GifPicker({ onSelect, onClose }: Props) {
           />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', maxHeight: '200px', overflowY: 'auto' }}>
             {customGifs.length === 0 && (
-              <p style={{ color: '#3d3d5c', fontSize: '12px', gridColumn: '1/-1', textAlign: 'center', padding: '20px 0' }}>
+              <p style={{ color: '#adb5bd', fontSize: '12px', gridColumn: '1/-1', textAlign: 'center', padding: '20px 0' }}>
                 No tienes GIFs personalizados
               </p>
             )}
@@ -205,11 +205,11 @@ export default function GifPicker({ onSelect, onClose }: Props) {
                 onClick={() => { onSelect(g.url); onClose() }}
                 style={{
                   padding: 0,
-                  border: '1px solid #1e1e3a',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   overflow: 'hidden',
-                  background: '#14142a',
+                  background: '#f0f2f5',
                   aspectRatio: '4/3',
                 }}
               >

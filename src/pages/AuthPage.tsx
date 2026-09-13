@@ -36,7 +36,7 @@ export default function AuthPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#070711',
+        background: '#f0f2f5',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -50,7 +50,7 @@ export default function AuthPage() {
           position: 'fixed',
           inset: 0,
           backgroundImage:
-            'linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px)',
+            'linear-gradient(rgba(0,168,132,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,168,132,0.04) 1px, transparent 1px)',
           backgroundSize: '48px 48px',
           pointerEvents: 'none',
         }}
@@ -63,14 +63,14 @@ export default function AuthPage() {
             style={{
               width: '56px',
               height: '56px',
-              background: 'linear-gradient(135deg, #8b5cf6, #22d3ee)',
+              background: 'linear-gradient(135deg, #00a884, #0088cc)',
               borderRadius: '16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '28px',
               margin: '0 auto 16px',
-              boxShadow: '0 0 40px rgba(139,92,246,0.3)',
+              boxShadow: '0 0 40px rgba(0,168,132,0.25)',
             }}
           >
             ◈
@@ -79,14 +79,14 @@ export default function AuthPage() {
             style={{
               fontSize: '28px',
               fontWeight: '700',
-              color: '#e8e8f0',
+              color: '#111b21',
               margin: '0 0 6px',
               letterSpacing: '-0.5px',
             }}
           >
             Ephemera
           </h1>
-          <p style={{ color: '#6b6b8a', fontSize: '14px', margin: 0 }}>
+          <p style={{ color: '#8696a0', fontSize: '14px', margin: 0 }}>
             Mensajes que desaparecen cuando todos los han visto
           </p>
         </div>
@@ -94,8 +94,8 @@ export default function AuthPage() {
         {/* Card */}
         <div
           style={{
-            background: '#0f0f1e',
-            border: '1px solid #1e1e3a',
+            background: '#ffffff',
+            border: '1px solid #e5e7eb',
             borderRadius: '20px',
             padding: '32px',
           }}
@@ -104,7 +104,7 @@ export default function AuthPage() {
           <div
             style={{
               display: 'flex',
-              background: '#14142a',
+              background: '#f0f2f5',
               borderRadius: '10px',
               padding: '4px',
               marginBottom: '28px',
@@ -124,8 +124,8 @@ export default function AuthPage() {
                   fontWeight: '500',
                   fontFamily: "'Outfit', sans-serif",
                   transition: 'all 0.2s',
-                  background: mode === m ? '#8b5cf6' : 'transparent',
-                  color: mode === m ? '#fff' : '#6b6b8a',
+                  background: mode === m ? '#00a884' : 'transparent',
+                  color: mode === m ? '#fff' : '#8696a0',
                 }}
               >
                 {m === 'login' ? 'Entrar' : 'Registrarse'}
@@ -135,7 +135,7 @@ export default function AuthPage() {
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#6b6b8a', marginBottom: '8px', fontWeight: '500' }}>
+              <label style={{ display: 'block', fontSize: '13px', color: '#8696a0', marginBottom: '8px', fontWeight: '500' }}>
                 ALIAS
               </label>
               <input
@@ -146,22 +146,22 @@ export default function AuthPage() {
                 required
                 style={{
                   width: '100%',
-                  background: '#14142a',
-                  border: '1px solid #1e1e3a',
+                  background: '#f0f2f5',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '10px',
                   padding: '12px 16px',
-                  color: '#e8e8f0',
+                  color: '#111b21',
                   fontSize: '15px',
                   fontFamily: "'Outfit', sans-serif",
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={(e) => (e.target.style.borderColor = '#8b5cf6')}
-                onBlur={(e) => (e.target.style.borderColor = '#1e1e3a')}
+                onFocus={(e) => (e.target.style.borderColor = '#00a884')}
+                onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#6b6b8a', marginBottom: '8px', fontWeight: '500' }}>
+              <label style={{ display: 'block', fontSize: '13px', color: '#8696a0', marginBottom: '8px', fontWeight: '500' }}>
                 CONTRASEÑA
               </label>
               <div style={{ position: 'relative' }}>
@@ -174,17 +174,17 @@ export default function AuthPage() {
                   required
                   style={{
                     width: '100%',
-                    background: '#14142a',
-                    border: '1px solid #1e1e3a',
+                    background: '#f0f2f5',
+                    border: '1px solid #e5e7eb',
                     borderRadius: '10px',
                     padding: '12px 48px 12px 16px',
-                    color: '#e8e8f0',
+                    color: '#111b21',
                     fontSize: '15px',
                     fontFamily: "'Outfit', sans-serif",
                     transition: 'border-color 0.2s',
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = '#8b5cf6')}
-                  onBlur={(e) => (e.target.style.borderColor = '#1e1e3a')}
+                  onFocus={(e) => (e.target.style.borderColor = '#00a884')}
+                  onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
                 />
                 <button
                   type="button"
@@ -204,11 +204,11 @@ export default function AuthPage() {
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    color: '#6b6b8a',
+                    color: '#8696a0',
                     transition: 'color 0.2s',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#e8e8f0')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#6b6b8a')}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#111b21')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#8696a0')}
                 >
                   {showPassword ? (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -234,7 +234,7 @@ export default function AuthPage() {
                   border: '1px solid rgba(239,68,68,0.3)',
                   borderRadius: '8px',
                   padding: '10px 14px',
-                  color: '#f87171',
+                  color: '#ea4335',
                   fontSize: '13px',
                 }}
               >
@@ -245,11 +245,11 @@ export default function AuthPage() {
             {info && (
               <div
                 style={{
-                  background: 'rgba(34,211,238,0.08)',
-                  border: '1px solid rgba(34,211,238,0.3)',
+                  background: 'rgba(0,136,204,0.08)',
+                  border: '1px solid rgba(0,136,204,0.25)',
                   borderRadius: '8px',
                   padding: '10px 14px',
-                  color: '#67e8f9',
+                  color: '#0088cc',
                   fontSize: '13px',
                 }}
               >
@@ -263,7 +263,7 @@ export default function AuthPage() {
               style={{
                 marginTop: '4px',
                 padding: '13px',
-                background: loading ? '#3d3d5c' : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                background: loading ? '#adb5bd' : 'linear-gradient(135deg, #00a884, #7c3aed)',
                 border: 'none',
                 borderRadius: '10px',
                 color: '#fff',
@@ -272,7 +272,7 @@ export default function AuthPage() {
                 fontFamily: "'Outfit', sans-serif",
                 cursor: loading ? 'default' : 'pointer',
                 transition: 'opacity 0.2s',
-                boxShadow: loading ? 'none' : '0 4px 20px rgba(139,92,246,0.3)',
+                boxShadow: loading ? 'none' : '0 4px 20px rgba(0,168,132,0.25)',
               }}
             >
               {loading ? '...' : mode === 'login' ? 'Entrar' : 'Crear cuenta'}
@@ -280,7 +280,7 @@ export default function AuthPage() {
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', color: '#3d3d5c', fontSize: '12px', marginTop: '24px', fontFamily: "'DM Mono', monospace" }}>
+        <p style={{ textAlign: 'center', color: '#adb5bd', fontSize: '12px', marginTop: '24px', fontFamily: "'DM Mono', monospace" }}>
           TUS DATOS SE ALMACENAN ENCRIPTADOS
         </p>
       </div>

@@ -118,8 +118,8 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
     >
       <div
         style={{
-          background: '#0f0f1e',
-          border: '1px solid #2a2a50',
+          background: '#ffffff',
+          border: '1px solid #d1d7db',
           borderRadius: '20px',
           width: '100%',
           maxWidth: '440px',
@@ -134,16 +134,16 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#e8e8f0' }}>
+            <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#111b21' }}>
               #{groupName}
             </h2>
-            <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+            <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
               {members.length} MIEMBRO{members.length !== 1 ? 'S' : ''}
             </p>
           </div>
           <button
             onClick={onClose}
-            style={{ background: '#14142a', border: '1px solid #1e1e3a', borderRadius: '8px', padding: '6px 10px', color: '#6b6b8a', cursor: 'pointer', fontSize: '14px' }}
+            style={{ background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 10px', color: '#8696a0', cursor: 'pointer', fontSize: '14px' }}
           >
             ✕
           </button>
@@ -158,17 +158,17 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
             placeholder="Invitar usuario por alias..."
             style={{
               width: '100%',
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '10px',
               padding: '10px 14px',
-              color: '#e8e8f0',
+              color: '#111b21',
               fontSize: '13px',
               fontFamily: "'Outfit', sans-serif",
               transition: 'border-color 0.2s',
             }}
-            onFocus={(e) => (e.target.style.borderColor = '#8b5cf6')}
-            onBlur={(e) => (e.target.style.borderColor = '#1e1e3a')}
+            onFocus={(e) => (e.target.style.borderColor = '#00a884')}
+            onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
           />
           {searchResults.length > 0 && (
             <div
@@ -177,8 +177,8 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
                 top: 'calc(100% + 4px)',
                 left: 0,
                 right: 0,
-                background: '#14142a',
-                border: '1px solid #1e1e3a',
+                background: '#f0f2f5',
+                border: '1px solid #e5e7eb',
                 borderRadius: '10px',
                 overflow: 'hidden',
                 zIndex: 10,
@@ -203,28 +203,28 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
                     textAlign: 'left',
                     fontFamily: "'Outfit', sans-serif",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139,92,246,0.08)')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,168,132,0.08)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div
                     style={{
                       width: '28px',
                       height: '28px',
-                      background: '#1e1e3a',
+                      background: '#e5e7eb',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '11px',
-                      color: '#8b5cf6',
+                      color: '#00a884',
                       fontWeight: '600',
                       flexShrink: 0,
                     }}
                   >
                     {u.alias[0].toUpperCase()}
                   </div>
-                  <span style={{ fontSize: '13px', color: '#c4b5fd' }}>@{u.alias}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#8b5cf6' }}>+ Añadir</span>
+                  <span style={{ fontSize: '13px', color: '#00a884' }}>@{u.alias}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#00a884' }}>+ Añadir</span>
                 </button>
               ))}
             </div>
@@ -235,7 +235,7 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
         {/* Member list */}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {loading ? (
-            <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
+            <p style={{ color: '#adb5bd', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
           ) : (
             members.map((m) => (
               <div
@@ -245,8 +245,8 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
                   alignItems: 'center',
                   gap: '10px',
                   padding: '10px 12px',
-                  background: m.user_id === user?.id ? 'rgba(139,92,246,0.06)' : '#14142a',
-                  border: `1px solid ${m.user_id === user?.id ? 'rgba(139,92,246,0.15)' : '#1e1e3a'}`,
+                  background: m.user_id === user?.id ? 'rgba(0,168,132,0.06)' : '#f0f2f5',
+                  border: `1px solid ${m.user_id === user?.id ? 'rgba(0,168,132,0.12)' : '#e5e7eb'}`,
                   borderRadius: '10px',
                 }}
               >
@@ -254,13 +254,13 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
                   style={{
                     width: '32px',
                     height: '32px',
-                    background: '#1e1e3a',
+                    background: '#e5e7eb',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '12px',
-                    color: '#8b5cf6',
+                    color: '#00a884',
                     fontWeight: '600',
                     flexShrink: 0,
                   }}
@@ -269,17 +269,17 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '14px', color: '#e8e8f0', fontWeight: '500' }}>@{m.alias}</span>
+                    <span style={{ fontSize: '14px', color: '#111b21', fontWeight: '500' }}>@{m.alias}</span>
                     {m.is_admin && (
-                      <span style={{ fontSize: '10px', color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
+                      <span style={{ fontSize: '10px', color: '#ea4335', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(234,67,53,0.2)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
                         ADMIN
                       </span>
                     )}
                     {m.user_id === user?.id && (
-                      <span style={{ fontSize: '10px', color: '#8b5cf6', fontFamily: "'DM Mono', monospace" }}>TÚ</span>
+                      <span style={{ fontSize: '10px', color: '#00a884', fontFamily: "'DM Mono', monospace" }}>TÚ</span>
                     )}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                  <div style={{ fontSize: '11px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
                     DESDE {formatDate(m.joined_at).toUpperCase()}
                   </div>
                 </div>
@@ -287,11 +287,11 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
                   <button
                     onClick={() => removeMember(m.user_id)}
                     style={{
-                      background: 'rgba(239,68,68,0.08)',
+                      background: 'rgba(234,67,53,0.08)',
                       border: '1px solid rgba(239,68,68,0.15)',
                       borderRadius: '7px',
                       padding: '4px 8px',
-                      color: '#f87171',
+                      color: '#ea4335',
                       fontSize: '11px',
                       cursor: 'pointer',
                       fontFamily: "'Outfit', sans-serif",
@@ -312,16 +312,16 @@ export default function GroupMembersPanel({ groupId, onClose }: Props) {
           style={{
             padding: '11px',
             background: 'transparent',
-            border: '1px solid rgba(239,68,68,0.25)',
+            border: '1px solid rgba(234,67,53,0.25)',
             borderRadius: '10px',
-            color: '#f87171',
+            color: '#ea4335',
             fontSize: '13px',
             fontWeight: '500',
             cursor: leaving ? 'default' : 'pointer',
             fontFamily: "'Outfit', sans-serif",
             transition: 'background 0.15s',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.06)')}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(234,67,53,0.06)')}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
         >
           {leaving ? 'Saliendo...' : '↩ Salir del grupo'}

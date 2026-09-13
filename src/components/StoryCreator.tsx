@@ -57,7 +57,7 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: '#070711',
+        background: '#f0f2f5',
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
@@ -71,7 +71,7 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '12px 16px',
-          borderBottom: '1px solid #1e1e3a',
+          borderBottom: '1px solid #e5e7eb',
         }}
       >
         <button
@@ -79,7 +79,7 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#8b5cf6',
+            color: '#00a884',
             fontSize: '14px',
             cursor: 'pointer',
             fontFamily: "'Outfit', sans-serif",
@@ -87,14 +87,14 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
         >
           Cancelar
         </button>
-        <span style={{ fontSize: '15px', fontWeight: '600', color: '#e8e8f0' }}>Nueva historia</span>
+        <span style={{ fontSize: '15px', fontWeight: '600', color: '#111b21' }}>Nueva historia</span>
         <button
           onClick={upload}
           disabled={!mediaFile || uploading}
           style={{
-            background: mediaFile ? '#8b5cf6' : 'transparent',
+            background: mediaFile ? '#00a884' : 'transparent',
             border: 'none',
-            color: mediaFile ? '#fff' : '#3d3d5c',
+            color: mediaFile ? '#fff' : '#adb5bd',
             fontSize: '14px',
             fontWeight: '600',
             cursor: mediaFile ? 'pointer' : 'default',
@@ -153,15 +153,15 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
               width: '120px',
               height: '120px',
               borderRadius: '50%',
-              background: 'rgba(139,92,246,0.1)',
-              border: '2px dashed #8b5cf6',
+              background: 'rgba(0,168,132,0.1)',
+              border: '2px dashed #00a884',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               cursor: 'pointer',
-              color: '#8b5cf6',
+              color: '#00a884',
             }}
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -186,10 +186,10 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
               width: '100%',
               maxWidth: '320px',
               padding: '10px 14px',
-              background: '#14142a',
-              border: '1px solid #1e1e3a',
+              background: '#f0f2f5',
+              border: '1px solid #e5e7eb',
               borderRadius: '10px',
-              color: '#e8e8f0',
+              color: '#111b21',
               fontSize: '13px',
               textAlign: 'center',
               fontFamily: "'Outfit', sans-serif",
@@ -197,7 +197,7 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
           />
         )}
 
-        <div style={{ marginTop: '16px', fontSize: '11px', color: '#3d3d5c', textAlign: 'center' }}>
+        <div style={{ marginTop: '16px', fontSize: '11px', color: '#adb5bd', textAlign: 'center' }}>
           La historia expira en 24 horas
         </div>
       </div>

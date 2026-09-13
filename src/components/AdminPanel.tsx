@@ -163,7 +163,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
       id: 'messages',
       label: 'Eliminar todos los mensajes',
       desc: 'Borra todos los mensajes de todos los grupos',
-      color: '#f87171',
+      color: '#ea4335',
       fn: () =>
         supabase.from('messages').delete({ count: 'exact' }).neq('id', '00000000-0000-0000-0000-000000000000'),
     },
@@ -195,7 +195,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
       id: 'conversations',
       label: 'Eliminar TODAS las conversaciones',
       desc: 'Borra mensajes, chats privados y grupos de TODO el sistema (acción irreversible)',
-      color: '#f87171',
+      color: '#ea4335',
       fn: async () => {
         const a = await supabase.from('messages').delete({ count: 'exact' }).neq('id', '00000000-0000-0000-0000-000000000000')
         await supabase.from('direct_messages').delete({ count: 'exact' }).neq('id', '00000000-0000-0000-0000-000000000000')
@@ -231,8 +231,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
     >
       <div
         style={{
-          background: '#0f0f1e',
-          border: '1px solid #2a2a50',
+          background: '#ffffff',
+          border: '1px solid #d1d7db',
           borderRadius: '20px',
           width: '100%',
           maxWidth: '520px',
@@ -244,30 +244,30 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
         }}
       >
         {/* Header */}
-        <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid #1e1e3a', flexShrink: 0 }}>
+        <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#e8e8f0' }}>
+              <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#111b21' }}>
                 Panel de Administrador
               </h2>
-              <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+              <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
                 ACCESO CON PRIVILEGIOS COMPLETOS
               </p>
             </div>
             <button
               onClick={onClose}
-              style={{ background: '#14142a', border: '1px solid #1e1e3a', borderRadius: '8px', padding: '6px 10px', color: '#6b6b8a', cursor: 'pointer', fontSize: '14px' }}
+              style={{ background: '#f0f2f5', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 10px', color: '#8696a0', cursor: 'pointer', fontSize: '14px' }}
             >
               ✕
             </button>
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', background: '#14142a', borderRadius: '9px', padding: '3px', gap: '2px' }}>
+          <div style={{ display: 'flex', background: '#f0f2f5', borderRadius: '9px', padding: '3px', gap: '2px' }}>
             {(['actions', 'approvals', 'users', 'locations'] as const).map((t) => {
               if (t === 'locations' && !user?.is_super_admin) return null
               const active = tab === t
-              const color = t === 'locations' ? '#22c55e' : t === 'users' ? '#8b5cf6' : t === 'approvals' ? '#22d3ee' : '#f87171'
+              const color = t === 'locations' ? '#25d366' : t === 'users' ? '#00a884' : t === 'approvals' ? '#0088cc' : '#ea4335'
               const label =
                 t === 'actions' ? '⚡ Acciones'
                 : t === 'approvals' ? `🛃 Aprobaciones (${pendingUsers.length})`
@@ -288,7 +288,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                     fontFamily: "'Outfit', sans-serif",
                     transition: 'all 0.15s',
                     background: active ? color : 'transparent',
-                    color: active ? (t === 'approvals' ? '#0a0a18' : '#fff') : '#6b6b8a',
+                    color: active ? (t === 'approvals' ? '#ffffff' : '#fff') : '#8696a0',
                   }}
                 >
                   {label}
@@ -306,8 +306,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                 <div
                   key={action.id}
                   style={{
-                    background: '#14142a',
-                    border: `1px solid ${confirming === action.id ? action.color + '30' : '#1e1e3a'}`,
+                    background: '#f0f2f5',
+                    border: `1px solid ${confirming === action.id ? action.color + '30' : '#e5e7eb'}`,
                     borderRadius: '12px',
                     padding: '13px 15px',
                     display: 'flex',
@@ -316,10 +316,10 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                   }}
                 >
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '14px', fontWeight: '500', color: '#e8e8f0', marginBottom: '2px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '500', color: '#111b21', marginBottom: '2px' }}>
                       {action.label}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#6b6b8a' }}>{action.desc}</div>
+                    <div style={{ fontSize: '12px', color: '#8696a0' }}>{action.desc}</div>
                   </div>
 
                   {confirming === action.id ? (
@@ -344,7 +344,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                       </button>
                       <button
                         onClick={() => setConfirming(null)}
-                        style={{ padding: '5px 8px', background: 'transparent', border: '1px solid #1e1e3a', borderRadius: '7px', color: '#6b6b8a', fontSize: '12px', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
+                        style={{ padding: '5px 8px', background: 'transparent', border: '1px solid #e5e7eb', borderRadius: '7px', color: '#8696a0', fontSize: '12px', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
                       >
                         No
                       </button>
@@ -376,7 +376,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
           {tab === 'approvals' && (
             <div>
-              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#6b6b8a' }}>
+              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#8696a0' }}>
                 Usuarios que se registraron y esperan tu permiso para entrar.
               </p>
               {users.length === 0 && !usersLoading ? (
@@ -387,7 +387,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                   Cargar solicitudes
                 </button>
               ) : pendingUsers.length === 0 ? (
-                <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+                <p style={{ color: '#adb5bd', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
                   No hay solicitudes pendientes
                 </p>
               ) : (
@@ -400,8 +400,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         alignItems: 'center',
                         gap: '10px',
                         padding: '10px 12px',
-                        background: '#14142a',
-                        border: '1px solid rgba(34,211,238,0.3)',
+                        background: '#f0f2f5',
+                        border: '1px solid rgba(0,136,204,0.25)',
                         borderRadius: '10px',
                       }}
                     >
@@ -409,13 +409,13 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         style={{
                           width: '30px',
                           height: '30px',
-                          background: 'rgba(34,211,238,0.15)',
+                          background: 'rgba(0,136,204,0.12)',
                           borderRadius: '50%',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '12px',
-                          color: '#67e8f9',
+                          color: '#0088cc',
                           fontWeight: '700',
                           flexShrink: 0,
                         }}
@@ -423,8 +423,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         {u.alias[0]?.toUpperCase()}
                       </div>
                       <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <span style={{ fontSize: '13px', color: '#e8e8f0', fontWeight: '500' }}>@{u.alias}</span>
-                        <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                        <span style={{ fontSize: '13px', color: '#111b21', fontWeight: '500' }}>@{u.alias}</span>
+                        <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
                           {new Date(u.created_at).toLocaleString('es')}
                         </div>
                       </div>
@@ -433,10 +433,10 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                           onClick={() => approveUser(u.id, u.alias)}
                           style={{
                             padding: '5px 12px',
-                            background: 'rgba(34,211,238,0.15)',
+                            background: 'rgba(0,136,204,0.12)',
                             border: '1px solid rgba(34,211,238,0.4)',
                             borderRadius: '7px',
-                            color: '#22d3ee',
+                            color: '#0088cc',
                             fontSize: '11px',
                             fontWeight: '600',
                             cursor: 'pointer',
@@ -452,7 +452,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                             background: 'transparent',
                             border: '1px solid rgba(239,68,68,0.15)',
                             borderRadius: '7px',
-                            color: '#f87171',
+                            color: '#ea4335',
                             fontSize: '11px',
                             cursor: 'pointer',
                             fontFamily: "'Outfit', sans-serif",
@@ -475,21 +475,21 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                 onChange={(e) => setUserSearch(e.target.value)}
                 placeholder="Buscar por alias..."
                 style={{
-                  background: '#14142a',
-                  border: '1px solid #1e1e3a',
+                  background: '#f0f2f5',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '9px',
                   padding: '9px 12px',
-                  color: '#e8e8f0',
+                  color: '#111b21',
                   fontSize: '13px',
                   fontFamily: "'Outfit', sans-serif",
                   width: '100%',
                 }}
               />
               {usersLoading ? (
-                <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
+                <p style={{ color: '#adb5bd', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ fontSize: '11px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace", marginBottom: '4px' }}>
+                  <div style={{ fontSize: '11px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", marginBottom: '4px' }}>
                     {approvedUsers.length} USUARIO{approvedUsers.length !== 1 ? 'S' : ''}
                   </div>
                   {approvedUsers.map((u) => (
@@ -500,8 +500,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         alignItems: 'center',
                         gap: '10px',
                         padding: '10px 12px',
-                        background: '#14142a',
-                        border: `1px solid ${u.is_approved ? '#1e1e3a' : 'rgba(34,211,238,0.35)'}`,
+                        background: '#f0f2f5',
+                        border: `1px solid ${u.is_approved ? '#e5e7eb' : 'rgba(0,136,204,0.3)'}`,
                         borderRadius: '10px',
                       }}
                     >
@@ -509,13 +509,13 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                         style={{
                           width: '30px',
                           height: '30px',
-                          background: u.is_admin ? 'rgba(239,68,68,0.15)' : u.is_approved ? '#1e1e3a' : 'rgba(34,211,238,0.15)',
+                          background: u.is_admin ? 'rgba(239,68,68,0.15)' : u.is_approved ? '#e5e7eb' : 'rgba(0,136,204,0.12)',
                           borderRadius: '50%',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '12px',
-                          color: u.is_admin ? '#f87171' : u.is_approved ? '#8b5cf6' : '#67e8f9',
+                          color: u.is_admin ? '#ea4335' : u.is_approved ? '#00a884' : '#0088cc',
                           fontWeight: '700',
                           flexShrink: 0,
                         }}
@@ -524,9 +524,9 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                       </div>
                       <div style={{ flex: 1, overflow: 'hidden' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '13px', color: '#e8e8f0', fontWeight: '500' }}>@{u.alias}</span>
+                          <span style={{ fontSize: '13px', color: '#111b21', fontWeight: '500' }}>@{u.alias}</span>
                           {u.is_admin && (
-                            <span style={{ fontSize: '9px', color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
+                            <span style={{ fontSize: '9px', color: '#ea4335', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(234,67,53,0.2)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
                               ADMIN
                             </span>
                           )}
@@ -536,7 +536,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                        <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
                           {new Date(u.created_at).toLocaleDateString('es')}
                         </div>
                       </div>
@@ -546,10 +546,10 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                           title={u.is_admin ? 'Quitar admin' : 'Hacer admin'}
                           style={{
                             padding: '4px 9px',
-                            background: u.is_admin ? 'rgba(239,68,68,0.08)' : 'rgba(139,92,246,0.08)',
-                            border: `1px solid ${u.is_admin ? 'rgba(239,68,68,0.2)' : 'rgba(139,92,246,0.2)'}`,
+                            background: u.is_admin ? 'rgba(234,67,53,0.08)' : 'rgba(0,168,132,0.08)',
+                            border: `1px solid ${u.is_admin ? 'rgba(234,67,53,0.2)' : 'rgba(0,168,132,0.12)'}`,
                             borderRadius: '7px',
-                            color: u.is_admin ? '#f87171' : '#c4b5fd',
+                            color: u.is_admin ? '#ea4335' : '#00a884',
                             fontSize: '11px',
                             cursor: 'pointer',
                             fontFamily: "'Outfit', sans-serif",
@@ -582,7 +582,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                             background: 'transparent',
                             border: '1px solid rgba(239,68,68,0.15)',
                             borderRadius: '7px',
-                            color: '#f87171',
+                            color: '#ea4335',
                             fontSize: '11px',
                             cursor: 'pointer',
                             fontFamily: "'Outfit', sans-serif",
@@ -600,18 +600,18 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
           {tab === 'locations' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#6b6b8a' }}>
-                Ubicación en tiempo real. Se guarda una <b style={{ color: '#67e8f9' }}>nueva ubicación</b> solo
+              <p style={{ margin: '0 0 4px', fontSize: '12px', color: '#8696a0' }}>
+                Ubicación en tiempo real. Se guarda una <b style={{ color: '#0088cc' }}>nueva ubicación</b> solo
                 si el usuario se aleja más de 20 m de la anterior y permanece ahí al menos 1 hora.
               </p>
               {/* Posición en vivo: se ve cómo se mueve el usuario en tiempo real */}
               <div style={{ background: '#0f1f17', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '10px', padding: '10px 12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ fontSize: '12px', fontWeight: '600', color: '#4ade80' }}>🟢 EN VIVO — posición actual</span>
-                  <span style={{ fontSize: '9px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>actualiza cada 10s</span>
+                  <span style={{ fontSize: '9px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>actualiza cada 10s</span>
                 </div>
                 {liveLocs.length === 0 ? (
-                  <p style={{ color: '#3d3d5c', fontSize: '12px', margin: 0 }}>Sin señal en vivo</p>
+                  <p style={{ color: '#adb5bd', fontSize: '12px', margin: 0 }}>Sin señal en vivo</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {liveLocs.map((lv: any) => {
@@ -625,20 +625,20 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                                 href={`https://maps.google.com/?q=${lv.lat},${lv.lng}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
+                                style={{ fontSize: '11px', color: '#25d366', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
                               >
                                 📍 {Number(lv.lat).toFixed(7)}, {Number(lv.lng).toFixed(7)}
                               </a>
                             ) : (
-                              <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin señal</span>
+                              <span style={{ fontSize: '11px', color: '#adb5bd' }}>sin señal</span>
                             )}
                             {typeof lv.accuracy === 'number' && (
-                              <div style={{ fontSize: '10px', color: '#6b6b8a', marginTop: '2px' }}>±{Math.round(lv.accuracy)} m</div>
+                              <div style={{ fontSize: '10px', color: '#8696a0', marginTop: '2px' }}>±{Math.round(lv.accuracy)} m</div>
                             )}
-                            <div style={{ fontSize: '10px', color: '#3d3d5c', marginTop: '2px' }}>hace {ageSec}s</div>
+                            <div style={{ fontSize: '10px', color: '#adb5bd', marginTop: '2px' }}>hace {ageSec}s</div>
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <span style={{ fontSize: '12px', color: '#e8e8f0' }}>@{u?.alias ?? 'desconocido'}</span>
+                            <span style={{ fontSize: '12px', color: '#111b21' }}>@{u?.alias ?? 'desconocido'}</span>
                           </div>
                         </div>
                       )
@@ -647,13 +647,13 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                 )}
               </div>
               {/* Ubicación de registro (principal) desde user_setup */}
-              <div style={{ background: '#0f1726', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '10px', padding: '10px 12px' }}>
+              <div style={{ background: '#0f1726', border: '1px solid rgba(0,136,204,0.25)', borderRadius: '10px', padding: '10px 12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#67e8f9' }}>📌 REGISTRO (principal)</span>
-                  <span style={{ fontSize: '9px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>precisa</span>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#0088cc' }}>📌 REGISTRO (principal)</span>
+                  <span style={{ fontSize: '9px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>precisa</span>
                 </div>
                 {regLocs.length === 0 ? (
-                  <p style={{ color: '#3d3d5c', fontSize: '12px', margin: 0 }}>Sin ubicación de registro</p>
+                  <p style={{ color: '#adb5bd', fontSize: '12px', margin: 0 }}>Sin ubicación de registro</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {regLocs.map((rv: any) => {
@@ -666,16 +666,16 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                                 href={`https://maps.google.com/?q=${rv.lat},${rv.lng}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
+                                style={{ fontSize: '11px', color: '#25d366', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
                               >
                                 📍 {Number(rv.lat).toFixed(7)}, {Number(rv.lng).toFixed(7)}
                               </a>
                             ) : (
-                              <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin registro</span>
+                              <span style={{ fontSize: '11px', color: '#adb5bd' }}>sin registro</span>
                             )}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <span style={{ fontSize: '12px', color: '#e8e8f0' }}>@{u?.alias ?? 'desconocido'}</span>
+                            <span style={{ fontSize: '12px', color: '#111b21' }}>@{u?.alias ?? 'desconocido'}</span>
                           </div>
                         </div>
                       )
@@ -684,13 +684,13 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                 )}
               </div>
               {/* Historial de direcciones guardadas */}
-              <div style={{ fontSize: '11px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace", marginTop: '4px' }}>
+              <div style={{ fontSize: '11px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", marginTop: '4px' }}>
                 DIRECCIONES GUARDADAS
               </div>
               {locationsLoading ? (
-                <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
+                <p style={{ color: '#adb5bd', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
               ) : locations.length === 0 ? (
-                <p style={{ color: '#3d3d5c', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+                <p style={{ color: '#adb5bd', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
                   Sin registros de ubicación
                 </p>
               ) : (
@@ -721,8 +721,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                     <div
                       key={g.user_id}
                       style={{
-                        background: '#14142a',
-                        border: '1px solid #1e1e3a',
+                        background: '#f0f2f5',
+                        border: '1px solid #e5e7eb',
                         borderRadius: '10px',
                         padding: '10px 12px',
                         marginBottom: '8px',
@@ -730,14 +730,14 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#e8e8f0' }}>@{g.alias}</span>
-                          <span style={{ fontSize: '9px', color: '#6b6b8a', background: '#0f0f1e', padding: '2px 4px', borderRadius: '4px' }}>{g.device_type}</span>
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#111b21' }}>@{g.alias}</span>
+                          <span style={{ fontSize: '9px', color: '#8696a0', background: '#ffffff', padding: '2px 4px', borderRadius: '4px' }}>{g.device_type}</span>
                         </div>
-                        <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                        <span style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
                           {g.items.length} ubicación{g.items.length !== 1 ? 'es' : ''}
                         </span>
                       </div>
-                      <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '4px' }}>
+                      <div style={{ fontSize: '11px', color: '#667781', marginTop: '4px' }}>
                         🎤 {g.mic ? '✅' : '⛔'} · 📷 {g.cam ? '✅' : '⛔'} · 🖥️ {g.screen ? '✅' : '⛔'}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
@@ -752,18 +752,18 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                             <div
                               key={l.id}
                               style={{
-                                background: '#0f0f1e',
-                                border: '1px solid #1e1e3a',
+                                background: '#ffffff',
+                                border: '1px solid #e5e7eb',
                                 borderRadius: '8px',
                                 padding: '8px 10px',
                               }}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace" }}>
+                                <span style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
                                   {new Date(l.created_at).toLocaleString('es')}
                                 </span>
                                 {l.is_initial && (
-                                  <span style={{ fontSize: '9px', color: '#22d3ee', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
+                                  <span style={{ fontSize: '9px', color: '#0088cc', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(0,136,204,0.2)', borderRadius: '4px', padding: '1px 5px', fontFamily: "'DM Mono', monospace" }}>
                                     REGISTRO
                                   </span>
                                 )}
@@ -775,22 +775,22 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                                       href={`https://maps.google.com/?q=${l.lat},${l.lng}`}
                                       target="_blank"
                                       rel="noreferrer"
-                                      style={{ fontSize: '11px', color: '#22c55e', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
+                                      style={{ fontSize: '11px', color: '#25d366', textDecoration: 'none', fontFamily: "'DM Mono', monospace" }}
                                     >
                                       📍 {Number(l.lat).toFixed(7)}, {Number(l.lng).toFixed(7)}
                                     </a>
                                   ) : (
-                                    <span style={{ fontSize: '11px', color: '#3d3d5c' }}>sin ubicación</span>
+                                    <span style={{ fontSize: '11px', color: '#adb5bd' }}>sin ubicación</span>
                                   )}
                                   {typeof l.accuracy === 'number' && (
-                                    <div style={{ fontSize: '10px', color: '#6b6b8a', marginTop: '2px' }}>±{Math.round(l.accuracy)} m</div>
+                                    <div style={{ fontSize: '10px', color: '#8696a0', marginTop: '2px' }}>±{Math.round(l.accuracy)} m</div>
                                   )}
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  {placeLabel && <div style={{ fontSize: '11px', color: '#e8e8f0' }}>{placeLabel}</div>}
-                                  {l.address && <div style={{ fontSize: '11px', color: '#9090b0', marginTop: '2px', wordBreak: 'break-word' }}>{l.address}</div>}
+                                  {placeLabel && <div style={{ fontSize: '11px', color: '#111b21' }}>{placeLabel}</div>}
+                                  {l.address && <div style={{ fontSize: '11px', color: '#667781', marginTop: '2px', wordBreak: 'break-word' }}>{l.address}</div>}
                                   {(l.manzana || l.lote) && (
-                                    <div style={{ fontSize: '11px', color: '#6b6b8a', marginTop: '2px' }}>
+                                    <div style={{ fontSize: '11px', color: '#8696a0', marginTop: '2px' }}>
                                       Manzana: {l.manzana ?? '—'} · Lote: {l.lote ?? '—'}
                                     </div>
                                   )}
@@ -807,20 +807,20 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {mobiles.length > 0 && (
                         <div>
-                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#8b5cf6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#00a884', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             📱 CELULARES
                           </div>
-                          <div style={{ borderLeft: '2px solid rgba(139,92,246,0.3)', paddingLeft: '8px' }}>
+                          <div style={{ borderLeft: '2px solid rgba(0,168,132,0.25)', paddingLeft: '8px' }}>
                             {mobiles.map(renderGroup)}
                           </div>
                         </div>
                       )}
                       {desktops.length > 0 && (
                         <div>
-                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#22d3ee', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#0088cc', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             💻 COMPUTADORAS
                           </div>
-                          <div style={{ borderLeft: '2px solid rgba(34,211,238,0.3)', paddingLeft: '8px' }}>
+                          <div style={{ borderLeft: '2px solid rgba(0,136,204,0.25)', paddingLeft: '8px' }}>
                             {desktops.map(renderGroup)}
                           </div>
                         </div>
@@ -835,13 +835,13 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
 
         {/* Activity log */}
         {log.length > 0 && (
-          <div style={{ padding: '12px 20px 16px', borderTop: '1px solid #1e1e3a', flexShrink: 0 }}>
-            <div style={{ fontSize: '10px', color: '#3d3d5c', fontFamily: "'DM Mono', monospace", marginBottom: '6px' }}>
+          <div style={{ padding: '12px 20px 16px', borderTop: '1px solid #e5e7eb', flexShrink: 0 }}>
+            <div style={{ fontSize: '10px', color: '#adb5bd', fontFamily: "'DM Mono', monospace", marginBottom: '6px' }}>
               LOG
             </div>
             <div style={{ maxHeight: '80px', overflowY: 'auto' }}>
               {log.map((entry, i) => (
-                <div key={i} style={{ fontSize: '11px', color: '#6b6b8a', fontFamily: "'DM Mono', monospace", marginBottom: '2px' }}>
+                <div key={i} style={{ fontSize: '11px', color: '#8696a0', fontFamily: "'DM Mono', monospace", marginBottom: '2px' }}>
                   {entry}
                 </div>
               ))}
@@ -857,9 +857,9 @@ const loadUsersBtn: React.CSSProperties = {
   width: '100%',
   padding: '9px',
   background: 'rgba(34,211,238,0.1)',
-  border: '1px solid rgba(34,211,238,0.3)',
+  border: '1px solid rgba(0,136,204,0.25)',
   borderRadius: '9px',
-  color: '#67e8f9',
+  color: '#0088cc',
   fontSize: '13px',
   fontWeight: '600',
   cursor: 'pointer',
