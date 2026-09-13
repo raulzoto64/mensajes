@@ -58,6 +58,11 @@ export default function ChatPage() {
     } else {
       setShowPhonePopup(false)
     }
+    // Check if permissions are granted; if not, show the request
+    const notifState = typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+    if (notifState !== 'granted') {
+      setShowPermissions(true)
+    }
   }, [user])
 
   useEffect(() => {
