@@ -25,27 +25,36 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
   }
 
   async function upload() {
-    if (!mediaFile || !user) return
+    if (!mediaFile || !user) { console.log('[STORY] upload abort: no mediaFile o no user'); return }
     setUploading(true)
 
     const ext = mediaFile.name.split('.').pop() ?? 'jpg'
     const path = `stories/${user.id}/${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage.from('media').upload(path, mediaFile, {
+    console.log('[STORY] subiendo archivo:', path, 'tipo:', mediaFile.type, 'tamaño:', mediaFile.size)
+
+    const { data: uploadData, error: uploadError } = await supabase.storage.from('media').upload(path, mediaFile, {
       contentType: mediaFile.type,
     })
-    if (uploadError) { setUploading(false); return }
+    console.log('[STORY] upload result:', uploadError ? 'ERROR: ' + uploadError.message : 'OK', uploadData)
+    if (uploadError) { console.error('[STORY] upload error:', uploadError); setUploading(false); return }
 
     const { data: urlData } = supabase.storage.from('media').getPublicUrl(path)
+    console.log('[STORY] public URL:', urlData.publicUrl)
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
-    await supabase.from('stories').insert({
+    const insertPayload = {
       user_id: user.id,
       media_url: urlData.publicUrl,
       media_type: mediaType,
       caption: caption.trim() || null,
       expires_at: expiresAt,
-    })
+    }
+    console.log('[STORY] insertando en DB:', insertPayload)
+
+    const { data: insertData, error: insertError } = await supabase.from('stories').insert(insertPayload)
+    console.log('[STORY] insert result:', insertError ? 'ERROR: ' + insertError.message : 'OK', insertData)
+    if (insertError) console.error('[STORY] insert error:', insertError)
 
     setUploading(false)
     onCreated()

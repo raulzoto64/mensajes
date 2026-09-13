@@ -37,7 +37,6 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
 
   async function handleStartCall() {
     if (!user) return
-    console.log('[FRONT] ChatWindow: botón Llamar pulsado, groupId:', groupId, 'user:', user.id)
     const { data: members } = await supabase
       .from('group_members')
       .select('user_id')
@@ -45,7 +44,6 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
     const ids = [...new Set([...(members ?? []).map((m: any) => m.user_id), user.id])]
     const { data: us } = await supabase.from('users').select('id, alias').in('id', ids)
     const participants = (us ?? []).map((u: any) => ({ userId: u.id, alias: u.alias }))
-    console.log('[FRONT] ChatWindow: participantes de la llamada:', participants)
     callManager.startCall(groupId, participants)
   }
 
@@ -288,7 +286,6 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   }
 
   async function handleMediaConsumed(msgId: string) {
-    console.log('[FRONT] ChatWindow: multimedia consumido, limpiando media_url ->', msgId)
     // Obtener media_url antes de limpiar para borrar el archivo
     const { data: msgRow } = await supabase
       .from('messages')
@@ -343,23 +340,14 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
           flexShrink: 0,
         }}
       >
-        {isMobile ? (
-          <button
-            onClick={onBack}
-            style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '20px', padding: '2px 6px 2px 0', display: 'flex', alignItems: 'center' }}
-          >
-            ←
-          </button>
-        ) : (
-          <button
-            onClick={onBack}
-            style={{ background: '#f0f2f5', border: '1px solid #e5e7eb', color: '#8696a0', cursor: 'pointer', fontSize: '14px', padding: '4px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e7eb'; e.currentTarget.style.color = '#111b21' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f2f5'; e.currentTarget.style.color = '#8696a0' }}
-          >
-            ← Atrás
-          </button>
-        )}
+        <button
+          onClick={onBack}
+          style={{ background: isMobile ? 'transparent' : '#f0f2f5', border: isMobile ? 'none' : '1px solid #e5e7eb', color: '#8696a0', cursor: 'pointer', fontSize: isMobile ? '20px' : '14px', padding: isMobile ? '2px 6px 2px 0' : '4px 8px', borderRadius: isMobile ? '0' : '8px', display: 'flex', alignItems: 'center', fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s' }}
+          onMouseEnter={(e) => { if (!isMobile) { e.currentTarget.style.background = '#e5e7eb'; e.currentTarget.style.color = '#111b21' } }}
+          onMouseLeave={(e) => { if (!isMobile) { e.currentTarget.style.background = '#f0f2f5'; e.currentTarget.style.color = '#8696a0' } }}
+        >
+          ←
+        </button>
         <div
           style={{
             width: '36px',

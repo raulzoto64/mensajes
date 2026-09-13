@@ -86,11 +86,9 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
   async function setupAll() {
     if (!user) return
-    console.log('[setupAll] Iniciando proceso de permisos para el usuario:', user.id)
     setSettingUp(true)
 
     // 1) Permiso de notificaciones (diálogo nativo del navegador)
-    console.log('[setupAll] Paso 1: Solicitando permiso de notificaciones...')
     let p = currentPerm()
     if (p !== 'granted') {
       try {
@@ -101,21 +99,17 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
         p = 'denied'
       }
     }
-    console.log('[setupAll] Resultado notificaciones:', p)
     setPerm(p)
     if (p !== 'granted') { 
-      console.log('[setupAll] Notificaciones denegadas. Abortando proceso.')
       setSettingUp(false); 
       return 
     }
 
     // 2) Suscripción de Web Push (reutiliza la existente si ya existe)
-    console.log('[setupAll] Paso 2: Suscribiendo a Web Push...')
     let push = false
     try {
       const r = await subscribePush(user.id)
       push = !!r?.ok
-      console.log('[setupAll] Resultado Web Push:', push ? 'Suscrito' : 'Falló (sin error disparado)')
       setPushOk(push)
     } catch (e) {
       console.error('[setupAll] Error Web Push:', e)
@@ -123,7 +117,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
     }
 
     // 3) Ubicación (best-effort)
-    console.log('[setupAll] Paso 3: Solicitando ubicación GPS/Wi-Fi...')
     let loc: { lat: number; lng: number } | null = null
     let locOkLocal = false
     try {
@@ -133,7 +126,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
         navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }),
       )
       loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-      console.log('[setupAll] Resultado Ubicación: Éxito', loc)
       locOkLocal = true
       setLocOk(true)
     } catch (e: any) {
@@ -143,7 +135,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
 
     // 4) Micrófono + Cámara en UNA sola llamada getUserMedia, de modo que el
     // navegador muestra un único diálogo (en vez de dos separados).
-    console.log('[setupAll] Paso 4: Solicitando Cámara y Micrófono...')
     let mic = false
     let cam = false
     try {
@@ -153,7 +144,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
         // Intentar pedir ambos juntos primero (para mostrar un solo diálogo)
         const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
         stopStream(s)
-        console.log('[setupAll] Cámara y Micrófono concedidos simultáneamente.')
         mic = true
         cam = true
       } catch (err: any) {
@@ -164,7 +154,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
           try {
             const sAudio = await navigator.mediaDevices.getUserMedia({ audio: true })
             stopStream(sAudio)
-            console.log('[setupAll] Micrófono concedido por separado.')
             mic = true
           } catch (e: any) {
             console.warn('[setupAll] Sin micrófono disponible:', e?.message ?? e)
@@ -173,7 +162,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
           try {
             const sVideo = await navigator.mediaDevices.getUserMedia({ video: true })
             stopStream(sVideo)
-            console.log('[setupAll] Cámara concedida por separado.')
             cam = true
           } catch (e: any) {
             console.warn('[setupAll] Sin cámara disponible:', e?.message ?? e)
@@ -191,8 +179,6 @@ export default function NotificationsPanel({ onOpenDm, onOpenGroup, onOpenAdmin 
       setMicOk(false)
       setCamOk(false)
     }
-
-    console.log('[setupAll] Guardando estado final en DB. Ubicación:', locOkLocal, 'Mic:', mic, 'Cam:', cam)
 
     await saveSetupLog(user.id, loc, { mic, cam, screen: false })
     await saveSetupState(user.id, {

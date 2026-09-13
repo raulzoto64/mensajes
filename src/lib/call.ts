@@ -108,15 +108,12 @@ class CallManager {
     this.emit()
     await this.ensureLocalStream()
     if (this.state.error) return
-    console.log('[call] startCall ->', callId, 'participants:', participants.map((p) => p.alias))
     await this.joinCallChannel(callId)
-    console.log('[call] call channel subscribed, enviando invites + join')
     for (const p of participants) {
       if (p.userId === this.me.userId) continue
       const ch = supabase.channel(`calls:${p.userId}`, { config: { broadcast: { self: false } } })
       ch.subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
-          console.log('[call] invite ->', p.alias)
           ch.send({
             type: 'broadcast',
             event: 'invite',
@@ -142,7 +139,6 @@ class CallManager {
   async acceptCall() {
     const inc = this.state.incoming
     if (!inc || !this.me) {
-      console.log('[call] acceptCall ignorado: no hay incoming o no hay me', { inc, me: this.me })
       return
     }
     this.state = {
@@ -160,13 +156,9 @@ class CallManager {
     this.emit()
     await this.ensureLocalStream()
     if (this.state.error) {
-      console.log('[call] acceptCall: error al obtener micrófono:', this.state.error)
       return
     }
-    console.log('[call] acceptCall ->', inc.callId, 'participantes:', inc.participants.map((p) => p.alias))
-    console.log('[call] acceptCall: local stream tracks:', this.localStream?.getAudioTracks().length)
     await this.joinCallChannel(inc.callId)
-    console.log('[call] call channel subscribed, enviando join')
     this.broadcastOnCall({
       type: 'broadcast',
       event: 'join',
@@ -210,9 +202,7 @@ class CallManager {
 
   private async ensureLocalStream() {
     try {
-      console.log('[call] ensureLocalStream: solicitando micrófono...')
       this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-      console.log('[call] ensureLocalStream: micrófono OK, tracks:', this.localStream.getAudioTracks().length)
     } catch (e: any) {
       console.error('[call] ensureLocalStream: ERROR micrófono:', e?.message ?? e)
       this.state = {
@@ -235,7 +225,6 @@ class CallManager {
         .on('broadcast', { event: 'ice' }, ({ payload }: any) => this.onIce(payload))
         .on('broadcast', { event: 'leave' }, ({ payload }: any) => this.onLeave(payload))
         .subscribe((status: string) => {
-          console.log('[call] call channel status:', status, 'callId:', callId)
           if (status === 'SUBSCRIBED') resolve()
         })
     })
@@ -252,13 +241,11 @@ class CallManager {
 
   private async onJoin(payload: { userId: string; alias: string }) {
     if (!this.me || payload.userId === this.me.userId) return
-    console.log('[call] onJoin from', payload.alias ?? payload.userId)
     this.ensurePeer(payload.userId, payload.alias)
     if (this.me.userId < payload.userId) {
       const pc = this.pcs.get(payload.userId)!
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
-      console.log('[call] enviando OFFER ->', payload.alias ?? payload.userId)
       this.broadcastOnCall({
         type: 'broadcast',
         event: 'offer',
@@ -269,14 +256,12 @@ class CallManager {
 
   private async onOffer(payload: { from: string; to: string; sdp: any }) {
     if (!this.me || payload.to !== this.me.userId) return
-    console.log('[call] onOffer from', payload.from)
     this.ensurePeer(payload.from, this.aliasOf(payload.from))
     const pc = this.pcs.get(payload.from)!
     await pc.setRemoteDescription(payload.sdp)
     await this.flushIce(payload.from)
     const answer = await pc.createAnswer()
     await pc.setLocalDescription(answer)
-    console.log('[call] enviando ANSWER ->', payload.from)
     this.broadcastOnCall({
       type: 'broadcast',
       event: 'answer',
@@ -286,7 +271,6 @@ class CallManager {
 
   private async onAnswer(payload: { from: string; to: string; sdp: any }) {
     if (!this.me || payload.to !== this.me.userId) return
-    console.log('[call] onAnswer from', payload.from)
     const pc = this.pcs.get(payload.from)
     if (!pc) return
     await pc.setRemoteDescription(payload.sdp)
@@ -301,12 +285,10 @@ class CallManager {
       const q = this.pendingIce.get(payload.from) ?? []
       q.push(payload.candidate)
       this.pendingIce.set(payload.from, q)
-      console.log('[call] ICE encolado (remote desc pendiente) de', payload.from)
       return
     }
     try {
       await pc.addIceCandidate(payload.candidate)
-      console.log('[call] ICE añadido de', payload.from)
     } catch (e) {
       console.error('[call] addIceCandidate error', e)
     }
@@ -324,12 +306,10 @@ class CallManager {
         console.error('[call] flushIce error', e)
       }
     }
-    console.log('[call] flush ICE (' + q.length + ') para', userId)
     this.pendingIce.delete(userId)
   }
 
   private onLeave(payload: { userId: string }) {
-    console.log('[call] onLeave from', payload.userId)
     const pc = this.pcs.get(payload.userId)
     if (pc) {
       pc.close()
@@ -343,7 +323,6 @@ class CallManager {
 
   private ensurePeer(userId: string, alias: string) {
     if (this.pcs.has(userId)) return
-    console.log('[call] ensurePeer ->', alias ?? userId, 'localStream tracks:', this.localStream?.getAudioTracks().length ?? 0)
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
     this.state = {
       ...this.state,
@@ -352,9 +331,6 @@ class CallManager {
     if (this.localStream) {
       const tracks = this.localStream.getAudioTracks()
       tracks.forEach((t) => pc.addTrack(t, this.localStream!))
-      console.log('[call] ensurePeer: agregadas', tracks.length, 'pistas de audio al PC de', alias ?? userId)
-    } else {
-      console.log('[call] ensurePeer: SIN localStream, no se agregan pistas')
     }
     pc.onicecandidate = (e) => {
       if (e.candidate && this.me) {
@@ -367,14 +343,12 @@ class CallManager {
     }
     pc.ontrack = (e) => {
       const stream = e.streams[0] ?? new MediaStream([e.track])
-      console.log('[call] ontrack de', alias ?? userId, 'pistas:', stream?.getAudioTracks().length)
       const peers = { ...this.state.peers }
       if (peers[userId]) peers[userId] = { ...peers[userId], stream, state: 'connected' }
       this.state = { ...this.state, peers, status: this.state.status === 'calling' ? 'active' : this.state.status }
       this.emit()
     }
     pc.onconnectionstatechange = () => {
-      console.log('[call] estado PC con', alias ?? userId, '=>', pc.connectionState)
       const peers = { ...this.state.peers }
       if (peers[userId]) peers[userId] = { ...peers[userId], state: pc.connectionState as PeerState }
       this.state = { ...this.state, peers }

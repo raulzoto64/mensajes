@@ -25,19 +25,15 @@ function AudioPeer({ stream }: { stream: MediaStream | null }) {
   const ref = useRef<HTMLAudioElement>(null)
   useEffect(() => {
     if (ref.current && stream) {
-      console.log('[FRONT] AudioPeer: asignando srcObject, tracks:', stream.getAudioTracks().length, stream.getVideoTracks().length)
       ref.current.srcObject = stream
       // Intentar reproducir inmediatamente para desbloquear autoplay
       ref.current.play()
-        .then(() => console.log('[FRONT] AudioPeer: play() OK'))
         .catch((e) => console.warn('[FRONT] AudioPeer: play() bloqueado (autoplay):', e?.message ?? e))
     } else if (ref.current && !stream) {
-      console.log('[FRONT] AudioPeer: stream es null, limpiando srcObject')
       ref.current.srcObject = null
     }
   }, [stream])
   const handlePress = () => {
-    console.log('[FRONT] AudioPeer: clic del usuario, reintentando play()')
     ref.current?.play().catch((e) => console.warn('[FRONT] AudioPeer: play() falló tras clic:', e?.message ?? e))
   }
   return <audio ref={ref} autoPlay playsInline onClick={handlePress} style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }} />
@@ -48,7 +44,6 @@ function CallOverlay({ state }: { state: CallState }) {
 
   if (state.incoming && state.status === 'idle') {
     const inc = state.incoming
-    console.log('[FRONT] CallOverlay: mostrando popup llamada entrante', { callId: inc.callId, from: inc.initiatorAlias })
     return (
       <div
         style={{
@@ -101,8 +96,6 @@ function CallOverlay({ state }: { state: CallState }) {
 
   const others = Object.values(state.peers)
   const connected = others.filter((p) => p.state === 'connected').length
-
-  console.log('[FRONT] CallOverlay: mostrando overlay activo', { status: state.status, connectedPeers: connected, peersCount: Object.keys(state.peers).length })
 
   return (
     <div
@@ -210,37 +203,30 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsub = callManager.subscribe((s) => {
-      console.log('[FRONT] CallProvider: estado cambió ->', { status: s.status, incoming: s.incoming?.callId, peers: Object.keys(s.peers).length })
       setState(s)
     })
     return () => { unsub() }
   }, [])
 
   useEffect(() => {
-    console.log('[FRONT] CallProvider: init con usuario', user?.id, user?.alias)
     if (user?.id && user?.alias) callManager.init(user.id, user.alias)
   }, [user?.id, user?.alias])
 
   const api: CallApi = {
     ...state,
     startCall: (callId, participants) => {
-      console.log('[FRONT] CallProvider: startCall disparado', { callId, participantCount: participants.length, participants })
       callManager.startCall(callId, participants)
     },
     acceptCall: () => {
-      console.log('[FRONT] CallProvider: acceptCall disparado, estado actual:', state.status, 'incoming:', state.incoming?.callId)
       callManager.acceptCall()
     },
     rejectCall: () => {
-      console.log('[FRONT] CallProvider: rejectCall disparado')
       callManager.rejectCall()
     },
     hangUp: () => {
-      console.log('[FRONT] CallProvider: hangUp disparado')
       callManager.hangUp()
     },
     toggleMute: () => {
-      console.log('[FRONT] CallProvider: toggleMute disparado')
       callManager.toggleMute()
     },
   }

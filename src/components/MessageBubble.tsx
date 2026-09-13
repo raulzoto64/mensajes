@@ -55,7 +55,6 @@ export default function MessageBubble({
     if (isConsumedOneTime) return // Ya fue consumido, no permitir
     if (mediaHidden) {
       setMediaHidden(false)
-      console.log('[MessageBubble] multimedia revelado:', msg.id, msg.type)
     }
   }
 
@@ -63,11 +62,9 @@ export default function MessageBubble({
     if (!mediaConsumed) {
       const esGrupo = Boolean(msg.group_id)
       if (esGrupo) {
-        console.log('[MessageBubble] grupo: multimedia NO consumido automáticamente (todos deben verlo):', msg.id)
         return // En grupos: no consumimos automáticamente
       }
       setMediaConsumed(true)
-      console.log('[MessageBubble] multimedia consumido (individual):', msg.id, msg.type)
       if (onMediaConsumed) onMediaConsumed(msg.id)
     }
   }
@@ -88,7 +85,6 @@ export default function MessageBubble({
     if (isMultimedia && msg.media_url) {
       if (mediaHidden) {
         setMediaHidden(false)
-        console.log('[MessageBubble] clic en multimedia oculto -> revelado')
         // Para image/gif/video, luego de revelar abrimos lightbox inmediatamente
         if (msg.type === 'image' || msg.type === 'gif' || msg.type === 'video') {
           setLightbox({ type: msg.type as 'image' | 'gif' | 'video', url: msg.media_url, sender_alias: msg.sender_alias })
@@ -325,7 +321,6 @@ export default function MessageBubble({
                   src={msg.media_url}
                   alt="GIF"
                   onClick={(e) => { e.stopPropagation(); openMedia() }}
-                  onLoad={() => console.log('[MessageBubble] GIF cargado:', msg.id)}
                   style={{ maxWidth: '220px', maxHeight: '160px', borderRadius: '6px', display: 'block', cursor: 'pointer' }}
                   loading="lazy"
                 />
@@ -376,7 +371,7 @@ export default function MessageBubble({
                   controls
                   src={msg.media_url}
                   style={{ maxWidth: '220px', height: '38px' }}
-                  onEnded={() => { console.log('[MessageBubble] audio terminado -> consumiendo:', msg.id); consume() }}
+                  onEnded={() => { consume() }}
                 />
               )
             )}
@@ -400,7 +395,7 @@ export default function MessageBubble({
                   controls
                   playsInline
                   src={msg.media_url}
-                  onEnded={() => { console.log('[MessageBubble] video terminado -> consumiendo:', msg.id); consume() }}
+                  onEnded={() => { consume() }}
                   onClick={(e) => { e.stopPropagation(); openMedia() }}
                   style={{ width: '100%', maxWidth: '320px', maxHeight: '280px', height: 'auto', borderRadius: '6px', display: 'block', objectFit: 'contain', cursor: 'pointer' }}
                 />
