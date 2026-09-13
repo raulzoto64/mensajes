@@ -15,10 +15,9 @@ type Group = {
 type Props = {
   activeGroupId: string | null
   onSelectGroup: (id: string, name: string) => void
-  onAdminPanel: () => void
 }
 
-export default function GroupList({ activeGroupId, onSelectGroup, onAdminPanel }: Props) {
+export default function GroupList({ activeGroupId, onSelectGroup }: Props) {
   const { user } = useAuth()
   const [groups, setGroups] = useState<Group[]>([])
   const [allGroups, setAllGroups] = useState<{ id: string; name: string; description: string | null }[]>([])
@@ -130,19 +129,6 @@ export default function GroupList({ activeGroupId, onSelectGroup, onAdminPanel }
       <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#111b21' }}>Grupos</h2>
-          {user?.is_admin && (
-            <button
-              onClick={onAdminPanel}
-              style={{
-                padding: '5px 10px', background: 'rgba(239,68,68,0.1)',
-                border: '1px solid rgba(234,67,53,0.2)', borderRadius: '7px',
-                color: '#ea4335', fontSize: '10px', fontWeight: '700',
-                cursor: 'pointer', fontFamily: "'DM Mono', monospace",
-              }}
-            >
-              ADMIN
-            </button>
-          )}
         </div>
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: '6px' }}>

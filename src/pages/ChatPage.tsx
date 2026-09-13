@@ -429,7 +429,6 @@ export default function ChatPage() {
                 <GroupList
                   activeGroupId={groupView?.id ?? null}
                   onSelectGroup={handleSelectGroup}
-                  onAdminPanel={() => setShowAdmin(true)}
                 />
               )}
               {activeTab === 'stories' && (
