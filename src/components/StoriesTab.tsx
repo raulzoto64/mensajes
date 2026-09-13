@@ -39,7 +39,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
     const now = new Date().toISOString()
     const { data } = await supabase
       .from('stories')
-      .select('*, users!stories_user_id_fkey(alias)')
+      .select('*, users!stories_user_id_fkey(alias, avatar_url)')
       .gt('expires_at', now)
       .order('created_at', { ascending: false })
 
@@ -55,6 +55,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
         id: s.id,
         user_id: s.user_id,
         user_alias: s.users?.alias ?? 'usuario',
+        avatar_url: s.users?.avatar_url ?? null,
         media_url: s.media_url,
         media_type: s.media_type,
         caption: s.caption,
@@ -85,38 +86,89 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
   const myStories = stories.filter((s) => s.user_id === user?.id)
   const otherStories = stories.filter((s) => s.user_id !== user?.id)
 
+  // Group other stories by user
+  const groupedByUser = otherStories.reduce<Record<string, Story[]>>((acc, s) => {
+    if (!acc[s.user_id]) acc[s.user_id] = []
+    acc[s.user_id].push(s)
+    return acc
+  }, {})
+
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
-      {/* Create story button */}
-      <div style={{ marginBottom: '16px' }}>
-        <button
-          onClick={onCreateStory}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px',
-            background: '#ffffff',
-            borderRadius: '12px',
-            border: '1px solid #e5e7eb',
-            cursor: 'pointer',
-            fontFamily: "'Outfit', sans-serif",
-          }}
-        >
-          <div style={{
-            width: '52px', height: '52px', borderRadius: '50%',
-            background: 'rgba(0,168,132,0.12)', border: '2px dashed #00a884',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '22px', color: '#00a884', flexShrink: 0,
-          }}>+</div>
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: '#111b21' }}>Nueva historia</div>
-            <div style={{ fontSize: '12px', color: '#8696a0' }}>
-              {myStories.length > 0 ? `${myStories.length} publicada${myStories.length > 1 ? 's' : ''}` : 'Comparte algo'}
+      {/* Story bubbles row */}
+      <div style={{
+        display: 'flex', gap: '12px', padding: '8px 0 16px',
+        overflowX: 'auto', overflowY: 'hidden',
+      }}>
+        {/* My story bubble */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+          <div style={{ position: 'relative' }}>
+            {/* Profile circle */}
+            <div
+              onClick={myStories.length > 0 ? () => { myStories.forEach(s => markViewed(s.id)); onViewStory(myStories[0]) } : onCreateStory}
+              style={{
+                width: '60px', height: '60px', borderRadius: '50%',
+                background: myStories.length > 0 ? 'linear-gradient(135deg, #00a884, #0088cc)' : '#f0f2f5',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                border: myStories.length > 0 ? '3px solid #00a884' : '3px dashed #00a884',
+              }}
+            >
+              {myStories.length > 0 ? (
+                <img src={myStories[0].media_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '24px', color: '#00a884' }}>👤</span>
+              )}
             </div>
+            {/* Plus badge - clickable to create new */}
+            <div
+              onClick={(e) => { e.stopPropagation(); onCreateStory() }}
+              style={{
+                position: 'absolute', bottom: '-2px', right: '-2px',
+                width: '22px', height: '22px', borderRadius: '50%',
+                background: myStories.length > 0 ? '#00a884' : '#ffffff',
+                border: myStories.length > 0 ? '2px solid #fff' : '2px solid #00a884',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', fontSize: '14px', fontWeight: '700',
+                color: myStories.length > 0 ? '#fff' : '#00a884',
+                lineHeight: 1,
+              }}
+            >+</div>
           </div>
-        </button>
+          <span style={{ fontSize: '10px', color: '#8696a0', maxWidth: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tu</span>
+        </div>
+
+        {/* Other users' story bubbles */}
+        {Object.entries(groupedByUser).map(([userId, userStories]) => {
+          const allViewed = userStories.every(s => s.viewed)
+          return (
+            <div key={userId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+              <div
+                onClick={() => { userStories.forEach(s => markViewed(s.id)); onViewStory(userStories[0]) }}
+                style={{
+                  width: '60px', height: '60px', borderRadius: '50%',
+                  background: allViewed ? '#f0f2f5' : 'linear-gradient(135deg, #00a884, #0088cc)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                  border: allViewed ? '3px solid #adb5bd' : '3px solid #00a884',
+                }}
+              >
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '50%',
+                  background: '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '18px', fontWeight: '700',
+                  color: allViewed ? '#8696a0' : '#00a884',
+                }}>
+                  {userStories[0].user_alias[0]?.toUpperCase()}
+                </div>
+              </div>
+              <span style={{ fontSize: '10px', color: '#8696a0', maxWidth: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                @{userStories[0].user_alias}
+              </span>
+            </div>
+          )
+        })}
       </div>
 
       {/* Reels grid */}
@@ -133,13 +185,8 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
         gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
         gap: '10px',
       }}>
-        {/* My stories first */}
-        {myStories.map((story) => (
-          <ReelCard key={story.id} story={story} isMine timeAgo={timeAgo} onClick={() => { markViewed(story.id); onViewStory(story) }} />
-        ))}
-        {/* Other stories */}
-        {otherStories.map((story) => (
-          <ReelCard key={story.id} story={story} isMine={false} timeAgo={timeAgo} onClick={() => { markViewed(story.id); onViewStory(story) }} />
+        {stories.map((story) => (
+          <ReelCard key={story.id} story={story} isMine={story.user_id === user?.id} timeAgo={timeAgo} onClick={() => { markViewed(story.id); onViewStory(story) }} />
         ))}
       </div>
     </div>
@@ -162,21 +209,17 @@ function ReelCard({ story, isMine, timeAgo, onClick }: { story: Story; isMine: b
       onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.03)')}
       onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
     >
-      {/* Media */}
       {story.media_type === 'video' ? (
         <video src={story.media_url} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
         <img src={story.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       )}
 
-      {/* Gradient overlay */}
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        height: '50%',
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%',
         background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
       }} />
 
-      {/* User info */}
       <div style={{
         position: 'absolute', bottom: '8px', left: '8px', right: '8px',
         display: 'flex', alignItems: 'center', gap: '6px',
@@ -200,7 +243,6 @@ function ReelCard({ story, isMine, timeAgo, onClick }: { story: Story; isMine: b
         </div>
       </div>
 
-      {/* Viewed badge */}
       {story.viewed && !isMine && (
         <div style={{
           position: 'absolute', top: '6px', right: '6px',
@@ -209,7 +251,6 @@ function ReelCard({ story, isMine, timeAgo, onClick }: { story: Story; isMine: b
         }}>Visto</div>
       )}
 
-      {/* My badge */}
       {isMine && (
         <div style={{
           position: 'absolute', top: '6px', right: '6px',
@@ -218,7 +259,6 @@ function ReelCard({ story, isMine, timeAgo, onClick }: { story: Story; isMine: b
         }}>Mi historia</div>
       )}
 
-      {/* Caption */}
       {story.caption && (
         <div style={{
           position: 'absolute', bottom: '40px', left: '8px', right: '8px',

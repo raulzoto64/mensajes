@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { unsubscribePush } from '../lib/push'
@@ -13,9 +13,11 @@ type Props = {
 }
 
 export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSelectDm, onAdminPanel }: Props) {
-  const { user, logout } = useAuth()
+  const { user, logout, setUser } = useAuth()
   const [supabaseMissing] = useState(!supabaseConfigured)
   const [updateInfo, setUpdateInfo] = useState<{ version: string; downloadUrl: string } | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     checkForUpdate().then((info) => {
@@ -24,6 +26,30 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
       }
     })
   }, [])
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploadingAvatar(true)
+
+    const ext = file.name.split('.').pop() ?? 'jpg'
+    const path = `avatars/${user.id}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('media').upload(path, file, {
+      contentType: file.type,
+      upsert: true,
+    })
+    if (uploadError) { setUploadingAvatar(false); return }
+
+    const { data: urlData } = supabase.storage.from('media').getPublicUrl(path)
+    const avatarUrl = urlData.publicUrl
+
+    await supabase.from('users').update({ avatar_url: avatarUrl }).eq('id', user.id)
+
+    const updated = { ...user, avatar_url: avatarUrl }
+    setUser(updated)
+    localStorage.setItem('ephemera_session', JSON.stringify(updated))
+    setUploadingAvatar(false)
+  }
 
   return (
     <div
@@ -72,20 +98,41 @@ export default function Sidebar({ activeGroupId, activeDmId, onSelectGroup, onSe
           </span>
         </div>
 
-        {/* User row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#f0f2f5', borderRadius: '8px' }}>
-          <div style={{
-            width: '26px', height: '26px', borderRadius: '50%',
-            background: 'rgba(0,168,132,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '11px', color: '#00a884', fontWeight: '700', flexShrink: 0,
-          }}>
-            {user?.alias?.[0]?.toUpperCase()}
+        {/* User row with avatar */}
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#f0f2f5', borderRadius: '8px', cursor: 'pointer', transition: 'background 0.15s' }}
+          onClick={() => avatarRef.current?.click()}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#e5e7eb')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#f0f2f5')}
+        >
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '50%',
+              background: user?.avatar_url ? 'transparent' : 'rgba(0,168,132,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden', flexShrink: 0,
+            }}>
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '13px', color: '#00a884', fontWeight: '700' }}>{user?.alias?.[0]?.toUpperCase()}</span>
+              )}
+            </div>
+            <div style={{
+              position: 'absolute', bottom: '-1px', right: '-1px',
+              width: '14px', height: '14px', borderRadius: '50%',
+              background: '#00a884', border: '2px solid #f0f2f5',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '8px', color: '#fff',
+            }}>
+              {uploadingAvatar ? '...' : '📷'}
+            </div>
           </div>
           <span style={{ fontSize: '13px', color: '#667781', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             @{user?.alias}
           </span>
         </div>
+        <input ref={avatarRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
       </div>
 
       {/* Spacer */}
