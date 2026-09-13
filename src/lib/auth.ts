@@ -76,9 +76,12 @@ export async function login(
     .eq('alias', trimmed)
     .maybeSingle()
 
+  console.log('[LOGIN] alias:', trimmed, 'found:', !!data, 'error:', error?.message)
   if (error || !data) return { user: null, error: 'Alias o contraseña incorrectos.', pending: false }
 
+  console.log('[LOGIN] salt:', data.salt, 'stored_hash:', data.password_hash?.substring(0, 16) + '...')
   const valid = await verifyPassword(password, data.salt, data.password_hash)
+  console.log('[LOGIN] password valid:', valid)
   if (!valid) return { user: null, error: 'Alias o contraseña incorrectos.', pending: false }
 
   if (!data.is_approved) {
