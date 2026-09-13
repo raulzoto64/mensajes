@@ -216,12 +216,14 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
   return (
     <div
       style={{
-        flex: 1,
+        position: 'fixed',
+        inset: 0,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         background: '#f0f2f5',
         fontFamily: "'Outfit', sans-serif",
+        zIndex: 150,
       }}
     >
         {/* Header */}
