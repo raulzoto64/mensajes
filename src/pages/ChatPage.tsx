@@ -55,6 +55,7 @@ export default function ChatPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, loadUnreadCounts)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages' }, loadUnreadCounts)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, loadStoryCount)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'story_views' }, loadStoryCount)
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [user])
@@ -104,12 +105,22 @@ export default function ChatPage() {
   }
 
   async function loadStoryCount() {
+    if (!user) return
     const now = new Date().toISOString()
-    const { count } = await supabase
+    const { data: allStories } = await supabase
       .from('stories')
-      .select('id', { count: 'exact', head: true })
+      .select('id')
       .gt('expires_at', now)
-    setStoryCount(count ?? 0)
+    const storyIds = (allStories ?? []).map((s: any) => s.id)
+    if (storyIds.length === 0) { setStoryCount(0); return }
+    const { data: viewed } = await supabase
+      .from('story_views')
+      .select('story_id')
+      .eq('user_id', user.id)
+      .in('story_id', storyIds)
+    const viewedIds = new Set((viewed ?? []).map((v: any) => v.story_id))
+    const unviewed = storyIds.filter((id: string) => !viewedIds.has(id))
+    setStoryCount(unviewed.length)
   }
 
   useEffect(() => { loadStoryCount() }, [user])
@@ -278,6 +289,7 @@ export default function ChatPage() {
             <StoriesTab
               key={storiesRefreshKey}
               onViewStory={(story) => { setStoryViewerStory(story); setStoryViewerIndex(0) }}
+              onStoryViewed={loadStoryCount}
               onCreateStory={() => setShowStoryCreator(true)}
             />
           )}

@@ -16,10 +16,11 @@ type Story = {
 
 type Props = {
   onViewStory: (story: Story) => void
+  onStoryViewed: () => void
   onCreateStory: () => void
 }
 
-export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
+export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }: Props) {
   const { user } = useAuth()
   const [stories, setStories] = useState<Story[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,6 +74,7 @@ export default function StoriesTab({ onViewStory, onCreateStory }: Props) {
   async function markViewed(storyId: string) {
     if (!user) return
     await supabase.from('story_views').upsert({ story_id: storyId, user_id: user.id })
+    onStoryViewed()
   }
 
   function timeAgo(date: string) {
