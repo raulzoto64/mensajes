@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -26,6 +26,7 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
   const [stories, setStories] = useState<Story[]>([])
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState<Story | null>(null)
+  const deletedIdsRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     loadStories()
@@ -68,7 +69,9 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
 
       const viewedIds = new Set((viewed ?? []).map((v: any) => v.story_id))
 
-      const mapped: Story[] = data.map((s: any) => ({
+      const mapped: Story[] = data
+        .filter((s: any) => !deletedIdsRef.current.has(s.id))
+        .map((s: any) => ({
         id: s.id,
         user_id: s.user_id,
         user_alias: s.users?.alias ?? 'usuario',

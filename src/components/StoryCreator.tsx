@@ -9,16 +9,38 @@ type Props = {
 
 function captureVideoFrame(video: HTMLVideoElement): Promise<Blob | null> {
   return new Promise((resolve) => {
-    video.currentTime = 1
-    video.onseeked = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext('2d')
-      if (!ctx) { resolve(null); return }
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7)
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth || 320
+    canvas.height = video.videoHeight || 240
+    const ctx = canvas.getContext('2d')
+    if (!ctx) { resolve(null); return }
+
+    function captureAt(time: number) {
+      video.currentTime = time
+      video.onseeked = () => {
+        try {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.6)
+        } catch { resolve(null) }
+      }
     }
+
+    // Try 0.5s first, fallback to duration/2, then 0
+    if (video.duration > 0.5) {
+      captureAt(0.5)
+    } else if (video.duration > 0) {
+      captureAt(video.duration / 2)
+    } else {
+      captureAt(0)
+    }
+
+    // Safety timeout
+    setTimeout(() => {
+      try {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.6)
+      } catch { resolve(null) }
+    }, 3000)
   })
 }
 

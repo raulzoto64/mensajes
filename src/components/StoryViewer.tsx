@@ -68,6 +68,23 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
     return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
+  const [startY, setStartY] = useState<number | null>(null)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    setStartY(e.touches[0].clientY)
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (startY === null) return
+    const endY = e.changedTouches[0].clientY
+    const diff = startY - endY
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) onNext()
+      else onPrev()
+    }
+    setStartY(null)
+  }
+
   const timeLeft = () => {
     const diff = new Date(story.expires_at).getTime() - Date.now()
     const hours = Math.floor(diff / 3600000)
@@ -87,7 +104,10 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        touchAction: 'pan-y',
       }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Progress bar */}
       <div style={{ position: 'absolute', top: '0', left: '0', right: '0', padding: '8px 12px', zIndex: 10, display: 'flex', gap: '3px' }}>
