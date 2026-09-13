@@ -147,7 +147,11 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
               }}
             >
               {myStories.length > 0 ? (
-                <img src={myStories[0].media_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                myStories[0].media_type === 'video' && myStories[0].thumbnail_url ? (
+                  <img src={myStories[0].thumbnail_url} alt="Portada" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <img src={myStories[0].media_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                )
               ) : (
                 <span style={{ fontSize: '24px', color: '#00a884' }}>👤</span>
               )}
