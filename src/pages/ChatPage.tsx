@@ -335,6 +335,7 @@ export default function ChatPage() {
           onClose={() => setStoryViewerStory(null)}
           onNext={() => setStoryViewerIndex((i) => i + 1)}
           onPrev={() => setStoryViewerIndex((i) => Math.max(i - 1, 0))}
+          onDelete={() => { setStoryViewerStory(null); setStoriesRefreshKey(k => k + 1) }}
         />
       )}
     </div>

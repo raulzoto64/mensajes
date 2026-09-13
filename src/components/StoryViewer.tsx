@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 
 type Story = {
   id: string
@@ -18,12 +20,16 @@ type Props = {
   onClose: () => void
   onNext: () => void
   onPrev: () => void
+  onDelete?: (storyId: string) => void
 }
 
-export default function StoryViewer({ story, allStories, currentIndex, onClose, onNext, onPrev }: Props) {
+export default function StoryViewer({ story, allStories, currentIndex, onClose, onNext, onPrev, onDelete }: Props) {
+  const { user } = useAuth()
   const [progress, setProgress] = useState(0)
   const timerRef = useRef<number | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  const canDelete = user && (user.id === story.user_id || user.is_admin || user.is_super_admin)
 
   useEffect(() => {
     setProgress(0)
@@ -134,6 +140,26 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
           <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>@{story.user_alias}</div>
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>Expira en {timeLeft()}</div>
         </div>
+        {canDelete && (
+          <button
+            onClick={() => { if (onDelete) onDelete(story.id); onClose() }}
+            style={{
+              background: 'rgba(239,68,68,0.3)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#fff',
+              fontSize: '14px',
+            }}
+          >
+            🗑️
+          </button>
+        )}
         <button
           onClick={onClose}
           style={{

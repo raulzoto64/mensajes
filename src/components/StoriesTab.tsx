@@ -86,8 +86,12 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
 
   async function markViewed(storyId: string) {
     if (!user) return
-    await supabase.from('story_views').upsert({ story_id: storyId, user_id: user.id })
-    onStoryViewed()
+    await supabase.from('story_views').upsert({ story_id: storyId, user_id: user.id }, { onConflict: 'story_id,user_id' })
+  }
+
+  async function deleteStory(storyId: string) {
+    await supabase.from('stories').delete().eq('id', storyId)
+    setStories(prev => prev.filter(s => s.id !== storyId))
   }
 
   function timeAgo(date: string) {
@@ -201,15 +205,18 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
         gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
         gap: '10px',
       }}>
-        {stories.map((story) => (
-          <ReelCard key={story.id} story={story} isMine={story.user_id === user?.id} timeAgo={timeAgo} onClick={() => { markViewed(story.id); onViewStory(story) }} />
-        ))}
+        {stories.map((story) => {
+          const canDelete = user && (story.user_id === user.id || user.is_admin || user.is_super_admin)
+          return (
+            <ReelCard key={story.id} story={story} isMine={story.user_id === user?.id} canDelete={!!canDelete} timeAgo={timeAgo} onClick={() => { markViewed(story.id); onViewStory(story) }} onDelete={() => deleteStory(story.id)} />
+          )
+        })}
       </div>
     </div>
   )
 }
 
-function ReelCard({ story, isMine, timeAgo, onClick }: { story: Story; isMine: boolean; timeAgo: (d: string) => string; onClick: () => void }) {
+function ReelCard({ story, isMine, canDelete, timeAgo, onClick, onDelete }: { story: Story; isMine: boolean; canDelete: boolean; timeAgo: (d: string) => string; onClick: () => void; onDelete: () => void }) {
   return (
     <div
       onClick={onClick}
@@ -273,6 +280,22 @@ function ReelCard({ story, isMine, timeAgo, onClick }: { story: Story; isMine: b
           background: 'rgba(0,168,132,0.8)', borderRadius: '6px',
           padding: '2px 6px', fontSize: '9px', color: '#fff',
         }}>Mi historia</div>
+      )}
+
+      {canDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete() }}
+          style={{
+            position: 'absolute', top: '6px', left: '6px',
+            background: 'rgba(239,68,68,0.8)', borderRadius: '50%',
+            width: '24px', height: '24px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: 'none', cursor: 'pointer', fontSize: '11px', color: '#fff',
+            zIndex: 2,
+          }}
+        >
+          🗑️
+        </button>
       )}
 
       {story.caption && (
