@@ -224,7 +224,7 @@ export default function ChatPage() {
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: !isMobile ? '60px' : '0' }}>
           {/* Active chat view (DM or Group) */}
           {showChat && dmView && (
             <>
