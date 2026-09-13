@@ -176,6 +176,10 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
               <button
                 key={u.id}
                 onClick={() => startDm(u.id, u.alias)}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,168,132,0.06)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                onMouseDown={(e) => (e.currentTarget.style.background = 'rgba(0,168,132,0.14)')}
+                onMouseUp={(e) => (e.currentTarget.style.background = 'rgba(0,168,132,0.06)')}
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -190,9 +194,8 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
                   textAlign: 'left',
                   cursor: 'pointer',
                   fontFamily: "'Outfit', sans-serif",
+                  transition: 'background 0.15s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,168,132,0.06)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 <div style={{
                   width: '32px', height: '32px', borderRadius: '50%',
@@ -231,12 +234,16 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
             <button
               key={d.conversationId}
               onClick={() => onSelectDm(d.conversationId, d.otherUserId, d.otherAlias)}
+              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.06)' }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
+              onMouseDown={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.14)' }}
+              onMouseUp={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.06)' }}
               style={{
                 width: '100%',
                 textAlign: 'left',
                 padding: '10px 12px',
-                background: active ? 'rgba(34,211,238,0.1)' : 'transparent',
-                border: `1px solid ${active ? 'rgba(0,136,204,0.2)' : 'transparent'}`,
+                background: active ? 'rgba(0,168,132,0.12)' : 'transparent',
+                border: `1px solid ${active ? 'rgba(0,168,132,0.25)' : 'transparent'}`,
                 borderRadius: '10px',
                 cursor: 'pointer',
                 marginBottom: '2px',
@@ -244,16 +251,14 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
                 alignItems: 'center',
                 gap: '10px',
                 fontFamily: "'Outfit', sans-serif",
-                transition: 'background 0.15s',
+                transition: 'background 0.15s, border-color 0.15s',
               }}
-              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.025)' }}
-              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
             >
               <div style={{
                 width: '40px', height: '40px', minWidth: '40px', borderRadius: '50%',
-                background: active ? 'rgba(34,211,238,0.18)' : '#f0f2f5',
+                background: active ? '#00a884' : '#f0f2f5',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '14px', color: active ? '#0088cc' : '#8696a0', fontWeight: '700',
+                fontSize: '14px', color: active ? '#fff' : '#8696a0', fontWeight: '700',
               }}>
                 {d.otherAlias[0]?.toUpperCase()}
               </div>

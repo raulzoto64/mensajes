@@ -257,24 +257,27 @@ export default function GroupList({ activeGroupId, onSelectGroup, onAdminPanel }
             <button
               key={g.id}
               onClick={() => onSelectGroup(g.id, g.name)}
+              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.06)' }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
+              onMouseDown={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.14)' }}
+              onMouseUp={(e) => { if (!active) e.currentTarget.style.background = 'rgba(0,168,132,0.06)' }}
               style={{
                 width: '100%', textAlign: 'left',
                 padding: '10px 12px',
-                background: active ? 'rgba(0,168,132,0.1)' : 'transparent',
-                border: `1px solid ${active ? 'rgba(0,168,132,0.2)' : 'transparent'}`,
+                background: active ? 'rgba(0,168,132,0.12)' : 'transparent',
+                border: `1px solid ${active ? 'rgba(0,168,132,0.25)' : 'transparent'}`,
                 borderRadius: '10px', cursor: 'pointer', marginBottom: '2px',
                 display: 'flex', alignItems: 'center', gap: '10px',
-                fontFamily: "'Outfit', sans-serif", transition: 'background 0.15s',
+                fontFamily: "'Outfit', sans-serif",
+                transition: 'background 0.15s, border-color 0.15s',
               }}
-              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.025)' }}
-              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
             >
               <div style={{
                 width: '40px', height: '40px', minWidth: '40px',
-                background: active ? 'rgba(0,168,132,0.12)' : '#f0f2f5',
+                background: active ? '#00a884' : '#f0f2f5',
                 borderRadius: '10px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '15px', color: active ? '#00a884' : '#8696a0', fontWeight: '700',
+                fontSize: '15px', color: active ? '#fff' : '#8696a0', fontWeight: '700',
               }}>
                 {g.name[0].toUpperCase()}
               </div>
