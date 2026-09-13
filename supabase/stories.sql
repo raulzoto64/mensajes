@@ -47,14 +47,6 @@ ALTER TABLE story_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE call_logs ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para stories (lectura pública, inserción autenticada)
-CREATE POLICY "stories_select" ON stories FOR SELECT USING (true);
-CREATE POLICY "stories_insert" ON stories FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "stories_delete" ON stories FOR DELETE USING (auth.uid() = user_id);
-
--- Políticas para story_views
-CREATE POLICY "story_views_select" ON story_views FOR SELECT USING (true);
-CREATE POLICY "story_views_insert" ON story_views FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Políticas para call_logs (lectura pública)
-CREATE POLICY "call_logs_select" ON call_logs FOR SELECT USING (true);
-CREATE POLICY "call_logs_insert" ON call_logs FOR INSERT WITH CHECK (true);
+CREATE POLICY "anon_all_stories"       ON stories      FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_story_views"   ON story_views   FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_call_logs"     ON call_logs     FOR ALL USING (true) WITH CHECK (true);
