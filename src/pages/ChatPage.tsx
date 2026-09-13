@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useCall } from '../contexts/CallContext'
 import { clearNotificationsForChat } from '../lib/notifications'
 
-type Tab = 'chats' | 'groups' | 'stories' | 'calls'
+type Tab = 'chats' | 'groups' | 'stories' | 'calls' | 'contacts' | 'permissions'
 type GroupView = { id: string; name: string }
 type DmView = { conversationId: string; otherUserId: string; otherAlias: string }
 
@@ -36,12 +36,10 @@ export default function ChatPage() {
   const [showSettings, setShowSettings] = useState(false)
   const [showPhonePopup, setShowPhonePopup] = useState(false)
   const [phoneInput, setPhoneInput] = useState('')
-  const [showMembers, setShowMembers] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  const [showPermissions, setShowPermissions] = useState(false)
   const [storyViewerStory, setStoryViewerStory] = useState<any>(null)
   const [viewerStories, setViewerStories] = useState<any[]>([])
   const [storyViewerIndex, setStoryViewerIndex] = useState(0)
@@ -61,7 +59,7 @@ export default function ChatPage() {
     // Check if permissions are granted; if not, show the request
     const notifState = typeof Notification !== 'undefined' ? Notification.permission : 'denied'
     if (notifState !== 'granted') {
-      setShowPermissions(true)
+      setActiveTab('permissions')
     }
   }, [user])
 
@@ -153,7 +151,7 @@ export default function ChatPage() {
     if (!user) return
     const shown = localStorage.getItem('ephemera_permissions_shown')
     if (!shown) {
-      setTimeout(() => setShowPermissions(true), 2000)
+      setTimeout(() => setActiveTab('permissions'), 2000)
       localStorage.setItem('ephemera_permissions_shown', '1')
     }
   }, [user])
@@ -316,7 +314,7 @@ export default function ChatPage() {
               onTabChange={handleTabChange}
               onAdminPanel={() => setShowAdmin(true)}
               onSettings={() => { setSidebarOpen(false); setShowSettings(true) }}
-              onPermissions={() => { setSidebarOpen(false); setShowPermissions(true) }}
+              onPermissions={() => { setSidebarOpen(false); setActiveTab('permissions') }}
             />
           </div>
         )}
@@ -383,7 +381,7 @@ export default function ChatPage() {
                           ⚙️ Configuración
                         </button>
                         <button
-                          onClick={() => { setShowMobileMenu(false); setShowPermissions(true) }}
+                          onClick={() => { setShowMobileMenu(false); setActiveTab('permissions') }}
                           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', color: '#f59e0b', fontSize: '14px', fontFamily: "'Outfit', sans-serif", textAlign: 'left' }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,158,11,0.06)')}
                           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -477,6 +475,9 @@ export default function ChatPage() {
               onCall={(otherId, otherAlias) => startCall(crypto.randomUUID(), [{ userId: otherId, alias: otherAlias }])}
             />
           )}
+          {activeTab === 'permissions' && (
+            <PermissionsRequest onClose={() => setActiveTab('chats')} />
+          )}
             </>
           )}
         </div>
@@ -560,7 +561,6 @@ export default function ChatPage() {
       {showMembers && groupView && (
         <GroupMembersPanel groupId={groupView.id} onClose={() => setShowMembers(false)} />
       )}
-      {showPermissions && <PermissionsRequest onClose={() => setShowPermissions(false)} />}
       {showStoryCreator && (
         <StoryCreator onClose={() => setShowStoryCreator(false)} onCreated={() => { loadStoryCount(); setStoriesRefreshKey(k => k + 1) }} />
       )}
