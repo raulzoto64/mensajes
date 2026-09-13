@@ -14,10 +14,11 @@ type Props = {
   otherUserId: string
   otherAlias: string
   onMenuToggle: () => void
+  onBack: () => void
   isMobile: boolean
 }
 
-export default function DmChatWindow({ conversationId, otherUserId, otherAlias, onMenuToggle, isMobile }: Props) {
+export default function DmChatWindow({ conversationId, otherUserId, otherAlias, onMenuToggle, onBack, isMobile }: Props) {
   const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [receipts, setReceipts] = useState<Record<string, 'delivered' | 'seen'>>({})
@@ -315,12 +316,21 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
           flexShrink: 0,
         }}
       >
-        {isMobile && (
+        {isMobile ? (
           <button
-            onClick={onMenuToggle}
+            onClick={onBack}
             style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '20px', padding: '2px 6px 2px 0', display: 'flex', alignItems: 'center' }}
           >
-            ☰
+            ←
+          </button>
+        ) : (
+          <button
+            onClick={onBack}
+            style={{ background: '#f0f2f5', border: '1px solid #e5e7eb', color: '#8696a0', cursor: 'pointer', fontSize: '14px', padding: '4px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e7eb'; e.currentTarget.style.color = '#111b21' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f2f5'; e.currentTarget.style.color = '#8696a0' }}
+          >
+            ← Atrás
           </button>
         )}
         <div

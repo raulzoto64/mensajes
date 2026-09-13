@@ -146,6 +146,11 @@ export default function ChatPage() {
     window.history.replaceState({}, '', window.location.pathname)
   }, [user])
 
+  function handleBack() {
+    setGroupView(null)
+    setDmView(null)
+  }
+
   function handleSelectGroup(id: string, name: string) {
     setGroupView({ id, name })
     setDmView(null)
@@ -224,7 +229,7 @@ export default function ChatPage() {
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: !isMobile ? '60px' : '0' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: !isMobile && !showChat ? '60px' : '0' }}>
           {/* Active chat view (DM or Group) */}
           {showChat && dmView && (
             <>
@@ -233,6 +238,7 @@ export default function ChatPage() {
                 otherUserId={dmView.otherUserId}
                 otherAlias={dmView.otherAlias}
                 onMenuToggle={() => setSidebarOpen(true)}
+                onBack={handleBack}
                 isMobile={isMobile}
               />
               <MessageInput conversationId={dmView.conversationId} onSent={handleSent} isMobile={isMobile} />
@@ -245,6 +251,7 @@ export default function ChatPage() {
                 groupName={groupView.name}
                 refresh={refreshKey}
                 onMenuToggle={() => setSidebarOpen(true)}
+                onBack={handleBack}
                 onShowMembers={() => setShowMembers(true)}
                 isMobile={isMobile}
               />
@@ -278,8 +285,8 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Bottom Navigation - only on desktop */}
-      {!isMobile && (
+      {/* Bottom Navigation - only on desktop and when not in a chat */}
+      {!isMobile && !showChat && (
         <BottomNav
           active={activeTab}
           onTabChange={handleTabChange}
