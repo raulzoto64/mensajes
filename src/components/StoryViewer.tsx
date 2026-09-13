@@ -31,6 +31,7 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const canDelete = user && (user.id === story.user_id || user.is_admin || user.is_super_admin)
+  console.log('[STORY VIEWER] mostrando historia:', story.id, 'tipo:', story.media_type, 'thumbnail_url:', story.thumbnail_url ? 'SI' : 'NO')
 
   useEffect(() => {
     setProgress(0)

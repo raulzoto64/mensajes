@@ -80,15 +80,25 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
     // Capture thumbnail for videos
     let thumbnailUrl: string | null = null
     if (mediaType === 'video' && videoRef.current) {
+      console.log('[STORY THUMB] capturando frame del video para portada...')
       const blob = await captureVideoFrame(videoRef.current)
+      console.log('[STORY THUMB] blob recibido:', blob ? 'SI (' + blob.size + ' bytes)' : 'NO')
       if (blob) {
         const thumbPath = `stories/${user.id}/${Date.now()}_thumb.jpg`
+        console.log('[STORY THUMB] subiendo portada a:', thumbPath)
         const { error: thumbErr } = await supabase.storage.from('media').upload(thumbPath, blob, { contentType: 'image/jpeg' })
         if (!thumbErr) {
           const { data: thumbUrl } = supabase.storage.from('media').getPublicUrl(thumbPath)
           thumbnailUrl = thumbUrl.publicUrl
+          console.log('[STORY THUMB] portada guardada:', thumbnailUrl)
+        } else {
+          console.error('[STORY THUMB] error subiendo portada:', thumbErr)
         }
+      } else {
+        console.log('[STORY THUMB] no se pudo capturar frame del video')
       }
+    } else {
+      console.log('[STORY THUMB] no aplica: mediaType=', mediaType, 'videoRef=', !!videoRef.current)
     }
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()

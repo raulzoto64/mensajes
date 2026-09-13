@@ -219,6 +219,9 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
       }}>
         {stories.map((story) => {
           const canDelete = user && (story.user_id === user.id || user.is_admin || user.is_super_admin)
+          if (story.media_type === 'video') {
+            console.log('[STORY DISPLAY] video story:', story.id, 'thumbnail_url:', story.thumbnail_url ? 'SI' : 'NO', 'media_url:', story.media_url)
+          }
           return (
             <ReelCard key={story.id} story={story} isMine={story.user_id === user?.id} canDelete={!!canDelete} timeAgo={timeAgo} onClick={() => { markViewed(story.id); onViewStory(story, sortedForViewer) }} onDelete={() => setConfirmDelete(story)} />
           )
