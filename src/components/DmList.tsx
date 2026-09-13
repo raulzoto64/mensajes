@@ -39,6 +39,18 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
 
   async function loadDms() {
     if (!user) return
+
+    const CACHE_KEY = 'ephemera_cache_dms'
+    const CACHE_TTL = 60 * 60 * 1000
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached)
+      if (Date.now() - timestamp < CACHE_TTL) {
+        setDms(data)
+        setLoading(false)
+      }
+    }
+
     const { data: convs } = await supabase
       .from('direct_conversations')
       .select('id, user_a, user_b, created_at')
@@ -95,6 +107,7 @@ export default function DmList({ activeDmId, onSelectDm }: Props) {
 
     setDms(list)
     setLoading(false)
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data: list, timestamp: Date.now() }))
   }
 
   async function searchUsers(q: string) {

@@ -36,6 +36,18 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
 
   async function loadStories() {
     if (!user) return
+
+    const CACHE_KEY = 'ephemera_cache_stories'
+    const CACHE_TTL = 60 * 60 * 1000
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached)
+      if (Date.now() - timestamp < CACHE_TTL) {
+        setStories(data)
+        setLoading(false)
+      }
+    }
+
     setLoading(true)
     const now = new Date().toISOString()
     const { data, error } = await supabase
@@ -67,6 +79,7 @@ export default function StoriesTab({ onViewStory, onStoryViewed, onCreateStory }
       }))
 
       setStories(mapped)
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ data: mapped, timestamp: Date.now() }))
     }
     setLoading(false)
   }

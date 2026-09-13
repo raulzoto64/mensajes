@@ -43,6 +43,18 @@ export default function GroupList({ activeGroupId, onSelectGroup, onAdminPanel }
 
   async function loadMyGroups() {
     if (!user) return
+
+    const CACHE_KEY = 'ephemera_cache_groups'
+    const CACHE_TTL = 60 * 60 * 1000
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached)
+      if (Date.now() - timestamp < CACHE_TTL) {
+        setGroups(data)
+        setLoading(false)
+      }
+    }
+
     const { data: memberships } = await supabase
       .from('group_members')
       .select('group_id, groups(id, name, description, created_by, created_at)')
@@ -74,8 +86,10 @@ export default function GroupList({ activeGroupId, onSelectGroup, onAdminPanel }
       }
     }
 
-    setGroups(gs.map((g) => ({ ...g, unreadCount: unreadByGroup.get(g.id) ?? 0 })))
+    const finalGroups = gs.map((g) => ({ ...g, unreadCount: unreadByGroup.get(g.id) ?? 0 }))
+    setGroups(finalGroups)
     setLoading(false)
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data: finalGroups, timestamp: Date.now() }))
   }
 
   async function loadAllGroups() {
