@@ -123,6 +123,46 @@ export default function ContactsTab() {
                 <div style={{ fontSize: '12px', color: '#adb5bd', marginTop: '2px' }}>Contacto</div>
               )}
             </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <button
+                title="Enviar mensaje"
+                onClick={() => alert(`Iniciar mensaje con @${contact.alias}`)}
+                style={{
+                  padding: '6px 10px',
+                  background: 'rgba(0,168,132,0.1)',
+                  border: '1px solid rgba(0,168,132,0.2)',
+                  borderRadius: '8px',
+                  color: '#00a884',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontFamily: "'Outfit', sans-serif",
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                💬
+              </button>
+              <button
+                title="Llamar"
+                onClick={() => alert(`Llamando a @${contact.alias}`)}
+                style={{
+                  padding: '6px 10px',
+                  background: 'rgba(0,136,204,0.1)',
+                  border: '1px solid rgba(0,136,204,0.2)',
+                  borderRadius: '8px',
+                  color: '#0088cc',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontFamily: "'Outfit', sans-serif",
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                📞
+              </button>
+            </div>
           </div>
         ))}
       </div>
