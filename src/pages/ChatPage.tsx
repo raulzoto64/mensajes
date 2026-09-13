@@ -20,6 +20,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useCall } from '../contexts/CallContext'
 import { clearNotificationsForChat } from '../lib/notifications'
+import { checkForUpdate } from '../lib/updater'
 
 type Tab = 'chats' | 'groups' | 'stories' | 'calls' | 'contacts' | 'permissions'
 type GroupView = { id: string; name: string }
@@ -36,6 +37,7 @@ export default function ChatPage() {
   const [showSettings, setShowSettings] = useState(false)
   const [showPhonePopup, setShowPhonePopup] = useState(false)
   const [phoneInput, setPhoneInput] = useState('')
+  const [updateInfo, setUpdateInfo] = useState<{ version: string; downloadUrl: string } | null>(null)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -146,6 +148,12 @@ export default function ChatPage() {
   }
 
   useEffect(() => { loadStoryCount() }, [user])
+
+  useEffect(() => {
+    checkForUpdate().then((info) => {
+      if (info && info.needsUpdate && info.downloadUrl) setUpdateInfo(info)
+    })
+  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -388,6 +396,14 @@ export default function ChatPage() {
                         >
                           🔐 Permisos
                         </button>
+                        {updateInfo && (
+                          <button
+                            onClick={() => { setShowMobileMenu(false); if (updateInfo.downloadUrl) window.open(updateInfo.downloadUrl, '_blank') }}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'rgba(0,136,204,0.08)', border: '1px solid rgba(0,136,204,0.2)', borderRadius: '8px', cursor: 'pointer', color: '#0088cc', fontSize: '13px', fontWeight: '600', fontFamily: "'Outfit', sans-serif", textAlign: 'left' }}
+                          >
+                            ⬆️ Actualizar v{updateInfo.version}
+                          </button>
+                        )}
                         <button
                           onClick={() => { setShowMobileMenu(false); if (user) { import('../lib/push').then(m => m.unsubscribePush(user.id)); logout() } }}
                           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', color: '#ea4335', fontSize: '14px', fontFamily: "'Outfit', sans-serif", textAlign: 'left' }}
@@ -396,49 +412,6 @@ export default function ChatPage() {
                         >
                           🚪 Cerrar sesión
                         </button>
-                        {/* Sidebar navigation in mobile dropdown */}
-                        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '8px', marginTop: '4px', paddingBottom: '4px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#f0f2f5', borderRadius: '8px', margin: '0 2px 4px' }}>
-                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: user?.avatar_url ? 'transparent' : 'rgba(0,168,132,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                              {user?.avatar_url ? (
-                                <img src={user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : (
-                                <span style={{ fontSize: '11px', color: '#00a884', fontWeight: '700' }}>{user?.alias?.[0]?.toUpperCase()}</span>
-                              )}
-                            </div>
-                            <span style={{ fontSize: '12px', color: '#667781', fontWeight: '500' }}>@{user?.alias}</span>
-                          </div>
-                          {[
-                            { id: 'chats' as const, label: 'Chats', icon: '💬', active: activeTab === 'chats' },
-                            { id: 'groups' as const, label: 'Grupos', icon: '👥', active: activeTab === 'groups' },
-                            { id: 'stories' as const, label: 'Historias', icon: '📖', active: activeTab === 'stories' },
-                            { id: 'calls' as const, label: 'Llamadas', icon: '📞', active: activeTab === 'calls' },
-                            { id: 'contacts' as const, label: 'Contactos', icon: '👥', active: activeTab === 'contacts' },
-                          ].map((tabItem) => (
-                            <button
-                              key={tabItem.id}
-                              onClick={() => { setShowMobileMenu(false); setActiveTab(tabItem.id); if (tabItem.id !== 'contacts' && tabItem.id !== 'calls' && tabItem.id !== 'stories' && tabItem.id !== 'groups') setShowChat(false); }}
-                              style={{
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '8px 10px',
-                                background: tabItem.active ? 'rgba(0,168,132,0.08)' : 'transparent',
-                                border: 'none',
-                                borderRadius: '8px',
-                                color: tabItem.active ? '#00a884' : '#667781',
-                                fontSize: '12px',
-                                fontWeight: tabItem.active ? '600' : '400',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <span>{tabItem.icon}</span>
-                              <span>{tabItem.label}</span>
-                            </button>
-                          ))}
-                        </div>
                       </div>
                     </>
                   )}
