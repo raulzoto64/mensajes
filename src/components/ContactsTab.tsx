@@ -10,7 +10,12 @@ type User = {
   avatar_url: string | null
 }
 
-export default function ContactsTab() {
+type Props = {
+  onCall?: (otherId: string, otherAlias: string) => void
+  onMessage?: (otherId: string, otherAlias: string) => void
+}
+
+export default function ContactsTab({ onCall, onMessage }: Props) {
   const { user } = useAuth()
   const [contacts, setContacts] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -128,7 +133,7 @@ export default function ContactsTab() {
             <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
               <button
                 title="Enviar mensaje"
-                onClick={() => alert(`Iniciar mensaje con @${contact.alias}`)}
+                onClick={() => { if (onMessage) onMessage(contact.id, contact.alias) }}
                 style={{
                   padding: '6px 10px',
                   background: 'rgba(0,168,132,0.1)',
@@ -146,7 +151,7 @@ export default function ContactsTab() {
               </button>
               <button
                 title="Llamar"
-                onClick={() => alert(`Llamando a @${contact.alias}`)}
+                onClick={() => { if (onCall) onCall(contact.id, contact.alias) }}
                 style={{
                   padding: '6px 10px',
                   background: 'rgba(0,136,204,0.1)',

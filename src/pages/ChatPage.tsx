@@ -18,6 +18,7 @@ import SettingsPanel from '../components/SettingsPanel'
 import { useActivityHeartbeat } from '../lib/realtime'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useCall } from '../contexts/CallContext'
 import { clearNotificationsForChat } from '../lib/notifications'
 
 type Tab = 'chats' | 'groups' | 'stories' | 'calls'
@@ -26,6 +27,7 @@ type DmView = { conversationId: string; otherUserId: string; otherAlias: string 
 
 export default function ChatPage() {
   const { user, logout, setUser } = useAuth()
+  const { startCall } = useCall()
   useActivityHeartbeat(user?.id ?? null)
   const [activeTab, setActiveTab] = useState<Tab>('chats')
   const [groupView, setGroupView] = useState<GroupView | null>(null)
@@ -194,6 +196,28 @@ export default function ChatPage() {
     setShowMembers(false)
     clearNotificationsForChat(conversationId)
     if (isMobile) setSidebarOpen(false)
+  }
+
+  async function handleMessageContact(otherId: string, otherAlias: string) {
+    if (!user) return
+    const [a, b] = [user.id, otherId].map((s) => `${s}`).sort()
+    let { data: conv } = await supabase
+      .from('direct_conversations')
+      .select('id')
+      .eq('user_a', a)
+      .eq('user_b', b)
+      .maybeSingle()
+    if (!conv) {
+      const { data: created } = await supabase
+        .from('direct_conversations')
+        .insert({ user_a: a, user_b: b })
+        .select('id')
+        .single()
+      conv = created
+    }
+    if (conv) {
+      handleSelectDm(conv.id, otherId, otherAlias)
+    }
   }
 
   function handleSent() {
@@ -391,7 +415,10 @@ export default function ChatPage() {
             <CallsTab onCallGroup={(id, name) => { handleSelectGroup(id, name); setActiveTab('groups') }} />
           )}
           {activeTab === 'contacts' && (
-            <ContactsTab />
+            <ContactsTab
+              onMessage={handleMessageContact}
+              onCall={(otherId, otherAlias) => startCall(crypto.randomUUID(), [{ userId: otherId, alias: otherAlias }])}
+            />
           )}
             </>
           )}
