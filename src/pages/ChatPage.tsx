@@ -35,6 +35,7 @@ export default function ChatPage() {
   const [dmView, setDmView] = useState<DmView | null>(null)
   const [showAdmin, setShowAdmin] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showMembers, setShowMembers] = useState(false)
   const [showPhonePopup, setShowPhonePopup] = useState(false)
   const [phoneInput, setPhoneInput] = useState('')
   const [updateInfo, setUpdateInfo] = useState<{ version: string; downloadUrl: string } | null>(null)
