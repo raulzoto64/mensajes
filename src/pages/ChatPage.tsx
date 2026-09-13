@@ -25,7 +25,7 @@ type GroupView = { id: string; name: string }
 type DmView = { conversationId: string; otherUserId: string; otherAlias: string }
 
 export default function ChatPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   useActivityHeartbeat(user?.id ?? null)
   const [activeTab, setActiveTab] = useState<Tab>('chats')
   const [groupView, setGroupView] = useState<GroupView | null>(null)
@@ -33,6 +33,7 @@ export default function ChatPage() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -311,29 +312,77 @@ export default function ChatPage() {
           )}
 
           {/* Tab content - only when no chat is active and not in admin mode */}
-          {!showChat && !showAdmin && activeTab === 'chats' && (
-            <DmList
-              activeDmId={dmView?.conversationId ?? null}
-              onSelectDm={handleSelectDm}
-            />
-          )}
-          {!showChat && !showAdmin && activeTab === 'groups' && (
-            <GroupList
-              activeGroupId={groupView?.id ?? null}
-              onSelectGroup={handleSelectGroup}
-              onAdminPanel={() => setShowAdmin(true)}
-            />
-          )}
-          {!showChat && !showAdmin && activeTab === 'stories' && (
-            <StoriesTab
-              key={storiesRefreshKey}
-              onViewStory={(story, allSorted) => { setStoryViewerStory(story); setViewerStories(allSorted); setStoryViewerIndex(allSorted.findIndex(s => s.id === story.id)) }}
+          {!showChat && !showAdmin && (
+            <>
+              {/* Mobile header with menu */}
+              {isMobile && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: '#fff', flexShrink: 0, position: 'relative' }}>
+                  <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px' }}>Ephemera</span>
+                  <button
+                    onClick={() => setShowMobileMenu(v => !v)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: '#667781', fontSize: '20px' }}
+                  >
+                    ⋮
+                  </button>
+                  {showMobileMenu && (
+                    <>
+                      <div onClick={() => setShowMobileMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />
+                      <div style={{
+                        position: 'absolute', top: '44px', right: '12px',
+                        background: '#fff', border: '1px solid #e5e7eb', borderRadius: '12px',
+                        padding: '6px', zIndex: 100, minWidth: '180px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                      }}>
+                        <button
+                          onClick={() => { setShowMobileMenu(false); setShowSettings(true) }}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', color: '#111b21', fontSize: '14px', fontFamily: "'Outfit', sans-serif", textAlign: 'left' }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f2f5')}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          ⚙️ Configuración
+                        </button>
+                        <button
+                          onClick={() => { setShowMobileMenu(false); if (user) { import('../lib/push').then(m => m.unsubscribePush(user.id)); logout() } }}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', color: '#ea4335', fontSize: '14px', fontFamily: "'Outfit', sans-serif", textAlign: 'left' }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(234,67,53,0.06)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          🚪 Cerrar sesión
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'chats' && (
+                <DmList
+                  activeDmId={dmView?.conversationId ?? null}
+                  onSelectDm={handleSelectDm}
+                />
+              )}
+              {activeTab === 'groups' && (
+                <GroupList
+                  activeGroupId={groupView?.id ?? null}
+                  onSelectGroup={handleSelectGroup}
+                  onAdminPanel={() => setShowAdmin(true)}
+                />
+              )}
+              {activeTab === 'stories' && (
+                <StoriesTab
+                  key={storiesRefreshKey}
+                  onViewStory={(story, allSorted) => { setStoryViewerStory(story); setViewerStories(allSorted); setStoryViewerIndex(allSorted.findIndex(s => s.id === story.id)) }}
               onStoryViewed={loadStoryCount}
               onCreateStory={() => setShowStoryCreator(true)}
             />
           )}
-          {!showChat && !showAdmin && activeTab === 'calls' && (
+          {activeTab === 'calls' && (
             <CallsTab onCallGroup={(id, name) => { handleSelectGroup(id, name); setActiveTab('groups') }} />
+          )}
+          {activeTab === 'contacts' && (
+            <ContactsTab />
+          )}
+            </>
           )}
         </div>
       </div>
