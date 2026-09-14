@@ -74,13 +74,17 @@ export default function PermissionsRequest({ onClose }: Props) {
     },
   ])
   const [requesting, setRequesting] = useState<string | null>(null)
+  const [statusMsg, setStatusMsg] = useState<string | null>(null)
+  const [showDebug, setShowDebug] = useState(true)
 
   useEffect(() => {
     checkPermissions()
   }, [])
 
   async function checkPermissions() {
+    console.log('[PERMISO] verificando estados de permisos...')
     const notifState = typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+    console.log('[PERMISO] notificaciones:', notifState)
     const camState = typeof navigator.mediaDevices !== 'undefined' ? 'granted' : 'denied'
     const micState = typeof navigator.mediaDevices !== 'undefined' ? 'granted' : 'denied'
 
@@ -109,9 +113,13 @@ export default function PermissionsRequest({ onClose }: Props) {
 
   async function requestPermission(id: string) {
     setRequesting(id)
+    setStatusMsg(`Solicitando ${id}...`)
+    console.log('[PERMISO] solicitando:', id)
     try {
       if (id === 'notifications') {
         const result = await Notification.requestPermission()
+        console.log('[PERMISO] notificaciones resultado:', result)
+        setStatusMsg(result === 'granted' ? 'Notificaciones concedidas ✓' : 'Notificaciones denegadas ✗')
         if (result === 'granted') {
           setPermissions((prev) => prev.map((p) => p.id === id ? { ...p, granted: true } : p))
         }
@@ -120,15 +128,21 @@ export default function PermissionsRequest({ onClose }: Props) {
           ? { video: true }
           : { audio: true }
         const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        console.log('[PERMISO] media (' + id + ') resultado: concedido')
         stream.getTracks().forEach((t) => t.stop())
+        setStatusMsg(id === 'camera' ? 'Cámara concedida ✓' : 'Micrófono concedido ✓')
         setPermissions((prev) => prev.map((p) => p.id === id ? { ...p, granted: true } : p))
       } else if (id === 'location') {
         await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject)
         })
+        console.log('[PERMISO] ubicación resultado: concedido')
+        setStatusMsg('Ubicación concedida ✓')
         setPermissions((prev) => prev.map((p) => p.id === id ? { ...p, granted: true } : p))
       }
-    } catch {
+    } catch (e: any) {
+      console.error('[PERMISO] error en ' + id + ':', e)
+      setStatusMsg(id + ': denegado o error')
       // Permission denied
     }
     setRequesting(null)
@@ -168,6 +182,12 @@ export default function PermissionsRequest({ onClose }: Props) {
           fontFamily: "'Outfit', sans-serif",
         }}
       >
+        {/* Status banner */}
+        {statusMsg && (
+          <div style={{ padding: '8px 16px', background: '#f0f2f5', borderBottom: '1px solid #e5e7eb', fontSize: '12px', color: '#111b21', textAlign: 'center', fontFamily: "'DM Mono', monospace" }}>
+            {statusMsg}
+          </div>
+        )}
         {/* Header */}
         <div style={{ padding: '20px 20px 12px', textAlign: 'center' }}>
           <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔐</div>
