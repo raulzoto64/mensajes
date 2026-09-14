@@ -37,7 +37,7 @@ jobs:
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --force
 
       - name: Build web app
         run: npm run build
