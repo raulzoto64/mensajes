@@ -19,7 +19,7 @@ import { useActivityHeartbeat } from '../lib/realtime'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useCall } from '../contexts/CallContext'
-import { clearNotificationsForChat, useNotifications } from '../lib/notifications'
+import { clearNotificationsForChat, useNotifications, markNotificationRead, markAllNotificationsRead } from '../lib/notifications'
 import { checkForUpdate } from '../lib/updater'
 
 type Tab = 'chats' | 'groups' | 'stories' | 'calls' | 'contacts' | 'permissions'
@@ -43,6 +43,7 @@ export default function ChatPage() {
   const [phoneInput, setPhoneInput] = useState('')
   const [updateInfo, setUpdateInfo] = useState<{ version: string; downloadUrl: string } | null>(null)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [showNotifPanel, setShowNotifPanel] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -368,10 +369,10 @@ export default function ChatPage() {
               {/* Mobile header with menu */}
               {isMobile && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: '#fff', flexShrink: 0, position: 'relative' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px', flex: 1 }}>Ephemera</span>
                   <button
-                    onClick={() => { document.hasFocus?.() ? null : null; alert('Notificaciones: ' + unreadNotifs + ' nuevas'); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px 5px', color: unreadNotifs > 0 ? '#f59e0b' : '#667781', fontSize: '16px', position: 'relative', flexShrink: 0 }}
+                    onClick={() => { document.hasFocus?.() ? null : null; setShowNotifPanel(v => !v) }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px 5px', color: unreadNotifs > 0 ? '#f59e0b' : '#667781', fontSize: '16px', position: 'relative', flexShrink: 0, marginRight: '4px' }}
                     title={`${unreadNotifs > 0 ? unreadNotifs + ' nuevas' : 'Sin notificaciones'}`}
                   >
                     🔔
@@ -381,14 +382,53 @@ export default function ChatPage() {
                       </span>
                     )}
                   </button>
-                  <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px' }}>Ephemera</span>
-                </div>
-                <button
-                  onClick={() => setShowMobileMenu(v => !v)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: '#667781', fontSize: '20px' }}
-                >
-                  ⋮
-                </button>
+                  {showNotifPanel && (
+                    <>
+                      <div onClick={() => setShowNotifPanel(false)} style={{ position: 'fixed', inset: 0, zIndex: 98 }} />
+                      <div style={{ position: 'absolute', top: '44px', right: '50px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '6px', zIndex: 100, minWidth: '240px', boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '700', color: '#8696a0', padding: '8px 10px', borderBottom: '1px solid #e5e7eb', letterSpacing: '0.05em' }}>
+                        NOTIFICACIONES
+                      </div>
+                      <div style={{ maxHeight: '240px', overflowY: 'auto', padding: '4px 0' }}>
+                        {notifications.filter(n => !n.read).length === 0 && (
+                          <div style={{ padding: '16px 12px', fontSize: '12px', color: '#adb5bd', textAlign: 'center' }}>
+                            Sin notificaciones nuevas
+                          </div>
+                        )}
+                        {notifications.filter(n => !n.read).map(n => (
+                          <div
+                            key={n.id}
+                            onClick={() => { markNotificationRead(n.id); setShowNotifPanel(false) }}
+                            style={{ padding: '10px 12px', borderBottom: '1px solid #f0f2f5', cursor: 'pointer', transition: 'background 0.15s' }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = '#f8f9fa')}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                          >
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#111b21', marginBottom: '2px' }}>
+                              {n.title}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#8696a0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {n.body}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {notifications.filter(n => !n.read).length > 0 && (
+                        <button
+                          onClick={() => { markAllNotificationsRead(); setShowNotifPanel(false) }}
+                          style={{ width: '100%', padding: '8px', background: 'transparent', border: 'none', borderTop: '1px solid #e5e7eb', borderRadius: '0 0 12px 12px', color: '#0088cc', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Outfit', sans-serif", textAlign: 'center' }}
+                        >
+                          Marcar todo como visto
+                        </button>
+                      )}
+                    </div>
+                  </>
+                  )}
+                  <button
+                    onClick={() => setShowMobileMenu(v => !v)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: '#667781', fontSize: '20px' }}
+                  >
+                    ⋮
+                  </button>
                   {showMobileMenu && (
                     <>
                       <div onClick={() => setShowMobileMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />
