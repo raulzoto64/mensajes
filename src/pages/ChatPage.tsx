@@ -381,7 +381,7 @@ export default function ChatPage() {
                         padding: '6px', zIndex: 100, minWidth: '180px',
                         boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
                       }}>
-                        {user?.is_admin && (
+                        {(user?.is_admin || user?.is_super_admin) && (
                           <button
                             onClick={() => { setShowMobileMenu(false); setShowAdmin(true) }}
                             style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', color: '#ea4335', fontSize: '14px', fontWeight: '700', fontFamily: "'DM Mono', monospace", textAlign: 'left' }}
