@@ -17,6 +17,8 @@ function Inner() {
     if (user?.id) {
       resubscribePush(user.id).then((r) => {
         if (!r.ok) showToast(`Push: ${r.error}`)
+      }).catch((e) => {
+        showToast(`Push fatal: ${e instanceof Error ? e.message : String(e)}`)
       })
     }
   }, [user?.id])

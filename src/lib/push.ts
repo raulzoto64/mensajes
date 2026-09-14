@@ -14,16 +14,28 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   return output
 }
 
-function pushSupported(): boolean {
-  return typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
-}
-
 // ── Native (Capacitor) push ──────────────────────────────────────────
 async function subscribePushNative(userId: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    const { PushNotifications } = await import('@capacitor/push-notifications')
+    const mod = await import('@capacitor/push-notifications')
+    const PushNotifications = mod.PushNotifications
+    if (!PushNotifications) {
+      const msg = 'PushNotifications plugin no disponible'
+      console.error('[push]', msg)
+      showToast(msg)
+      return { ok: false, error: msg }
+    }
 
-    const perm = await PushNotifications.requestPermissions()
+    let perm
+    try {
+      perm = await PushNotifications.requestPermissions()
+    } catch (e) {
+      const msg = `error al pedir permiso push: ${e instanceof Error ? e.message : String(e)}`
+      console.error('[push]', msg)
+      showToast(msg)
+      return { ok: false, error: msg }
+    }
+
     if (perm.receive !== 'granted') {
       const msg = `permiso push nativo: ${perm.receive}`
       console.error('[push]', msg)
@@ -31,10 +43,32 @@ async function subscribePushNative(userId: string): Promise<{ ok: boolean; error
       return { ok: false, error: msg }
     }
 
-    await PushNotifications.register()
+    try {
+      await PushNotifications.register()
+    } catch (e) {
+      const msg = `error al registrar push: ${e instanceof Error ? e.message : String(e)}`
+      console.error('[push]', msg)
+      showToast(msg)
+      return { ok: false, error: msg }
+    }
 
     return new Promise((resolve) => {
+      let resolved = false
+
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          resolved = true
+          const msg = 'push registration timeout (10s)'
+          console.error('[push]', msg)
+          showToast(msg)
+          resolve({ ok: false, error: msg })
+        }
+      }, 10000)
+
       PushNotifications.addListener('registration', async (token) => {
+        if (resolved) return
+        resolved = true
+        clearTimeout(timeout)
         console.log('[push] FCM token', token.value)
         const { error } = await supabase
           .from('push_subscriptions')
@@ -58,6 +92,9 @@ async function subscribePushNative(userId: string): Promise<{ ok: boolean; error
       })
 
       PushNotifications.addListener('registrationError', (err) => {
+        if (resolved) return
+        resolved = true
+        clearTimeout(timeout)
         const msg = `push registration error: ${JSON.stringify(err)}`
         console.error('[push]', msg)
         showToast(msg)
@@ -65,9 +102,9 @@ async function subscribePushNative(userId: string): Promise<{ ok: boolean; error
       })
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    console.error('[push] native exception', e)
-    showToast(`push native: ${msg}`)
+    const msg = `push native exception: ${e instanceof Error ? e.message : String(e)}`
+    console.error('[push]', msg)
+    showToast(msg)
     return { ok: false, error: msg }
   }
 }
@@ -75,7 +112,7 @@ async function subscribePushNative(userId: string): Promise<{ ok: boolean; error
 // ── Web push (service worker) ────────────────────────────────────────
 async function subscribePushWeb(userId: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    if (!pushSupported()) {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       const msg = 'push no soportado (sin serviceWorker/PushManager)'
       console.error('[push]', msg)
       showToast(msg)
@@ -121,9 +158,9 @@ async function subscribePushWeb(userId: string): Promise<{ ok: boolean; error?: 
     }
     return { ok: true }
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    console.error('[push] excepción', e)
-    showToast(`push exception: ${msg}`)
+    const msg = `push exception: ${e instanceof Error ? e.message : String(e)}`
+    console.error('[push]', msg)
+    showToast(msg)
     return { ok: false, error: msg }
   }
 }
@@ -146,7 +183,7 @@ export async function unsubscribePush(userId: string): Promise<void> {
     } catch { /* ignore */ }
   } else {
     try {
-      if (!pushSupported()) return
+      if (!('serviceWorker' in navigator)) return
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
       if (sub) await sub.unsubscribe().catch(() => {})
