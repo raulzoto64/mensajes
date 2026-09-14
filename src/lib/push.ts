@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { VAPID_PUBLIC_KEY } from './config'
+import { showToast } from '../components/Toast'
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -24,11 +25,13 @@ export async function subscribePush(userId: string): Promise<{ ok: boolean; erro
     if (!pushSupported()) {
       const msg = 'push no soportado (sin serviceWorker/PushManager)'
       console.error('[push]', msg)
+      showToast(msg)
       return { ok: false, error: msg }
     }
     if (Notification.permission !== 'granted') {
       const msg = `permiso de notificación: ${Notification.permission}`
       console.error('[push]', msg)
+      showToast(msg)
       return { ok: false, error: msg }
     }
     const reg = await navigator.serviceWorker.ready
@@ -43,6 +46,7 @@ export async function subscribePush(userId: string): Promise<{ ok: boolean; erro
     if (!json.keys) {
       const msg = 'la suscripción no trae claves p256dh/auth'
       console.error('[push]', msg)
+      showToast(msg)
       return { ok: false, error: msg }
     }
     const { data, error } = await supabase
@@ -59,12 +63,14 @@ export async function subscribePush(userId: string): Promise<{ ok: boolean; erro
       )
     if (error) {
       console.error('[push] upsert error', error)
+      showToast(`push upsert: ${error.message}`)
       return { ok: false, error: error.message }
     }
     return { ok: true }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('[push] excepción', e)
+    showToast(`push exception: ${msg}`)
     return { ok: false, error: msg }
   }
 }

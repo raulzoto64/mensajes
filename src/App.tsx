@@ -8,13 +8,16 @@ import { resubscribePush } from './lib/push'
 import { startLiveLocation, stopLiveLocation } from './lib/liveLocation'
 import { CallProvider } from './contexts/CallContext'
 import { isNative } from './lib/capacitor'
+import ToastContainer, { showToast } from './components/Toast'
 
 function Inner() {
   const { user } = useAuth()
 
   useEffect(() => {
     if (user?.id) {
-      resubscribePush(user.id).catch(() => {})
+      resubscribePush(user.id).then((r) => {
+        if (!r.ok) showToast(`Push: ${r.error}`)
+      })
     }
   }, [user?.id])
 
@@ -33,6 +36,7 @@ function Inner() {
       perms
         .then((res) => {
           if (active && res.state === 'granted') startLiveLocation(user.id)
+          else if (active && res.state === 'denied') showToast('Permiso de ubicación denegado')
         })
         .catch(() => {})
     }
@@ -50,6 +54,7 @@ function Inner() {
 export default function App() {
   return (
     <AuthProvider>
+      <ToastContainer />
       <Inner />
     </AuthProvider>
   )

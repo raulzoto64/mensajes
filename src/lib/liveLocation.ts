@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { reverseGeocode } from './geocode'
+import { showToast } from '../components/Toast'
 
 let watchId: number | null = null
 let dwellTimer: ReturnType<typeof setInterval> | null = null
@@ -152,7 +153,11 @@ export async function startLiveLocation(uid: string): Promise<void> {
         candidate = { lat: latitude, lng: longitude, accuracy: accuracy ?? null, startTs: now }
       }
     },
-    (err) => console.error('[liveLocation] watch error', err),
+    (err) => {
+      const msg = `geolocation error [${err.code}]: ${err.message}`
+      console.error('[liveLocation]', msg)
+      showToast(msg)
+    },
     { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 },
   )
 
