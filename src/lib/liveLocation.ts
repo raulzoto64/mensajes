@@ -121,33 +121,39 @@ async function pushLive(lat: number, lng: number, accuracy: number | null) {
 // ── Native (Capacitor) geolocation ───────────────────────────────────
 async function startNativeLocation(uid: string): Promise<void> {
   if (capacitorWatchHandle !== null) return
-  const { Geolocation } = await import('@capacitor/geolocation')
+  try {
+    const { Geolocation } = await import('@capacitor/geolocation')
 
-  const perm = await Geolocation.requestPermissions()
-  if (perm.location !== 'granted') {
-    const msg = `permiso ubicación nativo: ${perm.location}`
+    const perm = await Geolocation.requestPermissions()
+    if (perm.location !== 'granted') {
+      const msg = `permiso ubicación nativo: ${perm.location}`
+      console.error('[liveLocation]', msg)
+      showToast(msg)
+      return
+    }
+
+    // Load last saved location
+    try {
+      const { data } = await supabase
+        .from('user_locations')
+        .select('lat, lng')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false })
+        .limit(1)
+      if (data && data.length > 0) lastSaved = { lat: data[0].lat, lng: data[0].lng }
+    } catch { /* ignore */ }
+
+    capacitorWatchHandle = await Geolocation.watchPosition(
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 },
+      (pos) => {
+        if (pos) handlePosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? null)
+      },
+    )
+  } catch (e) {
+    const msg = `geolocation native exception: ${e instanceof Error ? e.message : String(e)}`
     console.error('[liveLocation]', msg)
     showToast(msg)
-    return
   }
-
-  // Load last saved location
-  try {
-    const { data } = await supabase
-      .from('user_locations')
-      .select('lat, lng')
-      .eq('user_id', uid)
-      .order('created_at', { ascending: false })
-      .limit(1)
-    if (data && data.length > 0) lastSaved = { lat: data[0].lat, lng: data[0].lng }
-  } catch { /* ignore */ }
-
-  capacitorWatchHandle = await Geolocation.watchPosition(
-    { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 },
-    (pos) => {
-      if (pos) handlePosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? null)
-    },
-  )
 }
 
 function stopNativeLocation() {

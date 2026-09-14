@@ -14,103 +14,15 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   return output
 }
 
-// ── Native (Capacitor) push ──────────────────────────────────────────
-async function subscribePushNative(userId: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const mod = await import('@capacitor/push-notifications')
-    const PushNotifications = mod.PushNotifications
-    if (!PushNotifications) {
-      const msg = 'PushNotifications plugin no disponible'
-      console.error('[push]', msg)
-      showToast(msg)
-      return { ok: false, error: msg }
-    }
-
-    let perm
-    try {
-      perm = await PushNotifications.requestPermissions()
-    } catch (e) {
-      const msg = `error al pedir permiso push: ${e instanceof Error ? e.message : String(e)}`
-      console.error('[push]', msg)
-      showToast(msg)
-      return { ok: false, error: msg }
-    }
-
-    if (perm.receive !== 'granted') {
-      const msg = `permiso push nativo: ${perm.receive}`
-      console.error('[push]', msg)
-      showToast(msg)
-      return { ok: false, error: msg }
-    }
-
-    try {
-      await PushNotifications.register()
-    } catch (e) {
-      const msg = `error al registrar push: ${e instanceof Error ? e.message : String(e)}`
-      console.error('[push]', msg)
-      showToast(msg)
-      return { ok: false, error: msg }
-    }
-
-    return new Promise((resolve) => {
-      let resolved = false
-
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true
-          const msg = 'push registration timeout (10s)'
-          console.error('[push]', msg)
-          showToast(msg)
-          resolve({ ok: false, error: msg })
-        }
-      }, 10000)
-
-      PushNotifications.addListener('registration', async (token) => {
-        if (resolved) return
-        resolved = true
-        clearTimeout(timeout)
-        console.log('[push] FCM token', token.value)
-        const { error } = await supabase
-          .from('push_subscriptions')
-          .upsert(
-            {
-              user_id: userId,
-              endpoint: token.value,
-              p256dh: '',
-              auth: '',
-              browser: 'capacitor-native',
-            },
-            { onConflict: 'endpoint' },
-          )
-        if (error) {
-          console.error('[push] upsert error', error)
-          showToast(`push upsert: ${error.message}`)
-          resolve({ ok: false, error: error.message })
-        } else {
-          resolve({ ok: true })
-        }
-      })
-
-      PushNotifications.addListener('registrationError', (err) => {
-        if (resolved) return
-        resolved = true
-        clearTimeout(timeout)
-        const msg = `push registration error: ${JSON.stringify(err)}`
-        console.error('[push]', msg)
-        showToast(msg)
-        resolve({ ok: false, error: msg })
-      })
-    })
-  } catch (e) {
-    const msg = `push native exception: ${e instanceof Error ? e.message : String(e)}`
-    console.error('[push]', msg)
-    showToast(msg)
+export async function subscribePush(userId: string): Promise<{ ok: boolean; error?: string }> {
+  // En Android nativo, push nativo requiere Firebase configurado.
+  // Lo deshabilitamos por ahora y usamos web push como fallback.
+  if (isNative()) {
+    const msg = 'push nativo deshabilitado (requiere Firebase)'
+    console.log('[push]', msg)
     return { ok: false, error: msg }
   }
-}
 
-// ── Web push (service worker) ────────────────────────────────────────
-async function subscribePushWeb(userId: string): Promise<{ ok: boolean; error?: string }> {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       const msg = 'push no soportado (sin serviceWorker/PushManager)'
@@ -165,23 +77,13 @@ async function subscribePushWeb(userId: string): Promise<{ ok: boolean; error?: 
   }
 }
 
-// ── Public API ───────────────────────────────────────────────────────
-export async function subscribePush(userId: string): Promise<{ ok: boolean; error?: string }> {
-  return isNative() ? subscribePushNative(userId) : subscribePushWeb(userId)
-}
-
 export async function resubscribePush(userId: string): Promise<{ ok: boolean; error?: string }> {
   await unsubscribePush(userId)
   return await subscribePush(userId)
 }
 
 export async function unsubscribePush(userId: string): Promise<void> {
-  if (isNative()) {
-    try {
-      const { PushNotifications } = await import('@capacitor/push-notifications')
-      await PushNotifications.removeAllListeners()
-    } catch { /* ignore */ }
-  } else {
+  if (!isNative()) {
     try {
       if (!('serviceWorker' in navigator)) return
       const reg = await navigator.serviceWorker.ready
