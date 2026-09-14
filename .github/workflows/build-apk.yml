@@ -30,22 +30,20 @@ jobs:
         with:
           node-version: 22
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - name: Setup Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
       - name: Build web app
-        run: pnpm build
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        run: npm run build
 
       - name: Add Android platform
-        run: npx cap add android
+        run: npx cap add android || true
 
       - name: Set version in build.gradle
         working-directory: android/app
