@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { VAPID_PUBLIC_KEY } from './config'
 import { showToast } from '../components/Toast'
+import { isNative } from './capacitor'
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -17,10 +18,62 @@ function pushSupported(): boolean {
   return typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
 }
 
-// Activa la suscripción de Web Push del dispositivo actual y la guarda en la BD.
-// Idempotente: si ya hay una suscripción activa solo la re-graba.
-// Devuelve { ok, error } para poder depurar por qué falla.
-export async function subscribePush(userId: string): Promise<{ ok: boolean; error?: string }> {
+// ── Native (Capacitor) push ──────────────────────────────────────────
+async function subscribePushNative(userId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const { PushNotifications } = await import('@capacitor/push-notifications')
+
+    const perm = await PushNotifications.requestPermissions()
+    if (perm.receive !== 'granted') {
+      const msg = `permiso push nativo: ${perm.receive}`
+      console.error('[push]', msg)
+      showToast(msg)
+      return { ok: false, error: msg }
+    }
+
+    await PushNotifications.register()
+
+    return new Promise((resolve) => {
+      PushNotifications.addListener('registration', async (token) => {
+        console.log('[push] FCM token', token.value)
+        const { error } = await supabase
+          .from('push_subscriptions')
+          .upsert(
+            {
+              user_id: userId,
+              endpoint: token.value,
+              p256dh: '',
+              auth: '',
+              browser: 'capacitor-native',
+            },
+            { onConflict: 'endpoint' },
+          )
+        if (error) {
+          console.error('[push] upsert error', error)
+          showToast(`push upsert: ${error.message}`)
+          resolve({ ok: false, error: error.message })
+        } else {
+          resolve({ ok: true })
+        }
+      })
+
+      PushNotifications.addListener('registrationError', (err) => {
+        const msg = `push registration error: ${JSON.stringify(err)}`
+        console.error('[push]', msg)
+        showToast(msg)
+        resolve({ ok: false, error: msg })
+      })
+    })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('[push] native exception', e)
+    showToast(`push native: ${msg}`)
+    return { ok: false, error: msg }
+  }
+}
+
+// ── Web push (service worker) ────────────────────────────────────────
+async function subscribePushWeb(userId: string): Promise<{ ok: boolean; error?: string }> {
   try {
     if (!pushSupported()) {
       const msg = 'push no soportado (sin serviceWorker/PushManager)'
@@ -75,31 +128,33 @@ export async function subscribePush(userId: string): Promise<{ ok: boolean; erro
   }
 }
 
-// Fuerza una suscripción nueva con la clave VAPID actual: borra la suscripción
-// local y la de la BD, y vuelve a crearlas. Útil cuando el push falla porque la
-// suscripción fue creada con un par VAPID anterior.
+// ── Public API ───────────────────────────────────────────────────────
+export async function subscribePush(userId: string): Promise<{ ok: boolean; error?: string }> {
+  return isNative() ? subscribePushNative(userId) : subscribePushWeb(userId)
+}
+
 export async function resubscribePush(userId: string): Promise<{ ok: boolean; error?: string }> {
   await unsubscribePush(userId)
   return await subscribePush(userId)
 }
 
-// Quita todas las suscripciones del usuario (por si se desloguea o desactiva).
 export async function unsubscribePush(userId: string): Promise<void> {
-  try {
-    if (!pushSupported()) return
-    const reg = await navigator.serviceWorker.ready
-    const sub = await reg.pushManager.getSubscription()
-    if (sub) {
-      await sub.unsubscribe().catch(() => {})
-    }
-  } catch {
-    /* ignore */
+  if (isNative()) {
+    try {
+      const { PushNotifications } = await import('@capacitor/push-notifications')
+      await PushNotifications.removeAllListeners()
+    } catch { /* ignore */ }
+  } else {
+    try {
+      if (!pushSupported()) return
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) await sub.unsubscribe().catch(() => {})
+    } catch { /* ignore */ }
   }
   try {
     await supabase.from('push_subscriptions').delete().eq('user_id', userId)
-  } catch {
-    /* ignore */
-  }
+  } catch { /* ignore */ }
 }
 
 export function standaloneMode(): boolean {

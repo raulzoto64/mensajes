@@ -1,27 +1,21 @@
 import { supabase } from './supabase'
 import { reverseGeocode } from './geocode'
 import { showToast } from '../components/Toast'
+import { isNative } from './capacitor'
 
 let watchId: number | null = null
+let capacitorWatchHandle: string | null = null
 let dwellTimer: ReturnType<typeof setInterval> | null = null
 let userId: string | null = null
 
-// Solo cuenta como "nueva dirección guardada" si se aleja más de esto de la última.
 const MOVE_THRESHOLD_M = 20
-// Y solo se guarda si el usuario permanece ahí al menos esta cantidad de tiempo.
-const DWELL_MS = 60 * 60 * 1000 // 1 hora
-const DWELL_CHECK_MS = 60 * 1000 // revisamos cada minuto
+const DWELL_MS = 60 * 60 * 1000
+const DWELL_CHECK_MS = 60 * 1000
+const LIVE_INTERVAL_MS = 15 * 1000
+const LIVE_MIN_MOVE_M = 3
 
-// Posición "en vivo": se actualiza seguido para ver el movimiento en tiempo real,
-// pero NO se guarda como dirección (no crea historial).
-const LIVE_INTERVAL_MS = 15 * 1000 // la enviamos cada 15 s como máximo
-const LIVE_MIN_MOVE_M = 3 // y solo si se movió al menos 3 m
-
-// Candidata: lugar donde el usuario está ahora y que podría guardarse como dirección.
 let candidate: { lat: number; lng: number; accuracy: number | null; startTs: number } | null = null
-// Última dirección YA guardada (para comparar la distancia mínima de 20 m).
 let lastSaved: { lat: number; lng: number } | null = null
-// Última posición "en vivo" enviada a la base de datos.
 let lastLive: { lat: number; lng: number; ts: number } | null = null
 
 function haversine(aLat: number, aLng: number, bLat: number, bLng: number): number {
@@ -38,7 +32,6 @@ async function saveCandidate() {
   if (!candidate || !userId) return
   const { lat, lng, accuracy } = candidate
 
-  // Geocodificación inversa (mejor esfuerzo).
   let placeType: string | null = null
   let address: string | null = null
   let manzana: string | null = null
@@ -53,7 +46,6 @@ async function saveCandidate() {
     console.error('[liveLocation] geocode error', ge)
   }
 
-  // La primera (ubicación de registro) se guarda de inmediato; el resto esperan la estancia.
   const isInitial = lastSaved === null
 
   supabase
@@ -84,6 +76,37 @@ function checkDwell() {
   if (Date.now() - candidate.startTs >= DWELL_MS) saveCandidate()
 }
 
+function handlePosition(latitude: number, longitude: number, accuracy: number | null) {
+  const now = Date.now()
+
+  const moved = lastLive ? haversine(lastLive.lat, lastLive.lng, latitude, longitude) : Infinity
+  if (now - (lastLive?.ts ?? 0) >= LIVE_INTERVAL_MS && moved >= LIVE_MIN_MOVE_M) {
+    lastLive = { lat: latitude, lng: longitude, ts: now }
+    pushLive(latitude, longitude, accuracy)
+  }
+
+  if (candidate === null) {
+    if (lastSaved === null) {
+      candidate = { lat: latitude, lng: longitude, accuracy, startTs: now }
+      lastSaved = { lat: latitude, lng: longitude }
+      saveCandidate()
+      return
+    }
+    if (haversine(lastSaved.lat, lastSaved.lng, latitude, longitude) >= MOVE_THRESHOLD_M) {
+      candidate = { lat: latitude, lng: longitude, accuracy, startTs: now }
+    }
+    return
+  }
+
+  if (haversine(candidate.lat, candidate.lng, latitude, longitude) < MOVE_THRESHOLD_M) return
+
+  if (lastSaved && haversine(lastSaved.lat, lastSaved.lng, latitude, longitude) < MOVE_THRESHOLD_M) {
+    candidate = null
+  } else {
+    candidate = { lat: latitude, lng: longitude, accuracy, startTs: now }
+  }
+}
+
 async function pushLive(lat: number, lng: number, accuracy: number | null) {
   if (!userId) return
   supabase
@@ -95,13 +118,20 @@ async function pushLive(lat: number, lng: number, accuracy: number | null) {
     )
 }
 
-// Inicia el seguimiento en tiempo real de la ubicación del usuario.
-export async function startLiveLocation(uid: string): Promise<void> {
-  if (watchId !== null) return
-  if (typeof navigator === 'undefined' || !navigator.geolocation) return
-  userId = uid
+// ── Native (Capacitor) geolocation ───────────────────────────────────
+async function startNativeLocation(uid: string): Promise<void> {
+  if (capacitorWatchHandle !== null) return
+  const { Geolocation } = await import('@capacitor/geolocation')
 
-  // Cargamos la última dirección guardada para no volver a registrar el mismo sitio.
+  const perm = await Geolocation.requestPermissions()
+  if (perm.location !== 'granted') {
+    const msg = `permiso ubicación nativo: ${perm.location}`
+    console.error('[liveLocation]', msg)
+    showToast(msg)
+    return
+  }
+
+  // Load last saved location
   try {
     const { data } = await supabase
       .from('user_locations')
@@ -110,49 +140,32 @@ export async function startLiveLocation(uid: string): Promise<void> {
       .order('created_at', { ascending: false })
       .limit(1)
     if (data && data.length > 0) lastSaved = { lat: data[0].lat, lng: data[0].lng }
-  } catch {
-    /* ignore */
+  } catch { /* ignore */ }
+
+  capacitorWatchHandle = await Geolocation.watchPosition(
+    { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 },
+    (pos) => {
+      if (pos) handlePosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? null)
+    },
+  )
+}
+
+function stopNativeLocation() {
+  if (capacitorWatchHandle !== null) {
+    import('@capacitor/geolocation').then(({ Geolocation }) => {
+      Geolocation.clearWatch({ id: capacitorWatchHandle! })
+      capacitorWatchHandle = null
+    })
   }
+}
+
+// ── Web geolocation ──────────────────────────────────────────────────
+function startWebLocation(uid: string) {
+  if (watchId !== null) return
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return
 
   watchId = navigator.geolocation.watchPosition(
-    (pos) => {
-      const { latitude, longitude, accuracy } = pos.coords
-      const now = Date.now()
-
-      // 1) Posición "en vivo": se actualiza seguido para ver el movimiento real.
-      const moved = lastLive ? haversine(lastLive.lat, lastLive.lng, latitude, longitude) : Infinity
-      if (now - (lastLive?.ts ?? 0) >= LIVE_INTERVAL_MS && moved >= LIVE_MIN_MOVE_M) {
-        lastLive = { lat: latitude, lng: longitude, ts: now }
-        pushLive(latitude, longitude, accuracy ?? null)
-      }
-
-      // 2) Dirección guardada: regla de >20 m y estancia >1 h.
-      if (candidate === null) {
-        if (lastSaved === null) {
-          // Ubicación de registro: se guarda de inmediato.
-          candidate = { lat: latitude, lng: longitude, accuracy: accuracy ?? null, startTs: now }
-          lastSaved = { lat: 0, lng: 0 } // optimista: evita dobles guardados
-          lastSaved = { lat: latitude, lng: longitude }
-          saveCandidate()
-          return
-        }
-        if (haversine(lastSaved.lat, lastSaved.lng, latitude, longitude) >= MOVE_THRESHOLD_M) {
-          candidate = { lat: latitude, lng: longitude, accuracy: accuracy ?? null, startTs: now }
-        }
-        return
-      }
-
-      // Ya hay un candidato: ¿sigue en el mismo sitio?
-      if (haversine(candidate.lat, candidate.lng, latitude, longitude) < MOVE_THRESHOLD_M) return
-
-      // Se movió del candidato: si volvió cerca de la última guardada, descartamos;
-      // si no, arrancamos un candidato nuevo desde esta posición.
-      if (lastSaved && haversine(lastSaved.lat, lastSaved.lng, latitude, longitude) < MOVE_THRESHOLD_M) {
-        candidate = null
-      } else {
-        candidate = { lat: latitude, lng: longitude, accuracy: accuracy ?? null, startTs: now }
-      }
-    },
+    (pos) => handlePosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? null),
     (err) => {
       const msg = `geolocation error [${err.code}]: ${err.message}`
       console.error('[liveLocation]', msg)
@@ -160,16 +173,45 @@ export async function startLiveLocation(uid: string): Promise<void> {
     },
     { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 },
   )
-
-  dwellTimer = setInterval(checkDwell, DWELL_CHECK_MS)
 }
 
-export function stopLiveLocation(): void {
+function stopWebLocation() {
   if (watchId !== null && typeof navigator !== 'undefined' && navigator.geolocation) {
     navigator.geolocation.clearWatch(watchId)
   }
-  if (dwellTimer !== null) clearInterval(dwellTimer)
   watchId = null
+}
+
+// ── Public API ───────────────────────────────────────────────────────
+export async function startLiveLocation(uid: string): Promise<void> {
+  if (watchId !== null || capacitorWatchHandle !== null) return
+  userId = uid
+  dwellTimer = setInterval(checkDwell, DWELL_CHECK_MS)
+
+  if (isNative()) {
+    await startNativeLocation(uid)
+  } else {
+    // Load last saved location for web too
+    try {
+      const { data } = await supabase
+        .from('user_locations')
+        .select('lat, lng')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false })
+        .limit(1)
+      if (data && data.length > 0) lastSaved = { lat: data[0].lat, lng: data[0].lng }
+    } catch { /* ignore */ }
+    startWebLocation(uid)
+  }
+}
+
+export function stopLiveLocation(): void {
+  if (isNative()) {
+    stopNativeLocation()
+  } else {
+    stopWebLocation()
+  }
+  if (dwellTimer !== null) clearInterval(dwellTimer)
   dwellTimer = null
   candidate = null
   lastSaved = null
