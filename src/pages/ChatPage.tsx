@@ -19,7 +19,7 @@ import { useActivityHeartbeat } from '../lib/realtime'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useCall } from '../contexts/CallContext'
-import { clearNotificationsForChat } from '../lib/notifications'
+import { clearNotificationsForChat, useNotifications } from '../lib/notifications'
 import { checkForUpdate } from '../lib/updater'
 
 type Tab = 'chats' | 'groups' | 'stories' | 'calls' | 'contacts' | 'permissions'
@@ -33,6 +33,9 @@ export default function ChatPage() {
   const [activeTab, setActiveTab] = useState<Tab>('chats')
   const [groupView, setGroupView] = useState<GroupView | null>(null)
   const [dmView, setDmView] = useState<DmView | null>(null)
+  const notifications = useNotifications()
+  const unreadNotifs = notifications.filter(n => !n.read).length
+
   const [showAdmin, setShowAdmin] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
@@ -366,6 +369,18 @@ export default function ChatPage() {
               {isMobile && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: '#fff', flexShrink: 0, position: 'relative' }}>
                   <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px' }}>Ephemera</span>
+                  <button
+                    onClick={() => { document.hasFocus?.() ? null : null; alert('Notificaciones: ' + unreadNotifs + ' nuevas'); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', color: unreadNotifs > 0 ? '#f59e0b' : '#667781', fontSize: '22px', position: 'relative' }}
+                    title={`${unreadNotifs > 0 ? unreadNotifs + ' nuevas' : 'Sin notificaciones'}`}
+                  >
+                    🔔
+                    {unreadNotifs > 0 && (
+                      <span style={{ position: 'absolute', top: '2px', right: '-2px', minWidth: '16px', height: '16px', background: '#f59e0b', borderRadius: '8px', color: '#fff', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', border: '2px solid #fff' }}>
+                        {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                      </span>
+                    )}
+                  </button>
                   <button
                     onClick={() => setShowMobileMenu(v => !v)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: '#667781', fontSize: '20px' }}
