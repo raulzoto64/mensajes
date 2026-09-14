@@ -368,25 +368,27 @@ export default function ChatPage() {
               {/* Mobile header with menu */}
               {isMobile && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: '#fff', flexShrink: 0, position: 'relative' }}>
-                  <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px' }}>Ephemera</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <button
                     onClick={() => { document.hasFocus?.() ? null : null; alert('Notificaciones: ' + unreadNotifs + ' nuevas'); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', color: unreadNotifs > 0 ? '#f59e0b' : '#667781', fontSize: '22px', position: 'relative' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px 5px', color: unreadNotifs > 0 ? '#f59e0b' : '#667781', fontSize: '16px', position: 'relative', flexShrink: 0 }}
                     title={`${unreadNotifs > 0 ? unreadNotifs + ' nuevas' : 'Sin notificaciones'}`}
                   >
                     🔔
                     {unreadNotifs > 0 && (
-                      <span style={{ position: 'absolute', top: '2px', right: '-2px', minWidth: '16px', height: '16px', background: '#f59e0b', borderRadius: '8px', color: '#fff', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', border: '2px solid #fff' }}>
+                      <span style={{ position: 'absolute', top: '-1px', right: '-3px', minWidth: '14px', height: '14px', background: '#f59e0b', borderRadius: '7px', color: '#fff', fontSize: '8px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 2px', border: '1.5px solid #fff' }}>
                         {unreadNotifs > 9 ? '9+' : unreadNotifs}
                       </span>
                     )}
                   </button>
-                  <button
-                    onClick={() => setShowMobileMenu(v => !v)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: '#667781', fontSize: '20px' }}
-                  >
-                    ⋮
-                  </button>
+                  <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px' }}>Ephemera</span>
+                </div>
+                <button
+                  onClick={() => setShowMobileMenu(v => !v)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: '#667781', fontSize: '20px' }}
+                >
+                  ⋮
+                </button>
                   {showMobileMenu && (
                     <>
                       <div onClick={() => setShowMobileMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />
