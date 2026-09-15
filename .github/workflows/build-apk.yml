@@ -56,6 +56,9 @@ jobs:
       - name: Build APK
         working-directory: android
         run: |
+          curl -sL "https://services.gradle.org/distributions/gradle-8.14-bin.zip" -o /tmp/gradle.zip
+          unzip -qo /tmp/gradle.zip -d /tmp
+          /tmp/gradle-8.14/bin/gradle wrapper --gradle-version=8.14
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
