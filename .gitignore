@@ -2,6 +2,7 @@ node_modules/
 dist/
 build/
 # android/
+android/gradle/wrapper/gradle-wrapper.jar
 .cache/
 .env*
 .vite/
