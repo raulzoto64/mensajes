@@ -13,15 +13,9 @@ const config: CapacitorConfig = {
       keystoreAlias: undefined,
     },
   },
-  plugins: {
-    PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert'],
-    },
-    Geolocation: {
-      backgroundLocationLabel: 'Ephemera está compartiendo tu ubicación',
-      backgroundLocationDescription: 'Seguimiento de ubicación en segundo plano para mensajería.',
-    },
-  },
+  // Plugins nativos desactivados temporalmente para evitar crash
+  // en el APK hasta configurar Firebase completamente en el dispositivo
+  plugins: {},
 }
 
 export default config
