@@ -53,21 +53,9 @@ jobs:
           sed -i "s/versionCode 1/versionCode $(( $(echo ${{ steps.version.outputs.version }} | tr '.' '+') ))/" build.gradle
           sed -i "s/versionName \"1.0\"/versionName \"${{ steps.version.outputs.version }}\"/" build.gradle
 
-      - name: Generate fresh gradle wrapper
-        working-directory: android
-        run: |
-          rm -f gradlew gradlew.bat
-          rm -rf gradle/wrapper
-          gradle wrapper --gradle-version=8.2.1 2>/dev/null || {
-            curl -sL "https://services.gradle.org/distributions/gradle-8.2.1-bin.zip" -o /tmp/gradle.zip
-            unzip -qo /tmp/gradle.zip -d /tmp
-            /tmp/gradle-8.2.1/bin/gradle wrapper --gradle-version=8.2.1
-          }
-          chmod +x gradlew
-
       - name: Build APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
