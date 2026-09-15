@@ -77,9 +77,9 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
     <div
       style={{
         position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        bottom: '20px',
+        left: '12px',
+        right: '12px',
         height: isNative() ? '64px' : '60px',
         paddingBottom: isNative() ? 'env(safe-area-inset-bottom)' : '0',
         background: '#ffffff',
@@ -88,6 +88,9 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
         alignItems: 'center',
         justifyContent: 'space-around',
         zIndex: 100,
+        borderRadius: '16px',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+        marginTop: '8px',
         fontFamily: "'Outfit', sans-serif",
       }}
     >
