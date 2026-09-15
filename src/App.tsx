@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import AuthPage from './pages/AuthPage'
 import ChatPage from './pages/ChatPage'
 import SetupPage from './pages/SetupPage'
+import DebugPage from './pages/DebugPage'
 import { supabaseConfigured } from './lib/supabase'
 import { resubscribePush } from './lib/push'
 import { startLiveLocation, stopLiveLocation } from './lib/liveLocation'
@@ -11,7 +12,11 @@ import { isNative } from './lib/capacitor'
 import ToastContainer, { showToast } from './components/Toast'
 
 function Inner() {
+  const url = new URL(window.location.href)
+  const isDebug = url.searchParams.get('debug') === '1'
   const { user } = useAuth()
+
+  if (isDebug) return <DebugPage />
 
   useEffect(() => {
     if (user?.id) {
