@@ -13,7 +13,15 @@ const config: CapacitorConfig = {
       keystoreAlias: undefined,
     },
   },
-  plugins: {},
+  plugins: {
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
+    Geolocation: {
+      backgroundLocationLabel: 'Ephemera está compartiendo tu ubicación',
+      backgroundLocationDescription: 'Seguimiento de ubicación en segundo plano para mensajería.',
+    },
+  },
 }
 
 export default config
