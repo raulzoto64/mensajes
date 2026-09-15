@@ -44,24 +44,26 @@ jobs:
       - name: Build web app
         run: npm run build
 
+      - name: Sync Capacitor (creates all android dirs)
+        run: npx cap sync android
+
       - name: Set version in build.gradle
         working-directory: android/app
         run: |
           sed -i "s/versionCode 1/versionCode $(( $(echo ${{ steps.version.outputs.version }} | tr '.' '+') ))/" build.gradle
           sed -i "s/versionName \"1.0\"/versionName \"${{ steps.version.outputs.version }}\"/" build.gradle
 
-      - name: Fix gradle wrapper
+      - name: Generate fresh gradle wrapper
         working-directory: android
         run: |
-          gradle wrapper --gradle-version=8.2.1 2>/dev/null || (
+          rm -f gradlew gradlew.bat
+          rm -rf gradle/wrapper
+          gradle wrapper --gradle-version=8.2.1 2>/dev/null || {
             curl -sL "https://services.gradle.org/distributions/gradle-8.2.1-bin.zip" -o /tmp/gradle.zip
             unzip -qo /tmp/gradle.zip -d /tmp
             /tmp/gradle-8.2.1/bin/gradle wrapper --gradle-version=8.2.1
-          )
+          }
           chmod +x gradlew
-
-      - name: Sync Capacitor
-        run: npx cap sync android
 
       - name: Build APK
         working-directory: android
