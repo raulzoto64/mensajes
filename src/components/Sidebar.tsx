@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { unsubscribePush } from '../lib/push'
 import { checkForUpdate } from '../lib/updater'
 
 type Tab = 'chats' | 'groups' | 'stories' | 'calls' | 'contacts'
@@ -283,7 +282,6 @@ export default function Sidebar({ activeGroupId, activeDmId, activeTab, unreadCh
       <div style={{ padding: '8px', borderTop: '1px solid #e5e7eb' }}>
         <button
           onClick={() => {
-            if (user) unsubscribePush(user.id)
             logout()
           }}
           style={{

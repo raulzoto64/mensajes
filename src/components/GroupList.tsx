@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { addNotification } from '../lib/notifications'
+
 
 type Group = {
   id: string

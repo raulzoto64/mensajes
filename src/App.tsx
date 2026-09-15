@@ -5,7 +5,6 @@ import ChatPage from './pages/ChatPage'
 import SetupPage from './pages/SetupPage'
 import DebugPage from './pages/DebugPage'
 import { supabaseConfigured } from './lib/supabase'
-import { resubscribePush } from './lib/push'
 import { startLiveLocation, stopLiveLocation } from './lib/liveLocation'
 import { CallProvider } from './contexts/CallContext'
 import { isNative } from './lib/capacitor'
@@ -17,16 +16,6 @@ function Inner() {
   const { user } = useAuth()
 
   if (isDebug) return <DebugPage />
-
-  useEffect(() => {
-    if (user?.id) {
-      resubscribePush(user.id).then((r) => {
-        if (!r.ok) showToast(`Push: ${r.error}`)
-      }).catch((e) => {
-        showToast(`Push fatal: ${e instanceof Error ? e.message : String(e)}`)
-      })
-    }
-  }, [user?.id])
 
   useEffect(() => {
     if (!user?.id) return

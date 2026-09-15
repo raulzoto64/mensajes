@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import EmojiPicker from './EmojiPicker'
 import GifPicker from './GifPicker'
 import { notifyChatChanged, notifyTyping, addPendingMessage, removePendingMessage } from '../lib/realtime'
-import { triggerMessagePush } from '../lib/pushNotify'
+
 
 type Props = {
   groupId?: string
@@ -91,15 +91,6 @@ export default function MessageInput({ groupId, conversationId, onSent, onSendin
         await supabase
           .from('direct_message_views')
           .upsert({ message_id: inserted.id, user_id: user.id }, { onConflict: 'message_id,user_id' })
-        void triggerMessagePush({
-          table: 'direct_messages',
-          id: inserted.id,
-          sender_id: user.id,
-          conversation_id: conversationId,
-          type,
-          content,
-          media_url: mediaUrl,
-        })
       }
     } else if (groupId) {
       const { data: inserted, error } = await supabase
@@ -120,15 +111,6 @@ export default function MessageInput({ groupId, conversationId, onSent, onSendin
       if (inserted?.id) {
         await supabase.from('message_views')
           .upsert({ message_id: inserted.id, user_id: user.id }, { onConflict: 'message_id,user_id' })
-        void triggerMessagePush({
-          table: 'messages',
-          id: inserted.id,
-          sender_id: user.id,
-          group_id: groupId,
-          type,
-          content,
-          media_url: mediaUrl,
-        })
       }
     }
     setSending(false)
