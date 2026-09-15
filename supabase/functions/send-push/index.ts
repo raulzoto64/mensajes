@@ -7,6 +7,7 @@
 //   VAPID_PRIVATE_KEY   = EeVYLtLwUDnFmQ5fRzRNcfm72g3sCKWMaNNLG6TUVvE
 //   VAPID_PUBLIC_KEY    = BEf5JRyAOcpsGaGGY8k9y_i7RcjzgJZ_Q7-MKKmaF_PL-Itg7JueNjFKQyRbtVv3isnrKB1jPc6wWOhMGVTxtMM
 //   VAPID_SUBJECT       = mailto:raulzoto64@gmail.com
+//   FCM_SERVER_KEY      = <tu server key de Firebase Console > Project Settings > Cloud Messaging>
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
@@ -17,6 +18,7 @@ const PUSH_SECRET = Deno.env.get('PUSH_SECRET') || ''
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || ''
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || ''
 const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:raulzoto64@gmail.com'
+const FCM_SERVER_KEY = Deno.env.get('FCM_SERVER_KEY') || ''
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
@@ -37,15 +39,47 @@ type Payload = {
   type: string
   content: string | null
   media_url: string | null
-  // Modo de prueba (desde la página de diagnóstico): envía a un usuario concreto
   self_test?: boolean
   user_id?: string
   title?: string
   body?: string
   url?: string
-  // Avisa a los administradores de un nuevo usuario pendiente de aprobación
   mode?: string
   user_alias?: string
+}
+
+function isFcmToken(endpoint: string): boolean {
+  return !endpoint.startsWith('http')
+}
+
+async function sendFcmPush(token: string, title: string, body: string, data: Record<string, string>): Promise<boolean> {
+  if (!FCM_SERVER_KEY) {
+    console.error('[push] FCM_SERVER_KEY not configured')
+    return false
+  }
+
+  const message = {
+    to: token,
+    notification: { title, body },
+    data,
+    priority: 'high',
+  }
+
+  const res = await fetch('https://fcm.googleapis.com/fcm/send', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `key=${FCM_SERVER_KEY}`,
+    },
+    body: JSON.stringify(message),
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    console.error('[push] FCM error', res.status, text)
+    return false
+  }
+  return true
 }
 
 async function resolveRecipients(p: Payload) {
@@ -111,7 +145,6 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'bad json' }, { status: 400, headers: corsHeaders })
   }
 
-  // Modo de prueba: enviar a un usuario concreto (usado por la página de diagnóstico)
   let target: { userIds: string[]; title: string; url: string } | null = null
   let customTitle: string | null = null
   let customBody: string | null = null
@@ -120,7 +153,6 @@ Deno.serve(async (req) => {
     customTitle = payload.title || 'Prueba de Ephemera'
     customBody = payload.body || 'Si ves esto en segundo plano, el push funciona.'
   } else if (payload.mode === 'new_user' && payload.user_alias) {
-    // Notifica a todos los administradores del nuevo usuario pendiente
     const { data: admins } = await admin.from('users').select('id').eq('is_admin', true)
     const userIds = (admins ?? []).map((a: { id: string }) => a.id)
     target = { userIds, title: 'Nuevo usuario pendiente', url: '/?admin=1' }
@@ -135,29 +167,44 @@ Deno.serve(async (req) => {
 
   const { data: subs } = await admin
     .from('push_subscriptions')
-    .select('endpoint, p256dh, auth')
+    .select('endpoint, p256dh, auth, browser')
     .in('user_id', target.userIds)
 
   const body = customBody ?? previewBody(payload)
-  const notificationPayload = JSON.stringify({
-    title: customTitle ?? target.title,
-    body,
-    url: target.url,
-    tag: payload.self_test ? `selftest-${payload.user_id}` : payload.table === 'messages' ? `g-${payload.group_id}` : `dm-${payload.conversation_id}`,
-    vibrate: [120, 60, 120],
-  })
+  const tag = payload.self_test ? `selftest-${payload.user_id}` : payload.table === 'messages' ? `g-${payload.group_id}` : `dm-${payload.conversation_id}`
 
   let sent = 0
   let failed = 0
   const errors: { status: number | null; message: string }[] = []
+
   for (const sub of subs ?? []) {
     try {
-      const pushSub = { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }
-      await webpush.sendNotification(pushSub, notificationPayload, { TTL: 86400 })
-      sent++
+      if (isFcmToken(sub.endpoint)) {
+        // Native Android — send via FCM
+        const ok = await sendFcmPush(sub.endpoint, customTitle ?? target!.title, body, {
+          url: target!.url,
+          tag,
+        })
+        if (ok) sent++
+        else {
+          failed++
+          errors.push({ status: null, message: 'FCM send failed' })
+        }
+      } else {
+        // Web browser — send via Web Push (VAPID)
+        const pushSub = { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }
+        const notificationPayload = JSON.stringify({
+          title: customTitle ?? target!.title,
+          body,
+          url: target!.url,
+          tag,
+          vibrate: [120, 60, 120],
+        })
+        await webpush.sendNotification(pushSub, notificationPayload, { TTL: 86400 })
+        sent++
+      }
     } catch (err) {
       failed++
-      // 404/410 → suscripción vencida, la borramos
       const status = (err as { statusCode?: number }).statusCode ?? null
       errors.push({ status, message: err instanceof Error ? err.message : String(err) })
       if (status === 404 || status === 410) {
