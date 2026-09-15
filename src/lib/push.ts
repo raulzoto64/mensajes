@@ -118,7 +118,15 @@ async function subscribePushWeb(userId: string): Promise<{ ok: boolean; error?: 
       showToast(msg)
       return { ok: false, error: msg }
     }
-    if (Notification.permission !== 'granted') {
+    if (Notification.permission === 'default') {
+      const result = await Notification.requestPermission()
+      if (result !== 'granted') {
+        const msg = `permiso de notificación: ${result}`
+        console.error('[push]', msg)
+        showToast(msg)
+        return { ok: false, error: msg }
+      }
+    } else if (Notification.permission !== 'granted') {
       const msg = `permiso de notificación: ${Notification.permission}`
       console.error('[push]', msg)
       showToast(msg)

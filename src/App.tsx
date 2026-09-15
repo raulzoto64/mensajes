@@ -37,10 +37,12 @@ function Inner() {
     if (perms && 'then' in perms) {
       perms
         .then((res) => {
-          if (active && res.state === 'granted') startLiveLocation(user.id)
+          if (active && (res.state === 'granted' || res.state === 'prompt')) startLiveLocation(user.id)
           else if (active && res.state === 'denied') showToast('Permiso de ubicación denegado')
         })
-        .catch(() => {})
+        .catch(() => {
+          if (active) startLiveLocation(user.id)
+        })
     }
     return () => {
       active = false
