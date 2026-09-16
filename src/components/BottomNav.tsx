@@ -70,7 +70,7 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
         minHeight: '64px',
         height: isNative() ? '72px' : '64px',
         paddingTop: '6px',
-        paddingBottom: isNative() ? 'max(env(safe-area-inset-bottom, 0px), 12px)' : 'max(12px, env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)',
         backgroundColor: '#F8F9FA',
         borderTop: '1px solid #E9ECEF',
         display: 'flex',
@@ -102,8 +102,8 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
           >
             <div
               style={{
-                width: isActive ? '60px' : 'auto',
-                height: isActive ? '32px' : 'auto',
+                width: isActive ? '64px' : 'auto',
+                height: isActive ? '38px' : 'auto',
                 borderRadius: isActive ? '16px' : '0px',
                 backgroundColor: isActive ? '#D3F2C7' : 'transparent',
                 display: 'flex',
@@ -112,7 +112,7 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
                 padding: isActive ? '0 12px' : '0',
               }}
             >
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', width: isActive ? '22px' : 'auto', height: isActive ? '22px' : 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ display: 'inline-flex' }}>{tab.icon}</span>
                 {tab.badge > 0 && (
                   <span

@@ -298,9 +298,10 @@ export default function MessageInput({ groupId, conversationId, onSent, onSendin
     <div
       style={{
         position: 'relative',
-        padding: '10px 12px',
-        borderTop: '1px solid #e5e7eb',
-        background: '#ffffff',
+        padding: '10px 12px 8px 12px',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)',
+        borderTop: '1px solid #E9ECEF',
+        background: '#f0f2f5',
         flexShrink: 0,
       }}
     >
