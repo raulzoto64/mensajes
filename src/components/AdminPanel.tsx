@@ -224,6 +224,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
         background: '#f0f2f5',
         fontFamily: "'Outfit', sans-serif",
         zIndex: 150,
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)',
       }}
     >
       <style>{`
