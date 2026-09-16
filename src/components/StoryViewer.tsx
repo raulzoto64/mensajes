@@ -150,6 +150,8 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* White top padding area like header */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 28px)', background: '#fff', zIndex: 5 }} />
       {/* Progress bar */}
       <div style={{ position: 'absolute', top: '0', left: '0', right: '0', padding: '8px 12px', zIndex: 10, display: 'flex', gap: '3px' }}>
         {allStories.map((_, i) => (

@@ -261,6 +261,8 @@ export default function ChatPage() {
         paddingTop: 'max(env(safe-area-inset-top, 0px), 28px)',
       }}
     >
+      {/* White top area for safe-area */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 28px)', background: '#fff', zIndex: 5 }} />
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div
