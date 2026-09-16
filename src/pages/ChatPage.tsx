@@ -15,7 +15,7 @@ import PermissionsRequest from '../components/PermissionsRequest'
 import DmList from '../components/DmList'
 import GroupList from '../components/GroupList'
 import SettingsPanel from '../components/SettingsPanel'
-import { useActivityHeartbeat } from '../lib/realtime'
+import { useActivityHeartbeat, onChatChanged } from '../lib/realtime'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useCall } from '../contexts/CallContext'
@@ -70,6 +70,12 @@ export default function ChatPage() {
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    const unsubscribe = onChatChanged(loadUnreadCounts)
+    return unsubscribe
+  }, [user])
 
   useEffect(() => {
     if (!user) return
@@ -245,7 +251,7 @@ export default function ChatPage() {
   return (
     <div
       style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: '#f0f2f5',
@@ -326,7 +332,7 @@ export default function ChatPage() {
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobile && !showChat && !showAdmin ? '60px' : '0' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobile && !showChat && !showAdmin ? '76px' : '0' }}>
           {/* Active chat view (DM or Group) */}
           {showChat && dmView && (
             <>
@@ -362,7 +368,7 @@ export default function ChatPage() {
               {/* Mobile header with menu */}
               {isMobile && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: '#fff', flexShrink: 0, position: 'relative' }}>
-                  <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px', flex: 1 }}>Ephemera</span>
+                  <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px', flex: 1 }}>comunidadOG</span>
                   <button
                     onClick={() => setShowMobileMenu(v => !v)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: '#667781', fontSize: '20px' }}

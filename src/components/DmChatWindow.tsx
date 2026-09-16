@@ -246,6 +246,11 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   }, [loadMessages])
 
   useEffect(() => {
+    // Al entrar al DM, ir directamente al último mensaje sin animación
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+  }, [conversationId])
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length, pending.length])
 

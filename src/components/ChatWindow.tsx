@@ -293,6 +293,11 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   }, [loadMessages])
 
   useEffect(() => {
+    // Al entrar al chat, ir directamente al último mensaje sin animación
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+  }, [groupId])
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length, pending.length])
 
