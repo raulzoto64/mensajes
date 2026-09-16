@@ -52,7 +52,12 @@ export default function NotificationBell({ userId, onGoToChat }: Props) {
               <button
                 key={item.id}
                 onClick={() => {
-                  // No cierra el panel para que no desaparezca al abrir una
+                  // 1. Filtrar/eliminar del estado local inmediatamente
+                  const updated = items.filter(n => n.id !== item.id);
+                  setItems(updated);
+                  // 2. Si la lista queda vacía, cerrar el modal
+                  if (updated.length === 0) setOpen(false);
+                  // 3. Navegar al chat
                   if (onGoToChat) {
                     const groupMatch = item.url.match(/grupo=([^&]+)/)
                     const dmMatch = item.url.match(/dm=([^&]+)/)
