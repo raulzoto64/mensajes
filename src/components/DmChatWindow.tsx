@@ -386,20 +386,6 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
             )}
           </div>
         </div>
-        <div
-          style={{
-            padding: '3px 9px',
-            background: 'rgba(34,211,238,0.06)',
-            border: '1px solid rgba(0,136,204,0.12)',
-            borderRadius: '20px',
-            fontSize: '10px',
-            color: '#0088cc',
-            fontFamily: "'DM Mono', monospace",
-            whiteSpace: 'nowrap',
-          }}
-        >
-          ◉ PRIVADO
-        </div>
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setMenuOpen((v) => !v)}
