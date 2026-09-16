@@ -103,8 +103,8 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
           >
             <div
               style={{
-                width: isActive ? '64px' : 'auto',
-                height: isActive ? '38px' : 'auto',
+                width: isActive ? '68px' : 'auto',
+                height: isActive ? '44px' : 'auto',
                 borderRadius: isActive ? '16px' : '0px',
                 backgroundColor: isActive ? '#D3F2C7' : 'transparent',
                 display: 'flex',
