@@ -285,14 +285,23 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
         </div>
       )}
 
+      {/* Story messages */}
+      <div style={{ position: 'absolute', bottom: '80px', left: '12px', right: '12px', maxHeight: '200px', overflowY: 'auto', zIndex: 20 }}>
+        {storyMsgs.map((m: any) => (
+          <div key={m.id} style={{ padding: '6px 10px', background: m.user_id === user?.id ? '#D3F2C7' : '#fff', border: m.user_id === user?.id ? '1px solid #00a884' : '1px solid #E9ECEF', borderRadius: '8px', marginBottom: '4px', color: '#111B21', fontSize: '12px', backdropFilter: 'blur(4px)' }}>
+            <span style={{ fontWeight: '700', fontSize: '11px', color: m.user_id === user?.id ? '#00695c' : '#008069' }}>{m.user_id === user?.id ? 'Tú' : m.user_alias || 'Usuario'}:</span> {m.type === 'emoji' ? m.content : m.content || (m.type === 'audio' ? '🎤 Audio' : m.type === 'text' ? m.content || '' : '📎 Media')}
+          </div>
+        ))}
+      </div>
+
       {/* Story message input */}
-      <div style={{ position: 'absolute', bottom: '24px', left: '12px', right: '12px', zIndex: 20, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: 'rgba(255,255,255,0.12)', borderRadius: '24px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.15)' }}>
+      <div style={{ position: 'absolute', bottom: '24px', left: '12px', right: '12px', zIndex: 20, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: '#fff', borderRadius: '24px', border: '1px solid #E9ECEF', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
         <input
           value={msgText}
           onChange={e => setMsgText(e.target.value)}
           placeholder="Responder historia..."
           onKeyDown={e => { if (e.key === 'Enter' && msgText.trim()) { sendStoryMessage('text', msgText.trim(), null); } }}
-          style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '13px', fontFamily: "'Outfit', sans-serif", outline: 'none', padding: '4px 8px' }}
+          style={{ flex: 1, background: '#F0F2F5', border: '1px solid #E9ECEF', borderRadius: '12px', color: '#111B21', fontSize: '13px', fontFamily: "'Outfit', sans-serif", outline: 'none', padding: '6px 10px' }}
         />
         <button onClick={() => { if (msgText.trim()) sendStoryMessage('emoji', msgText.trim(), null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: '18px', padding: '4px' }}>😀</button>
         <button onClick={() => sendStoryMessage('text', msgText.trim() || '👍', null)} style={{ background: '#008069', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: '#fff', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>➤</button>
