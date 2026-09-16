@@ -258,11 +258,11 @@ export default function ChatPage() {
         fontFamily: "'Outfit', sans-serif",
         overflow: 'hidden',
         position: 'relative',
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 28px)',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)',
       }}
     >
       {/* White top area for safe-area */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 28px)', background: '#fff', zIndex: 5 }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 12px)', background: '#fff', zIndex: 5 }} />
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div

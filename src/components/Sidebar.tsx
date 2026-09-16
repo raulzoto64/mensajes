@@ -93,11 +93,11 @@ export default function Sidebar({ activeGroupId, activeDmId, activeTab, unreadCh
         display: 'flex',
         flexDirection: 'column',
         fontFamily: "'Outfit', sans-serif",
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 28px)',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)',
       }}
     >
       {/* White safe-area top */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 28px)', background: '#fff', zIndex: 5 }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 12px)', background: '#fff', zIndex: 5 }} />
       {/* Config warning */}
       {supabaseMissing && (
         <div style={{ margin: '8px', padding: '10px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '10px', fontSize: '11px', color: '#fbbf24', fontFamily: "'DM Mono', monospace", lineHeight: '1.5' }}>

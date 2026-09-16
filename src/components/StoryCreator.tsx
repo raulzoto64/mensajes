@@ -133,14 +133,14 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
       }}
     >
       {/* White safe-area top */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 28px)', background: '#fff', zIndex: 5 }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 12px)', background: '#fff', zIndex: 5 }} />
       {/* Header */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-        padding: 'max(env(safe-area-inset-top, 0px), 28px) 16px 12px 16px',
+        padding: 'max(env(safe-area-inset-top, 0px), 12px) 16px 12px 16px',
         borderBottom: '1px solid #E9ECEF',
         backgroundColor: '#f8f9fa',
         }}

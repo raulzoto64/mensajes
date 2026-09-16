@@ -67,10 +67,10 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
         bottom: 0,
         left: 0,
         right: 0,
-        minHeight: '84px',
+        minHeight: '64px',
         height: 'auto',
-        paddingTop: '18px',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+        paddingTop: '6px',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)',
         backgroundColor: '#ffffff',
         borderTop: '1px solid #E9ECEF',
         boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
@@ -103,8 +103,8 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
           >
             <div
               style={{
-                width: isActive ? '68px' : 'auto',
-                height: isActive ? '48px' : 'auto',
+                width: isActive ? '60px' : 'auto',
+                height: isActive ? '36px' : 'auto',
                 borderRadius: isActive ? '16px' : '0px',
                 backgroundColor: isActive ? '#D3F2C7' : 'transparent',
                 display: 'flex',

@@ -333,9 +333,9 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   const statusColor = typing ? '#fbbf24' : isOnline ? '#25d366' : '#adb5bd'
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f0f2f5', paddingTop: 'max(env(safe-area-inset-top, 0px), 28px)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f0f2f5', paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}>
       {/* White safe-area top */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 28px)', background: '#fff', zIndex: 5 }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 12px)', background: '#fff', zIndex: 5 }} />
       {/* Header */}
       <div
         style={{
