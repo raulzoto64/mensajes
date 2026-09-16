@@ -8,7 +8,7 @@ type Props = {
 
 export default function NotificationBell({ userId, onGoToChat }: Props) {
   const [open, setOpen] = useState(false)
-  const [items, setItems] = useState<{ id: string; title: string; url: string; count: number }[]>([])
+  const [items, setItems] = useState<{ id: string; title: string; url: string; count: number; messageId: string; isGroup: boolean }[]>([])
 
   async function load() {
     if (!userId) return
@@ -21,8 +21,8 @@ export default function NotificationBell({ userId, onGoToChat }: Props) {
       .from('direct_messages')
       .select('id, conversation_id')
       .eq('is_deleted', false)
-    const groups = (groupMsgs ?? []).map((m: any) => ({ id: `g-${m.group_id}`, title: 'Grupo', url: `/?grupo=${m.group_id}`, count: 1 }))
-    const dms = (dmMsgs ?? []).map((m: any) => ({ id: `dm-${m.conversation_id}`, title: 'Mensaje', url: `/?dm=${m.conversation_id}`, count: 1 }))
+    const groups = (groupMsgs ?? []).map((m: any) => ({ id: `g-${m.group_id}`, title: 'Grupo', url: `/?grupo=${m.group_id}`, count: 1, messageId: m.id, isGroup: true }))
+    const dms = (dmMsgs ?? []).map((m: any) => ({ id: `dm-${m.conversation_id}`, title: 'Mensaje', url: `/?dm=${m.conversation_id}`, count: 1, messageId: m.id, isGroup: false }))
     setItems([...groups, ...dms].slice(0, 5))
   }
 
@@ -51,13 +51,25 @@ export default function NotificationBell({ userId, onGoToChat }: Props) {
             items.map((item) => (
               <button
                 key={item.id}
-                onClick={() => {
+                onClick={async () => {
+                  const itemData = items.find(n => n.id === item.id)
+                  if (!itemData || !userId) return
                   // 1. Filtrar/eliminar del estado local inmediatamente
                   const updated = items.filter(n => n.id !== item.id);
                   setItems(updated);
                   // 2. Si la lista queda vacía, cerrar el modal
                   if (updated.length === 0) setOpen(false);
-                  // 3. Navegar al chat
+                  // 3. Marcar como visto en la base de datos (Opción B: vistas)
+                  try {
+                    if (itemData.isGroup) {
+                      await supabase.from('message_views').upsert({ message_id: itemData.messageId, user_id: userId, group_id: itemData.url.match(/grupo=([^&]+)/)?.[1] || '' }).select().single()
+                    } else {
+                      await supabase.from('direct_message_views').upsert({ message_id: itemData.messageId, user_id: userId, conversation_id: itemData.url.match(/dm=([^&]+)/)?.[1] || '' }).select().single()
+                    }
+                  } catch (e) {
+                    console.error('Error al marcar notificación como vista:', e)
+                  }
+                  // 4. Navegar al chat
                   if (onGoToChat) {
                     const groupMatch = item.url.match(/grupo=([^&]+)/)
                     const dmMatch = item.url.match(/dm=([^&]+)/)
