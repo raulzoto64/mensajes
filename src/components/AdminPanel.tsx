@@ -844,9 +844,12 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
         {/* Admin Bottom Nav - mobile only */}
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
-          height: '60px',
+          minHeight: '64px',
+          height: 'auto',
+          paddingTop: '6px',
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)',
           background: '#ffffff',
-          borderTop: '1px solid #e5e7eb',
+          borderTop: '1px solid #E9ECEF',
           display: 'none', alignItems: 'center', justifyContent: 'space-around',
           zIndex: 100,
           fontFamily: "'Outfit', sans-serif",
