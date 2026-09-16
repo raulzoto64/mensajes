@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'com.ephemera.app',
-  appName: 'Ephemera',
+  appName: 'ComunidadOg',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
@@ -15,7 +15,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     Geolocation: {
-      backgroundLocationLabel: 'Ephemera está compartiendo tu ubicación',
+      backgroundLocationLabel: 'ComunidadOg está compartiendo tu ubicación',
       backgroundLocationDescription: 'Seguimiento de ubicación en segundo plano para mensajería.',
     },
   },

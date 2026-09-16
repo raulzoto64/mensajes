@@ -42,7 +42,7 @@ export default function SetupPage() {
             ◈
           </div>
           <h1 style={{ fontSize: '26px', fontWeight: '700', color: '#111b21', margin: '0 0 6px', letterSpacing: '-0.5px' }}>
-            Ephemera
+            ComunidadOg
           </h1>
           <p style={{ color: '#8696a0', fontSize: '14px', margin: 0 }}>
             Configuración requerida

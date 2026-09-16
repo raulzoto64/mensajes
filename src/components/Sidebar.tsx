@@ -125,7 +125,7 @@ export default function Sidebar({ activeGroupId, activeDmId, activeTab, unreadCh
             ◈
           </div>
           <span style={{ fontWeight: '700', fontSize: '15px', color: '#111b21', letterSpacing: '-0.3px' }}>
-            Ephemera
+            ComunidadOg
           </span>
         </div>
 

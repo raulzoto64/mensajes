@@ -1,4 +1,4 @@
-# Ephemera
+# ComunidadOg
 
 React + Vite + Tailwind CSS chat messaging app with Supabase backend.
 

@@ -77,11 +77,11 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
     <div
       style={{
         position: 'fixed',
-        bottom: '20px',
+        bottom: isNative() ? 'env(safe-area-inset-bottom, 0px)' : '12px',
         left: '12px',
         right: '12px',
         height: isNative() ? '64px' : '60px',
-        paddingBottom: isNative() ? 'env(safe-area-inset-bottom)' : '0',
+        paddingBottom: isNative() ? 'env(safe-area-inset-bottom)' : '4px',
         background: '#ffffff',
         borderTop: '1px solid #e5e7eb',
         display: 'flex',
@@ -90,7 +90,6 @@ export default function BottomNav({ active, onTabChange, unreadChats, unreadGrou
         zIndex: 100,
         borderRadius: '16px',
         boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        marginTop: '8px',
         fontFamily: "'Outfit', sans-serif",
       }}
     >

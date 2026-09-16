@@ -85,7 +85,7 @@ export default function AuthPage() {
               letterSpacing: '-0.5px',
             }}
           >
-            Ephemera
+            ComunidadOg
           </h1>
           <p style={{ color: '#8696a0', fontSize: '14px', margin: 0 }}>
             Mensajes que desaparecen cuando todos los han visto

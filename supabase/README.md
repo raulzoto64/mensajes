@@ -1,4 +1,4 @@
-# Configuración de Supabase para Ephemera
+# Configuración de Supabase para ComunidadOg
 
 ## Pasos para configurar Supabase
 

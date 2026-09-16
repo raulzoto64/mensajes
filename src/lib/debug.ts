@@ -194,7 +194,7 @@ export async function sendTestPush(userId: string): Promise<{ ok: boolean; sent?
       body: {
         self_test: true,
         user_id: userId,
-        title: 'Prueba de Ephemera',
+        title: 'Prueba de ComunidadOg',
         body: 'Si ves esto en segundo plano, el push funciona.',
         url: '/',
       },

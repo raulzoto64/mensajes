@@ -149,8 +149,8 @@ Deno.serve(async (req) => {
   let customTitle: string | null = null
   let customBody: string | null = null
   if (payload.self_test && payload.user_id) {
-    target = { userIds: [payload.user_id], title: payload.title || 'Prueba de Ephemera', url: payload.url || '/' }
-    customTitle = payload.title || 'Prueba de Ephemera'
+    target = { userIds: [payload.user_id], title: payload.title || 'Prueba de ComunidadOg', url: payload.url || '/' }
+    customTitle = payload.title || 'Prueba de ComunidadOg'
     customBody = payload.body || 'Si ves esto en segundo plano, el push funciona.'
   } else if (payload.mode === 'new_user' && payload.user_alias) {
     const { data: admins } = await admin.from('users').select('id').eq('is_admin', true)
