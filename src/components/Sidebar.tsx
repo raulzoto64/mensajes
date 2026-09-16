@@ -25,6 +25,7 @@ export default function Sidebar({ activeGroupId, activeDmId, activeTab, unreadCh
   const [supabaseMissing] = useState(!supabaseConfigured)
   const [updateInfo, setUpdateInfo] = useState<{ version: string; downloadUrl: string } | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [pendingUsers, setPendingUsers] = useState(0)
   const avatarRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -33,6 +34,14 @@ export default function Sidebar({ activeGroupId, activeDmId, activeTab, unreadCh
         setUpdateInfo({ version: info.version, downloadUrl: info.downloadUrl })
       }
     })
+  }, [])
+
+  useEffect(() => {
+    async function loadPending() {
+      const { data } = await supabase.from('users').select('id').eq('is_approved', false)
+      setPendingUsers(data?.length ?? 0)
+    }
+    loadPending()
   }, [])
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -233,7 +242,12 @@ export default function Sidebar({ activeGroupId, activeDmId, activeTab, unreadCh
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            Administrar
+            <span style={{ flex: 1 }}>Administrar</span>
+            {pendingUsers > 0 && (
+              <span style={{ minWidth: '16px', height: '16px', background: '#ea4335', borderRadius: '8px', color: '#fff', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                {pendingUsers > 99 ? '99+' : pendingUsers}
+              </span>
+            )}
           </button>
         )}
         <button
