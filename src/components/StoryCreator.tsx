@@ -138,8 +138,9 @@ export default function StoryCreator({ onClose, onCreated }: Props) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 16px',
-          borderBottom: '1px solid #e5e7eb',
+        padding: 'max(env(safe-area-inset-top, 0px), 16px) 16px 12px 16px',
+        borderBottom: '1px solid #E9ECEF',
+        backgroundColor: '#f8f9fa',
         }}
       >
         <button
