@@ -182,11 +182,11 @@ export default function MessageBubble({
             style={{
               position: 'relative',
               background: isMine
-                ? '#d9fdd3'
-                : '#ffffff',
+                ? '#D9FDD3'
+                : '#FFFFFF',
               border: selected
                 ? '1px solid #ef4444'
-                : `1px solid ${isMine ? 'rgba(0,168,132,0.25)' : '#e5e7eb'}`,
+                : `1px solid ${isMine ? 'rgba(0,136,100,0.25)' : '#E9ECEF'}`,
               borderRadius: isMine ? '14px 3px 14px 14px' : '3px 14px 14px 14px',
               padding: msg.type === 'emoji' ? '6px 10px' : '10px 13px',
               cursor: selectMode && selectable ? 'pointer' : 'default',
@@ -306,7 +306,7 @@ export default function MessageBubble({
             )}
 
             {msg.type === 'text' && (
-              <p style={{ margin: 0, fontSize: '14px', color: '#111b21', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <p style={{ margin: 0, fontSize: '14px', color: '#111B21', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {msg.content}
               </p>
             )}
@@ -435,7 +435,7 @@ export default function MessageBubble({
 
             {/* Texto/caption del multimedia */}
             {isMultimedia && msg.content && !isConsumedOneTime && (
-              <p style={{ margin: '6px 0 0', fontSize: '14px', color: '#111b21', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <p style={{ margin: '6px 0 0', fontSize: '14px', color: '#111B21', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {msg.content}
               </p>
             )}

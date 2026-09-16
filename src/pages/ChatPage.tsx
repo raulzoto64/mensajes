@@ -368,7 +368,7 @@ export default function ChatPage() {
             <>
               {/* Mobile header with menu */}
               {isMobile && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: '#fff', flexShrink: 0, position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #E9ECEF', background: '#FFFFFF', flexShrink: 0, position: 'relative' }}>
                   <span style={{ fontSize: '17px', fontWeight: '700', color: '#111b21', letterSpacing: '-0.3px', flex: 1 }}>ComunidadOg</span>
                   <NotificationBell userId={user?.id} onGoToChat={(gid, did) => { if (gid) handleSelectGroup(gid, ''); else if (did) handleSelectDm(did, '', ''); }} />
                   <button

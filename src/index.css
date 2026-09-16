@@ -2,30 +2,18 @@
 @import 'tailwindcss';
 
 @theme inline {
-  --font-sans: 'Outfit', sans-serif;
+  --font-sans: 'Outfit', 'Segoe UI', sans-serif;
   --font-mono: 'DM Mono', monospace;
-
-  --color-background: #070711;
-  --color-surface: #0f0f1e;
-  --color-card: #14142a;
-  --color-card-2: #1a1a35;
-  --color-border: #1e1e3a;
-  --color-border-light: #2a2a50;
-
-  --color-accent: #8b5cf6;
-  --color-accent-hover: #7c3aed;
-  --color-accent-dim: rgba(139, 92, 246, 0.15);
-  --color-cyan: #22d3ee;
-  --color-cyan-dim: rgba(34, 211, 238, 0.12);
-
-  --color-text: #e8e8f0;
-  --color-text-muted: #6b6b8a;
-  --color-text-faint: #3d3d5c;
-
-  --color-danger: #ef4444;
-  --color-danger-dim: rgba(239, 68, 68, 0.12);
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
+  --color-wa-green: #008069;
+  --color-wa-dark: #111B21;
+  --color-wa-bg: #F0F2F5;
+  --color-wa-card: #FFFFFF;
+  --color-wa-bubble-mine: #D9FDD3;
+  --color-wa-bubble-other: #FFFFFF;
+  --color-wa-text: #111B21;
+  --color-wa-muted: #667781;
+  --color-wa-border: #E9ECEF;
+  --color-wa-active-pill: #D3F2C7;
 }
 
 * {
@@ -43,10 +31,11 @@ body,
 }
 
 body {
-  background-color: #070711;
-  color: #e8e8f0;
-  font-family: 'Outfit', sans-serif;
+  background-color: #F0F2F5;
+  color: #111B21;
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow: hidden;
 }
 
 ::-webkit-scrollbar {

@@ -51,9 +51,11 @@ function Inner() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastContainer />
-      <Inner />
-    </AuthProvider>
+    <div style={{ height: '100dvh', width: '100vw', overflow: 'hidden', display: 'flex', flexDirection: 'column', backgroundColor: '#F0F2F5' }}>
+      <AuthProvider>
+        <ToastContainer />
+        <Inner />
+      </AuthProvider>
+    </div>
   )
 }
