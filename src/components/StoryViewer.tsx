@@ -87,13 +87,6 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
   }
 
   const [msgText, setMsgText] = useState('')
-  const [storyMsgs, setStoryMsgs] = useState<any[]>([])
-
-  async function loadStoryMessages() {
-    if (!user || !story) return
-    const { data } = await supabase.from('story_messages').select('*').eq('story_id', story.id).order('created_at', { ascending: true })
-    setStoryMsgs(data ?? [])
-  }
 
   async function sendStoryMessage(type: string, content: string | null, mediaUrl: string | null) {
     if (!user || !story) return
@@ -122,8 +115,6 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
     // Cerrar historia y redirigir al chat (simulado con callback si existe)
     onClose()
   }
-
-  useEffect(() => { loadStoryMessages() }, [story.id])
 
   const timeLeft = () => {
     const diff = new Date(story.expires_at).getTime() - Date.now()
