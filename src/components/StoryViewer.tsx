@@ -97,9 +97,30 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
 
   async function sendStoryMessage(type: string, content: string | null, mediaUrl: string | null) {
     if (!user || !story) return
+    // Guardar mensaje de historia (persistencia simple)
     await supabase.from('story_messages').insert({ story_id: story.id, user_id: user.id, type, content, media_url: mediaUrl, created_at: new Date().toISOString() })
+
+    // Generar mensaje en chat con quoted_story
+    const chatPayload = {
+      conversation_id: `story-${story.id}-${user.id}`,
+      sender_id: user.id,
+      type: type === 'emoji' ? 'emoji' : 'text',
+      content: content || '',
+      media_url: mediaUrl,
+      is_deleted: false,
+      one_time_view: false,
+      quoted_story: {
+        story_id: story.id,
+        media_url: story.media_url,
+        caption: story.caption,
+        user_alias: story.user_alias,
+      }
+    }
+    await supabase.from('direct_messages').insert(chatPayload)
+
     setMsgText('')
-    loadStoryMessages()
+    // Cerrar historia y redirigir al chat (simulado con callback si existe)
+    onClose()
   }
 
   useEffect(() => { loadStoryMessages() }, [story.id])
@@ -260,15 +281,6 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
           {story.caption}
         </div>
       )}
-
-      {/* Story messages */}
-      <div style={{ position: 'absolute', bottom: '80px', left: '12px', right: '12px', maxHeight: '200px', overflowY: 'auto', zIndex: 20 }}>
-        {storyMsgs.map((m: any) => (
-          <div key={m.id} style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', marginBottom: '4px', color: '#fff', fontSize: '12px', backdropFilter: 'blur(4px)' }}>
-            <span style={{ fontWeight: '700', fontSize: '11px', color: '#D3F2C7' }}>{m.user_id === user?.id ? 'Tú' : m.user_alias || 'Usuario'}:</span> {m.type === 'emoji' ? m.content : m.content || (m.type === 'audio' ? '🎤 Audio' : m.type === 'text' ? m.content || '' : '📎 Media')}
-          </div>
-        ))}
-      </div>
 
       {/* Story message input */}
       <div style={{ position: 'absolute', bottom: '24px', left: '12px', right: '12px', zIndex: 20, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: 'rgba(255,255,255,0.12)', borderRadius: '24px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.15)' }}>

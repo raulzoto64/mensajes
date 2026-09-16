@@ -299,7 +299,7 @@ export default function MessageInput({ groupId, conversationId, onSent, onSendin
       style={{
         position: 'relative',
         padding: '10px 12px 8px 12px',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 18px)',
         borderTop: '1px solid #E9ECEF',
         background: '#f0f2f5',
         flexShrink: 0,

@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS direct_messages (
   delete_reason   text,
   delete_after    timestamptz,
   one_time_view   boolean NOT NULL DEFAULT false,
+  quoted_story    jsonb,
   created_at      timestamptz NOT NULL DEFAULT now()
 );
 

@@ -90,6 +90,13 @@ video {
   animation: fadeIn 0.2s ease forwards;
 }
 
+.header, .app-header, .top-bar {
+  padding-top: max(env(safe-area-inset-top), 20px) !important;
+  padding-bottom: 12px !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
 .record-dot {
   animation: record-pulse 1s ease infinite;
 }
