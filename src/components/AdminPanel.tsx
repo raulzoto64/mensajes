@@ -236,6 +236,8 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
           .admin-mobile-nav { display: none !important; }
         }
       `}</style>
+        {/* White safe-area top */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'max(env(safe-area-inset-top, 0px), 12px)', background: '#fff', zIndex: 5 }} />
         {/* Header */}
         <div style={{ padding: 'max(env(safe-area-inset-top, 0px), 8px) 16px 14px 16px', borderBottom: '1px solid #e5e7eb', background: '#ffffff', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
