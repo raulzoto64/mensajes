@@ -52,7 +52,7 @@ export default function NotificationBell({ userId, onGoToChat }: Props) {
               <button
                 key={item.id}
                 onClick={() => {
-                  setOpen(false)
+                  // No cierra el panel para que no desaparezca al abrir una
                   if (onGoToChat) {
                     const groupMatch = item.url.match(/grupo=([^&]+)/)
                     const dmMatch = item.url.match(/dm=([^&]+)/)
@@ -60,7 +60,7 @@ export default function NotificationBell({ userId, onGoToChat }: Props) {
                     else if (dmMatch) onGoToChat(undefined, dmMatch[1])
                   }
                 }}
-                style={{ width: '100%', textAlign: 'left', padding: '8px', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', color: '#111b21', fontFamily: "'Outfit', sans-serif" }}
+                style={{ width: '100%', textAlign: 'left', padding: '8px', border: 'none', background: '#e8f5e9', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', color: '#00695c', fontWeight: '600', fontFamily: "'Outfit', sans-serif", borderLeft: '4px solid #00a884' }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f2f5')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
