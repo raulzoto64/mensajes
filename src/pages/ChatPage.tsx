@@ -50,6 +50,7 @@ export default function ChatPage() {
   const [unreadChats, setUnreadChats] = useState(0)
   const [unreadGroups, setUnreadGroups] = useState(0)
   const [storyCount, setStoryCount] = useState(0)
+  const [pendingUsers, setPendingUsers] = useState(0)
 
   useEffect(() => {
     if (!user) return
@@ -88,6 +89,15 @@ export default function ChatPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'story_views' }, loadStoryCount)
       .subscribe()
     return () => { supabase.removeChannel(channel) }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    async function loadPending() {
+      const { data } = await supabase.from('users').select('id').eq('is_approved', false)
+      setPendingUsers(data?.length ?? 0)
+    }
+    loadPending()
   }, [user])
 
   async function loadUnreadCounts() {
@@ -394,7 +404,7 @@ export default function ChatPage() {
                             onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(234,67,53,0.06)')}
                             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                           >
-                            ⚡ ADMIN
+                            ⚡ ADMIN {pendingUsers > 0 && <span style={{ minWidth: '16px', height: '16px', background: '#ea4335', borderRadius: '8px', color: '#fff', fontSize: '9px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', marginLeft: '6px' }}>{pendingUsers > 99 ? '99+' : pendingUsers}</span>}
                           </button>
                         )}
                         <button
