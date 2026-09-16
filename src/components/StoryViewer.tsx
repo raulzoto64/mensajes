@@ -145,6 +145,7 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
         alignItems: 'center',
         justifyContent: 'center',
         touchAction: 'pan-y',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 28px)',
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}

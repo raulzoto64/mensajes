@@ -258,6 +258,7 @@ export default function ChatPage() {
         fontFamily: "'Outfit', sans-serif",
         overflow: 'hidden',
         position: 'relative',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 28px)',
       }}
     >
       {/* Mobile overlay */}

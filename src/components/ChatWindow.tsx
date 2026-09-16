@@ -373,7 +373,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const typerLabel = typings.length ? `@${typings[0]} escribiendo…` : null
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f0f2f5', position: 'relative' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f0f2f5', position: 'relative', paddingTop: 'max(env(safe-area-inset-top, 0px), 28px)' }}>
       {/* Header */}
       <div
         style={{

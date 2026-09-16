@@ -333,7 +333,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   const statusColor = typing ? '#fbbf24' : isOnline ? '#25d366' : '#adb5bd'
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f0f2f5' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f0f2f5', paddingTop: 'max(env(safe-area-inset-top, 0px), 28px)' }}>
       {/* Header */}
       <div
         style={{
