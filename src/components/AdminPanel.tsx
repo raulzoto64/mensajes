@@ -236,7 +236,7 @@ export default function AdminPanel({ onClose, initialTab = 'actions' }: Props) {
         }
       `}</style>
         {/* Header */}
-        <div style={{ padding: 'max(env(safe-area-inset-top, 0px), 12px) 16px 14px 16px', borderBottom: '1px solid #e5e7eb', background: '#ffffff', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ padding: 'max(env(safe-area-inset-top, 0px), 8px) 16px 14px 16px', borderBottom: '1px solid #e5e7eb', background: '#ffffff', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
             onClick={onClose}
             style={{ background: '#f0f2f5', border: '1px solid #e5e7eb', color: '#8696a0', cursor: 'pointer', fontSize: '16px', padding: '4px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s' }}
