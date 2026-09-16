@@ -298,7 +298,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   }, [groupId])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
   }, [messages.length, pending.length])
 
   function toggleSelect(msgId: string) {

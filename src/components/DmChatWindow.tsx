@@ -251,7 +251,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   }, [conversationId])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
   }, [messages.length, pending.length])
 
   function toggleSelect(msgId: string) {
