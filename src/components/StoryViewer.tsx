@@ -143,7 +143,7 @@ export default function StoryViewer({ story, allStories, currentIndex, onClose, 
     >
       {/* Progress bar */}
       <div style={{ position: 'absolute', top: '0', left: '0', right: '0', padding: '8px 12px', zIndex: 10, display: 'flex', gap: '3px' }}>
-        {allStories.map((_, i) => (
+        {(allStories || []).map((_, i) => (
           <div key={i} style={{ flex: 1, height: '2px', background: 'rgba(255,255,255,0.3)', borderRadius: '1px', overflow: 'hidden' }}>
             <div
               style={{

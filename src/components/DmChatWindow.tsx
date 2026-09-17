@@ -33,6 +33,7 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadIdRef = useRef(0)
+  const lastLoadTimeRef = useRef(0)
   const onlineUsers = useOnlineUsers(user?.id ?? null)
   const pending = usePendingMessages(`dm-${conversationId}`)
 
@@ -40,6 +41,18 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
     if (!user) return
 
     const myLoadId = ++loadIdRef.current
+    const cacheKey = `ephemera_cache_dm_${conversationId}`
+
+    if (Date.now() - lastLoadTimeRef.current < 3000) {
+      try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null') as { messages: Message[]; timestamp: number } | null
+        if (cached && Array.isArray(cached.messages) && Date.now() - cached.timestamp < 60 * 60 * 1000) {
+          setMessages(cached.messages)
+          return
+        }
+      } catch { /* ignore */ }
+    }
+    lastLoadTimeRef.current = Date.now()
 
     const { data: convInfo } = await supabase
       .from('direct_conversations')

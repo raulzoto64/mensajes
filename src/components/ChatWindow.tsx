@@ -34,6 +34,7 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadIdRef = useRef(0)
+  const lastLoadTimeRef = useRef(0)
   const pending = usePendingMessages(`group-${groupId}`)
   const [optimistic, setOptimistic] = useState<{ tempId: string; type: string; content: string | null; mediaUrl: string | null; createdAt: string; error: boolean }[]>([])
 
@@ -56,6 +57,18 @@ export default function ChatWindow({ groupId, groupName, refresh, onMenuToggle, 
     const cacheKey = `ephemera_cache_group_${groupId}`
 
     const isStale = () => loadIdRef.current !== myLoadId
+
+    // Si ya cargó recientemente y hay caché, usar caché inmediatamente
+    if (Date.now() - lastLoadTimeRef.current < 3000) {
+      try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null') as { messages: Message[]; timestamp: number } | null
+        if (cached && Array.isArray(cached.messages) && Date.now() - cached.timestamp < 60 * 60 * 1000) {
+          setMessages(cached.messages)
+          return
+        }
+      } catch { /* ignore */ }
+    }
+    lastLoadTimeRef.current = Date.now()
 
     // Try to load from cache and show immediately
     try {
