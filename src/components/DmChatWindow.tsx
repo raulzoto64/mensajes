@@ -63,7 +63,6 @@ export default function DmChatWindow({ conversationId, otherUserId, otherAlias, 
     const convHours = (convInfo as any)?.auto_delete_hours ?? 24
     setAutoDeleteHours(convHours)
 
-    const cacheKey = `ephemera_cache_dm_${conversationId}`
     let msgsFromServer: any[] | null = null
 
     try {
