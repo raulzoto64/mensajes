@@ -268,7 +268,7 @@ export default function ChatPage() {
         fontFamily: "'Outfit', sans-serif",
         overflow: 'hidden',
         position: 'relative',
-        paddingTop: '0',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)',
       }}
     >
       {/* White top area for safe-area */}

@@ -102,7 +102,7 @@ export default function Sidebar({ activeGroupId, activeDmId, activeTab, unreadCh
         display: 'flex',
         flexDirection: 'column',
         fontFamily: "'Outfit', sans-serif",
-        paddingTop: '0',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)',
       }}
     >
       {/* Config warning */}
