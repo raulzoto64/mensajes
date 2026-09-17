@@ -62,6 +62,10 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
+      - name: Verify APK exists
+        working-directory: android/app/build/outputs/apk/debug
+        run: ls -la || echo "No APK generated"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
